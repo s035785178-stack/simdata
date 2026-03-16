@@ -10,6 +10,7 @@ object AppPrefs {
     private const val KEY_BALANCE = "balance"
     private const val KEY_VALID = "valid"
     private const val KEY_UPDATED = "updated"
+    private const val KEY_STATUS = "status"
     private const val KEY_HISTORY = "history"
     private const val KEY_INSTALL = "install"
 
@@ -48,12 +49,26 @@ object AppPrefs {
         return prefs(context).getString(KEY_UPDATED, "") ?: ""
     }
 
+    fun saveStatus(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_STATUS, value).apply()
+    }
+
+    fun getStatus(context: Context): String {
+        return prefs(context).getString(KEY_STATUS, "") ?: ""
+    }
+
     fun saveHistory(context: Context, value: String) {
         prefs(context).edit().putString(KEY_HISTORY, value).apply()
     }
 
     fun getHistory(context: Context): String {
         return prefs(context).getString(KEY_HISTORY, "") ?: ""
+    }
+
+    fun appendHistory(context: Context, value: String) {
+        val current = getHistory(context)
+        val merged = if (current.isBlank()) value else "$value\n$current"
+        saveHistory(context, merged)
     }
 
     fun clearHistory(context: Context) {
@@ -65,6 +80,15 @@ object AppPrefs {
     }
 
     fun getInstallTimestamp(context: Context): Long {
-        return prefs(context).getLong(KEY_INSTALL, 0)
+        return prefs(context).getLong(KEY_INSTALL, 0L)
     }
+
+    fun clearAll(context: Context) {
+        prefs(context).edit().clear().apply()
+    }
+
+    // Aliases for older code
+    fun getLastBalance(context: Context): String = getBalanceMb(context)
+    fun getLastCheckTime(context: Context): String = getUpdated(context)
+    fun getLastStatus(context: Context): String = getStatus(context)
 }
