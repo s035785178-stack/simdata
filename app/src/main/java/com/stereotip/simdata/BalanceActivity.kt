@@ -56,8 +56,8 @@ class BalanceActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
-        bindLatest()
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
     }
 
     override fun onPause() {
@@ -75,6 +75,7 @@ class BalanceActivity : AppCompatActivity() {
         val mb = AppPrefs.getBalanceMb(this)
         val valid = AppPrefs.getValid(this) ?: "---"
         val updated = AppPrefs.getUpdated(this)
+
         tvLine.text = "📱 מספר קו: $line"
         tvData.text = "📊 יתרת גלישה: ${mb?.let { Formatter.mbToDisplay(it) } ?: "---"}"
         tvValid.text = "📅 תוקף חבילה: $valid"
@@ -83,24 +84,24 @@ class BalanceActivity : AppCompatActivity() {
     }
 
     private fun startBalanceCheck() {
-        val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+        val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) ==
+            PackageManager.PERMISSION_GRANTED
+
         if (!hasCall) {
             Toast.makeText(this, "אין הרשאת שיחה", Toast.LENGTH_SHORT).show()
             return
         }
-        tvProgress.text = "⏳ בודק יתרה... ההודעה עשויה להגיע תוך כדקה"
+
+        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 60 שניות"
+
         timer?.cancel()
         timer = object : CountDownTimer(60_000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                val sec = millisUntilFinished / 1000
-                tvProgress.text = if (sec > 30) {
-                    "⏳ בודק יתרה... נותרו $sec שניות"
-                } else {
-                    "⏳ עדיין ממתין ל-SMS מ-019... נותרו $sec שניות"
-                }
+                tvProgress.text = "⏳ בודק יתרה... נותרו ${millisUntilFinished / 1000} שניות"
             }
+
             override fun onFinish() {
-                tvProgress.text = "לא התקבלה תשובה מ-019, נסו שוב"
+                tvProgress.text = "לא התקבלה תשובה, נסו שוב"
             }
         }.start()
 
