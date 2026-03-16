@@ -11,7 +11,7 @@
         android:layout_width="220dp"
         android:layout_height="78dp"
         android:layout_gravity="center_horizontal"
-        android:src="@drawable/stereo_logo"
+        android:src="@drawable/logo"
         android:scaleType="fitCenter" />
 
     <TextView
