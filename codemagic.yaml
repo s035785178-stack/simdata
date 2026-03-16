@@ -8,13 +8,9 @@ workflows:
         PACKAGE_NAME: "com.stereotip.simdata"
 
     scripts:
-      - name: Set up Gradle
-        script: |
-          chmod +x ./gradlew
-
       - name: Build APK
         script: |
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
     artifacts:
       - app/build/outputs/**/*.apk
