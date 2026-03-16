@@ -1,180 +1,94 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_screen"
-    android:orientation="vertical"
-    android:padding="18dp"
-    android:layoutDirection="rtl">
+    android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="280dp"
-        android:layout_height="100dp"
-        android:layout_gravity="center_horizontal"
-        android:src="@drawable/stereo_logo"
-        android:scaleType="fitCenter"
-        android:contentDescription="logo" />
-
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_card"
-            android:padding="18dp"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📱 מספר הקו"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tvLine"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:layoutDirection="ltr"
-                    android:textDirection="ltr"
-                    android:text="---"
-                    android:textColor="@color/text_primary"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📊 יתרה אחרונה"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tvBalanceQuick"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="לא בוצעה בדיקה"
-                    android:textColor="@color/text_primary"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🕒 בדיקה אחרונה"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tvUpdated"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="---"
-                    android:textColor="@color/text_primary"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
-
+        <!-- כותרת -->
         <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="match_parent"
+            android:id="@+id/title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:padding="14dp"
-            android:text="לא בוצעה בדיקה"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:text="ניהול סים נתונים"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-        <GridLayout
-            android:layout_width="match_parent"
+        <!-- יתרת גלישה -->
+        <TextView
+            android:id="@+id/balanceText"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:text="יתרת גלישה: --"
+            android:textSize="18sp"
+            android:paddingTop="20dp"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- תוקף -->
+        <TextView
+            android:id="@+id/validText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="תוקף: --"
+            android:textSize="16sp"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/balanceText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- גריד כפתורים -->
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/buttonsGrid"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:columnCount="2"
             android:rowCount="2"
-            android:useDefaultMargins="true">
+            android:useDefaultMargins="true"
+            app:layout_constraintTop_toBottomOf="@id/validText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="24dp">
 
             <Button
-                android:id="@+id/btnBalance"
+                android:id="@+id/btnCheck"
                 android:layout_width="0dp"
-                android:layout_height="92dp"
+                android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:background="@drawable/bg_button_green"
-                android:text="📶 בדיקת יתרת גלישה"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:text="בדיקת חבילת גלישה"/>
 
             <Button
-                android:id="@+id/btnNetwork"
+                android:id="@+id/btnResetApn"
                 android:layout_width="0dp"
-                android:layout_height="92dp"
+                android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:background="@drawable/bg_button_blue"
-                android:text="📡 בדיקת תקינות רשת"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnPackages"
-                android:layout_width="0dp"
-                android:layout_height="92dp"
-                android:layout_columnWeight="1"
-                android:background="@drawable/bg_button_orange"
-                android:text="💳 חידוש חבילת גלישה"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:text="איפוס APN"/>
 
             <Button
                 android:id="@+id/btnSupport"
                 android:layout_width="0dp"
-                android:layout_height="92dp"
+                android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:background="@drawable/bg_button_gray"
-                android:text="🛠 תמיכה טכנית"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </GridLayout>
-    </LinearLayout>
+                android:text="תמיכה"/>
 
-</LinearLayout>
+            <Button
+                android:id="@+id/btnTech"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:text="טכנאי"/>
+
+        </androidx.gridlayout.widget.GridLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
