@@ -1,33 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/txtBalance"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="יתרת גלישה"
-        android:textSize="22sp"
-        android:textStyle="bold"/>
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <TextView
-        android:id="@+id/txtValid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="תוקף"
-        android:layout_marginTop="12dp"
-        android:textSize="18sp"/>
+        <TextView
+            android:id="@+id/tvBalanceStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="סטטוס יתרה"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
 
-    <TextView
-        android:id="@+id/txtUpdated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="עודכן"
-        android:layout_marginTop="12dp"
-        android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/tvProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="טוען..."
+            android:layout_marginTop="8dp"/>
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvLineBalance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="מספר קו"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:id="@+id/tvData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="יתרת גלישה"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/tvValid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="תוקף"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/tvUpdatedBalance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="עודכן לאחרונה"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/btnCheckBalance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="בדוק יתרה"
+            android:layout_marginTop="24dp"/>
+
+        <Button
+            android:id="@+id/btnRenewFromBalance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="חדש חבילה מהיתרה"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnBackBalance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="חזרה"
+            android:layout_marginTop="12dp"/>
+
+    </LinearLayout>
+
+</ScrollView>
