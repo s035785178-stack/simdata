@@ -35,6 +35,10 @@ class MainActivity : AppCompatActivity() {
         val btnPackages = findViewById<Button>(R.id.btnPackages)
         val btnSupport = findViewById<Button>(R.id.btnSupport)
 
+        if (AppPrefs.getInstallTimestamp(this) == 0L) {
+            AppPrefs.saveInstallTimestamp(this, System.currentTimeMillis())
+        }
+
         refreshMainScreen()
 
         btnBalance.setOnClickListener {
@@ -65,14 +69,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshMainScreen() {
         val lineNumber = TelephonyUtils.getLineNumber(this)
+        if (lineNumber.isNotBlank() && lineNumber != "לא זוהה מספר" && lineNumber != "לא אושרו הרשאות") {
+            AppPrefs.saveLineNumber(this, lineNumber)
+        }
+
         val savedBalance = AppPrefs.getLastBalance(this)
         val savedCheckTime = AppPrefs.getLastCheckTime(this)
         val savedStatus = AppPrefs.getLastStatus(this)
 
-        tvLineNumber.text = lineNumber.ifBlank { "לא זוהה מספר" }
-        tvLastBalance.text = if (savedBalance.isNullOrBlank()) "לא בוצעה בדיקה" else savedBalance
-        tvLastCheck.text = if (savedCheckTime.isNullOrBlank()) "לא בוצעה בדיקה" else savedCheckTime
-        tvStatusText.text = if (savedStatus.isNullOrBlank()) "מוכן לבדיקה" else savedStatus
+        tvLineNumber.text = if (lineNumber.isBlank()) "לא זוהה מספר" else lineNumber
+        tvLastBalance.text = if (savedBalance.isBlank()) "לא בוצעה בדיקה" else savedBalance
+        tvLastCheck.text = if (savedCheckTime.isBlank()) "לא בוצעה בדיקה" else savedCheckTime
+        tvStatusText.text = if (savedStatus.isBlank()) "מוכן לבדיקה" else savedStatus
     }
 
     private fun handleLogoTap() {
