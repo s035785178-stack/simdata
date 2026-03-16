@@ -8,84 +8,104 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- כותרת -->
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="ניהול סים נתונים"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:gravity="center"
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@mipmap/ic_launcher"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-        <!-- יתרת גלישה -->
         <TextView
-            android:id="@+id/balanceText"
+            android:id="@+id/tvLine"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="מספר קו: לא זוהה"
+            android:textSize="16sp"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/logo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="12dp"/>
+
+        <TextView
+            android:id="@+id/tvBalanceQuick"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="יתרת גלישה: --"
             android:textSize="18sp"
-            android:paddingTop="20dp"
+            android:textStyle="bold"
             android:gravity="center"
-            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/tvLine"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"/>
 
-        <!-- תוקף -->
         <TextView
-            android:id="@+id/validText"
+            android:id="@+id/tvUpdated"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="תוקף: --"
-            android:textSize="16sp"
+            android:text="עדכון אחרון: --"
             android:gravity="center"
-            app:layout_constraintTop_toBottomOf="@id/balanceText"
+            app:layout_constraintTop_toBottomOf="@id/tvBalanceQuick"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="4dp"/>
 
-        <!-- גריד כפתורים -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="סטטוס"
+            android:gravity="center"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/tvUpdated"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"/>
+
         <androidx.gridlayout.widget.GridLayout
-            android:id="@+id/buttonsGrid"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:columnCount="2"
-            android:rowCount="2"
             android:useDefaultMargins="true"
-            app:layout_constraintTop_toBottomOf="@id/validText"
+            app:layout_constraintTop_toBottomOf="@id/tvStatus"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="24dp">
 
             <Button
-                android:id="@+id/btnCheck"
+                android:id="@+id/btnBalance"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
+                android:minHeight="70dp"
                 android:text="בדיקת חבילת גלישה"/>
 
             <Button
-                android:id="@+id/btnResetApn"
+                android:id="@+id/btnNetwork"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
+                android:minHeight="70dp"
                 android:text="איפוס APN"/>
+
+            <Button
+                android:id="@+id/btnPackages"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:minHeight="70dp"
+                android:text="חבילות"/>
 
             <Button
                 android:id="@+id/btnSupport"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
+                android:minHeight="70dp"
                 android:text="תמיכה"/>
-
-            <Button
-                android:id="@+id/btnTech"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:text="טכנאי"/>
 
         </androidx.gridlayout.widget.GridLayout>
 
