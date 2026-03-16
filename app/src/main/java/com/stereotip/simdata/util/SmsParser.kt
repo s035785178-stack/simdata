@@ -1,48 +1,50 @@
 package com.stereotip.simdata.util
 
-import com.stereotip.simdata.data.BalanceResult
+data class BalanceResult(
+    val balanceText: String = "",
+    val validText: String = "",
+    val source: String = ""
+)
 
 object SmsParser {
-    private val numberRegex = Regex("Your\s+number\s+is:\s*([0-9+]+)", RegexOption.IGNORE_CASE)
-    private val dataRegex = Regex("Data\s+Internet\s*:?\s*([0-9.]+)", RegexOption.IGNORE_CASE)
-    private val validRegex = Regex("Valid\s*:?\s*([0-9.\-/]+)", RegexOption.IGNORE_CASE)
-    private val balanceRegex = Regex("Your\s+Balance\s*:?\s*([0-9.]+)", RegexOption.IGNORE_CASE)
 
-    fun parse(text: String): BalanceResult? {
-        if (!looksRelevant(text)) return null
+    private val dataInternetRegex =
+        Regex("""Data\s*Internet\s*:?\s*([0-9.]+)""", RegexOption.IGNORE_CASE)
 
-        val line = numberRegex.find(text)?.groupValues?.getOrNull(1)
-        val dataValues = dataRegex.findAll(text).mapNotNull { it.groupValues.getOrNull(1)?.toDoubleOrNull() }.toList()
-        val balanceValues = balanceRegex.findAll(text).mapNotNull { it.groupValues.getOrNull(1)?.toDoubleOrNull() }.toList()
-        val valid = validRegex.findAll(text).mapNotNull { it.groupValues.getOrNull(1) }.lastOrNull()
+    private val yourBalanceRegex =
+        Regex("""Your\s*Balance\s*:?\s*([0-9.]+)""", RegexOption.IGNORE_CASE)
 
-        val chosenMb = chooseBestBalance(dataValues, balanceValues)
+    private val validRegex =
+        Regex("""Valid\s*:?\s*([0-9.\-\/]+)""", RegexOption.IGNORE_CASE)
+
+    fun parse(message: String): BalanceResult {
+        val dataInternet = dataInternetRegex.find(message)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val yourBalance = yourBalanceRegex.find(message)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val valid = validRegex.find(message)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+
+        val chosen = chooseBestBalance(dataInternet, yourBalance)
 
         return BalanceResult(
-            lineNumber = line,
-            dataMb = chosenMb,
-            validUntil = valid,
-            rawMessage = text
+            balanceText = chosen.first,
+            validText = valid,
+            source = chosen.second
         )
     }
 
-    private fun looksRelevant(text: String): Boolean {
-        return text.contains("Your number is", true) ||
-            text.contains("Data Internet", true) ||
-            text.contains("Your Balance", true) ||
-            text.contains("Valid", true)
-    }
-
-    private fun chooseBestBalance(dataValues: List<Double>, balanceValues: List<Double>): Int? {
-        val bestData = dataValues.maxOrNull()
-        val bestBalance = balanceValues.maxOrNull()
+    private fun chooseBestBalance(dataInternet: String, yourBalance: String): Pair<String, String> {
+        val dataNum = dataInternet.toDoubleOrNull()
+        val balanceNum = yourBalance.toDoubleOrNull()
 
         return when {
-            bestData != null && bestData >= 500 -> bestData.toInt()
-            bestBalance != null && bestBalance >= 500 -> bestBalance.toInt()
-            bestData != null -> bestData.toInt()
-            bestBalance != null -> bestBalance.toInt()
-            else -> null
+            dataNum != null && dataNum >= 500 -> Pair(formatMb(dataInternet), "Data Internet")
+            balanceNum != null && balanceNum >= 500 -> Pair(formatMb(yourBalance), "Your Balance")
+            dataInternet.isNotBlank() -> Pair(formatMb(dataInternet), "Data Internet")
+            yourBalance.isNotBlank() -> Pair(formatMb(yourBalance), "Your Balance")
+            else -> Pair("", "")
         }
+    }
+
+    private fun formatMb(value: String): String {
+        return if (value.isBlank()) "" else "${value} MB"
     }
 }
