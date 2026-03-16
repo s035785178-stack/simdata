@@ -1,34 +1,53 @@
 package com.stereotip.simdata
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.QrUtils
-import java.net.URLEncoder
 
 class PackagesActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_packages)
 
-        findViewById<Button>(R.id.btnTrial).setOnClickListener {
-            showPackageQr("4GB לחודשיים", "40₪")
+        val btnPackageTrial = findViewById<Button>(R.id.btnPackageTrial)
+        val btnPackageSaver = findViewById<Button>(R.id.btnPackageSaver)
+        val btnPackageBest = findViewById<Button>(R.id.btnPackageBest)
+        val btnBack = findViewById<Button>(R.id.btnBack)
+
+        btnPackageTrial.setOnClickListener {
+            openQrScreen(
+                packageName = "4GB לחודשיים",
+                packagePrice = "40₪"
+            )
         }
-        findViewById<Button>(R.id.btnLong).setOnClickListener {
-            showPackageQr("36GB ל-60 חודשים", "400₪")
+
+        btnPackageSaver.setOnClickListener {
+            openQrScreen(
+                packageName = "36GB ל-5 שנים",
+                packagePrice = "400₪"
+            )
         }
-        findViewById<Button>(R.id.btnFeatured).setOnClickListener {
-            showPackageQr("100GB לשנתיים", "250₪")
+
+        btnPackageBest.setOnClickListener {
+            openQrScreen(
+                packageName = "100GB לשנתיים",
+                packagePrice = "250₪"
+            )
         }
-        findViewById<Button>(R.id.btnBackPackages).setOnClickListener { finish() }
+
+        btnBack.setOnClickListener {
+            finish()
+        }
     }
 
-    private fun showPackageQr(pkg: String, price: String) {
-        val line = AppPrefs.getLineNumber(this) ?: "לא זוהה"
-        val msg = "שלום, אני רוצה לחדש חבילת גלישה\n\nמספר מנוי: $line\nחבילה: $pkg\nמחיר: $price"
-        val wa = "https://wa.me/972559911336?text=${URLEncoder.encode(msg, "UTF-8")}"
-        val bitmap = QrUtils.createQrBitmap(wa)
-        QrDialogFragment.newInstance(bitmap, "סרקו לחידוש מהנייד").show(supportFragmentManager, "qr_package")
+    private fun openQrScreen(packageName: String, packagePrice: String) {
+        val intent = Intent(this, SupportActivity::class.java).apply {
+            putExtra("mode", "renew")
+            putExtra("package_name", packageName)
+            putExtra("package_price", packagePrice)
+        }
+        startActivity(intent)
     }
 }
