@@ -4,49 +4,67 @@ import android.content.Context
 
 object AppPrefs {
 
-    private const val PREFS_NAME = "simdata_prefs"
+    private const val PREFS = "simdata_prefs"
 
-    private const val KEY_LINE_NUMBER = "line_number"
-    private const val KEY_LAST_BALANCE = "last_balance"
-    private const val KEY_LAST_CHECK_TIME = "last_check_time"
-    private const val KEY_LAST_STATUS = "last_status"
+    private const val KEY_LINE = "line"
+    private const val KEY_BALANCE = "balance"
+    private const val KEY_VALID = "valid"
+    private const val KEY_UPDATED = "updated"
+    private const val KEY_HISTORY = "history"
+    private const val KEY_INSTALL = "install"
 
     private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     fun saveLineNumber(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_LINE_NUMBER, value).apply()
+        prefs(context).edit().putString(KEY_LINE, value).apply()
     }
 
     fun getLineNumber(context: Context): String {
-        return prefs(context).getString(KEY_LINE_NUMBER, "") ?: ""
+        return prefs(context).getString(KEY_LINE, "") ?: ""
     }
 
-    fun saveLastBalance(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_LAST_BALANCE, value).apply()
+    fun saveBalance(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_BALANCE, value).apply()
     }
 
-    fun getLastBalance(context: Context): String {
-        return prefs(context).getString(KEY_LAST_BALANCE, "") ?: ""
+    fun getBalanceMb(context: Context): String {
+        return prefs(context).getString(KEY_BALANCE, "") ?: ""
     }
 
-    fun saveLastCheckTime(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_LAST_CHECK_TIME, value).apply()
+    fun saveValid(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_VALID, value).apply()
     }
 
-    fun getLastCheckTime(context: Context): String {
-        return prefs(context).getString(KEY_LAST_CHECK_TIME, "") ?: ""
+    fun getValid(context: Context): String {
+        return prefs(context).getString(KEY_VALID, "") ?: ""
     }
 
-    fun saveLastStatus(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_LAST_STATUS, value).apply()
+    fun saveUpdated(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_UPDATED, value).apply()
     }
 
-    fun getLastStatus(context: Context): String {
-        return prefs(context).getString(KEY_LAST_STATUS, "") ?: ""
+    fun getUpdated(context: Context): String {
+        return prefs(context).getString(KEY_UPDATED, "") ?: ""
     }
 
-    fun clearAll(context: Context) {
-        prefs(context).edit().clear().apply()
+    fun saveHistory(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_HISTORY, value).apply()
+    }
+
+    fun getHistory(context: Context): String {
+        return prefs(context).getString(KEY_HISTORY, "") ?: ""
+    }
+
+    fun clearHistory(context: Context) {
+        prefs(context).edit().remove(KEY_HISTORY).apply()
+    }
+
+    fun saveInstallTimestamp(context: Context, value: Long) {
+        prefs(context).edit().putLong(KEY_INSTALL, value).apply()
+    }
+
+    fun getInstallTimestamp(context: Context): Long {
+        return prefs(context).getLong(KEY_INSTALL, 0)
     }
 }
