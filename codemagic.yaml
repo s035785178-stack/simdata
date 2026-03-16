@@ -1,0 +1,20 @@
+workflows:
+  android-workflow:
+    name: Android Build
+    max_build_duration: 30
+
+    environment:
+      vars:
+        PACKAGE_NAME: "com.stereotip.simdata"
+
+    scripts:
+      - name: Set up Gradle
+        script: |
+          chmod +x ./gradlew
+
+      - name: Build APK
+        script: |
+          ./gradlew assembleDebug
+
+    artifacts:
+      - app/build/outputs/**/*.apk
