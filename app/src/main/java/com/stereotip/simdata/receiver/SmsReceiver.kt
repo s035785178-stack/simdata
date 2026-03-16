@@ -3,68 +3,50 @@ package com.stereotip.simdata.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.os.Build
+import android.provider.Telephony
 import android.telephony.SmsMessage
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.stereotip.simdata.util.AppPrefs
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.stereotip.simdata.util.SmsParser
 
 class SmsReceiver : BroadcastReceiver() {
-
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != "android.provider.Telephony.SMS_RECEIVED") return
-
-        val bundle: Bundle = intent.extras ?: return
+    override fun onReceive(context: Context, intent: Intent?) {
+        if (intent?.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
+        val bundle = intent.extras ?: return
         val pdus = bundle.get("pdus") as? Array<*> ?: return
+        val format = bundle.getString("format")
 
-        val messages = pdus.mapNotNull { pdu ->
-            try {
+        val parts = mutableListOf<SmsMessage>()
+        pdus.forEach { pdu ->
+            val msg = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                SmsMessage.createFromPdu(pdu as ByteArray, format)
+            } else {
+                @Suppress("DEPRECATION")
                 SmsMessage.createFromPdu(pdu as ByteArray)
-            } catch (_: Exception) {
-                null
             }
+            parts.add(msg)
         }
 
-        val body = messages.joinToString(separator = "") { it.messageBody ?: "" }
-        if (body.isBlank()) return
+        val body = parts.joinToString(separator = "") { it.messageBody ?: "" }
+        val sender = parts.firstOrNull()?.displayOriginatingAddress.orEmpty()
 
-        val balance = extractRelevantBalance(body)
-        val valid = extractValue(body, "Valid")
-        val updated = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+        if (!isLikelyCarrierSms(sender, body)) return
 
-        if (balance.isNotBlank()) {
-            AppPrefs.saveBalance(context, balance)
-        }
-        if (valid.isNotBlank()) {
-            AppPrefs.saveValid(context, valid)
-        }
-
-        AppPrefs.saveUpdated(context, updated)
-        AppPrefs.saveStatus(context, "התקבל SMS מ-019")
-        AppPrefs.appendHistory(context, "$updated | יתרה: ${if (balance.isBlank()) "לא זוהתה" else balance} | תוקף: ${if (valid.isBlank()) "לא זוהה" else valid}")
+        val parsed = SmsParser.parse(body) ?: return
+        AppPrefs.saveBalance(context, parsed)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(ACTION_BALANCE_UPDATED))
     }
 
-    private fun extractRelevantBalance(body: String): String {
-        val dataInternet = extractValue(body, "Data Internet")
-        val yourBalance = extractValue(body, "Your Balance")
-
-        return when {
-            dataInternet.isNotBlank() && isLikelyRelevant(dataInternet) -> "$dataInternet MB"
-            yourBalance.isNotBlank() && isLikelyRelevant(yourBalance) -> "$yourBalance MB"
-            dataInternet.isNotBlank() -> dataInternet
-            yourBalance.isNotBlank() -> yourBalance
-            else -> ""
-        }
+    private fun isLikelyCarrierSms(sender: String, body: String): Boolean {
+        if (sender.contains("019", true)) return true
+        return body.contains("Your Balance", true) ||
+            body.contains("Data Internet", true) ||
+            body.contains("Your number is", true) ||
+            body.contains("Valid", true)
     }
 
-    private fun extractValue(body: String, label: String): String {
-        val regex = Regex("$label\\s*:?\\s*([0-9.]+)", RegexOption.IGNORE_CASE)
-        return regex.find(body)?.groupValues?.getOrNull(1)?.trim().orEmpty()
-    }
-
-    private fun isLikelyRelevant(value: String): Boolean {
-        val num = value.toDoubleOrNull() ?: return false
-        return num >= 500
+    companion object {
+        const val ACTION_BALANCE_UPDATED = "com.stereotip.simdata.ACTION_BALANCE_UPDATED"
     }
 }

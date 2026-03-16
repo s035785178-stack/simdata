@@ -1,84 +1,112 @@
 package com.stereotip.simdata
 
+import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.TelephonyUtils
+import com.stereotip.simdata.util.Formatter
 
 class BalanceActivity : AppCompatActivity() {
-
-    private lateinit var tvBalanceStatus: TextView
+    private lateinit var tvStatus: TextView
     private lateinit var tvProgress: TextView
-    private lateinit var tvLineBalance: TextView
+    private lateinit var tvLine: TextView
     private lateinit var tvData: TextView
     private lateinit var tvValid: TextView
-    private lateinit var tvUpdatedBalance: TextView
+    private lateinit var tvUpdated: TextView
+    private var timer: CountDownTimer? = null
 
-    private lateinit var btnCheckBalance: Button
-    private lateinit var btnRenewFromBalance: Button
-    private lateinit var btnBackBalance: Button
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            timer?.cancel()
+            tvProgress.text = "✔ הבדיקה הושלמה בהצלחה"
+            bindLatest()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_balance)
 
-        tvBalanceStatus = findViewById(R.id.tvBalanceStatus)
+        tvStatus = findViewById(R.id.tvBalanceStatus)
         tvProgress = findViewById(R.id.tvProgress)
-        tvLineBalance = findViewById(R.id.tvLineBalance)
+        tvLine = findViewById(R.id.tvLineBalance)
         tvData = findViewById(R.id.tvData)
         tvValid = findViewById(R.id.tvValid)
-        tvUpdatedBalance = findViewById(R.id.tvUpdatedBalance)
+        tvUpdated = findViewById(R.id.tvUpdatedBalance)
 
-        btnCheckBalance = findViewById(R.id.btnCheckBalance)
-        btnRenewFromBalance = findViewById(R.id.btnRenewFromBalance)
-        btnBackBalance = findViewById(R.id.btnBackBalance)
+        findViewById<Button>(R.id.btnCheckBalance).setOnClickListener { startBalanceCheck() }
+        findViewById<Button>(R.id.btnRenewFromBalance).setOnClickListener { startActivity(Intent(this, PackagesActivity::class.java)) }
+        findViewById<Button>(R.id.btnBackBalance).setOnClickListener { finish() }
 
-        refreshUi()
-
-        btnCheckBalance.setOnClickListener {
-            tvProgress.text = "מבצע בדיקה מול 019...\nההודעה עשויה להגיע תוך כדקה"
-            AppPrefs.saveStatus(this, "ממתין ל-SMS מ-019")
-            refreshUi()
-        }
-
-        btnRenewFromBalance.setOnClickListener {
-            startActivity(Intent(this, PackagesActivity::class.java))
-        }
-
-        btnBackBalance.setOnClickListener {
-            finish()
-        }
+        bindLatest()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshUi()
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+        bindLatest()
     }
 
-    private fun refreshUi() {
-        val line = TelephonyUtils.getLineNumber(this)
-        val balance = AppPrefs.getBalanceMb(this)
-        val valid = AppPrefs.getValid(this)
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        timer?.cancel()
+        super.onDestroy()
+    }
+
+    private fun bindLatest() {
+        val line = AppPrefs.getLineNumber(this) ?: "לא זוהה"
+        val mb = AppPrefs.getBalanceMb(this)
+        val valid = AppPrefs.getValid(this) ?: "---"
         val updated = AppPrefs.getUpdated(this)
+        tvLine.text = "📱 מספר קו: $line"
+        tvData.text = "📊 יתרת גלישה: ${mb?.let { Formatter.mbToDisplay(it) } ?: "---"}"
+        tvValid.text = "📅 תוקף חבילה: $valid"
+        tvUpdated.text = "🕒 עודכן: ${Formatter.formatDateTime(updated)}"
+        tvStatus.text = Formatter.balanceStatus(mb)
+    }
 
-        tvLineBalance.text = "מספר קו: ${if (line.isBlank()) "לא זוהה מספר" else line}"
-        tvData.text = "יתרת גלישה: ${if (balance.isBlank()) "טרם התקבלה" else balance}"
-        tvValid.text = "תוקף: ${if (valid.isBlank()) "טרם התקבל" else valid}"
-        tvUpdatedBalance.text = "עודכן: ${if (updated.isBlank()) "טרם בוצעה בדיקה" else updated}"
-
-        tvBalanceStatus.text = if (balance.isBlank()) {
-            "טרם התקבלה יתרה"
-        } else {
-            "היתרה עודכנה"
+    private fun startBalanceCheck() {
+        val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+        if (!hasCall) {
+            Toast.makeText(this, "אין הרשאת שיחה", Toast.LENGTH_SHORT).show()
+            return
         }
+        tvProgress.text = "⏳ בודק יתרה... ההודעה עשויה להגיע תוך כדקה"
+        timer?.cancel()
+        timer = object : CountDownTimer(60_000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val sec = millisUntilFinished / 1000
+                tvProgress.text = if (sec > 30) {
+                    "⏳ בודק יתרה... נותרו $sec שניות"
+                } else {
+                    "⏳ עדיין ממתין ל-SMS מ-019... נותרו $sec שניות"
+                }
+            }
+            override fun onFinish() {
+                tvProgress.text = "לא התקבלה תשובה מ-019, נסו שוב"
+            }
+        }.start()
 
-        if (AppPrefs.getStatus(this).isBlank()) {
-            tvProgress.text = "לחץ על בדוק יתרה והמתן ל-SMS"
-        } else {
-            tvProgress.text = AppPrefs.getStatus(this)
+        val intent = Intent(Intent.ACTION_CALL).apply {
+            data = Uri.parse("tel:${Uri.encode("*019")}")
         }
+        startActivity(intent)
     }
 }

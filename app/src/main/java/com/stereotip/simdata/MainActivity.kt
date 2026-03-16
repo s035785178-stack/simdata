@@ -1,101 +1,121 @@
 package com.stereotip.simdata
 
+import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
+import com.stereotip.simdata.util.Formatter
 import com.stereotip.simdata.util.TelephonyUtils
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var tvLineNumber: TextView
-    private lateinit var tvLastBalance: TextView
-    private lateinit var tvLastCheck: TextView
-    private lateinit var tvStatusText: TextView
+    private lateinit var tvLine: TextView
+    private lateinit var tvBalanceQuick: TextView
+    private lateinit var tvUpdated: TextView
+    private lateinit var tvStatus: TextView
     private lateinit var logo: ImageView
-
     private var logoTapCount = 0
-    private var lastLogoTapTime = 0L
+    private var lastTapTime = 0L
+
+    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        updateSummary()
+    }
+
+    private val balanceReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            updateSummary()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        AppPrefs.ensureInstallTimestamp(this)
 
-        tvLineNumber = findViewById(R.id.lineNumber)
-        tvLastBalance = findViewById(R.id.lastBalance)
-        tvLastCheck = findViewById(R.id.lastCheck)
-        tvStatusText = findViewById(R.id.statusText)
+        tvLine = findViewById(R.id.tvLine)
+        tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
+        tvUpdated = findViewById(R.id.tvUpdated)
+        tvStatus = findViewById(R.id.tvStatus)
         logo = findViewById(R.id.logo)
 
-        val btnBalance = findViewById<Button>(R.id.btnBalance)
-        val btnNetwork = findViewById<Button>(R.id.btnNetwork)
-        val btnPackages = findViewById<Button>(R.id.btnPackages)
-        val btnSupport = findViewById<Button>(R.id.btnSupport)
+        findViewById<Button>(R.id.btnBalance).setOnClickListener { startActivity(Intent(this, BalanceActivity::class.java)) }
+        findViewById<Button>(R.id.btnNetwork).setOnClickListener { startActivity(Intent(this, NetworkCheckActivity::class.java)) }
+        findViewById<Button>(R.id.btnPackages).setOnClickListener { startActivity(Intent(this, PackagesActivity::class.java)) }
+        findViewById<Button>(R.id.btnSupport).setOnClickListener { startActivity(Intent(this, SupportActivity::class.java)) }
 
-        if (AppPrefs.getInstallTimestamp(this) == 0L) {
-            AppPrefs.saveInstallTimestamp(this, System.currentTimeMillis())
-        }
-
-        refreshMainScreen()
-
-        btnBalance.setOnClickListener {
-            startActivity(Intent(this, BalanceActivity::class.java))
-        }
-
-        btnNetwork.setOnClickListener {
-            startActivity(Intent(this, NetworkCheckActivity::class.java))
-        }
-
-        btnPackages.setOnClickListener {
-            startActivity(Intent(this, PackagesActivity::class.java))
-        }
-
-        btnSupport.setOnClickListener {
-            startActivity(Intent(this, SupportActivity::class.java))
-        }
-
-        logo.setOnClickListener {
-            handleLogoTap()
-        }
+        logo.setOnClickListener { onLogoTapped() }
+        askForRequiredPermissionsIfNeeded()
+        updateSummary()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshMainScreen()
+        LocalBroadcastManager.getInstance(this).registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+        updateSummary()
     }
 
-    private fun refreshMainScreen() {
-        val lineNumber = TelephonyUtils.getLineNumber(this)
-        if (lineNumber.isNotBlank() && lineNumber != "לא זוהה מספר" && lineNumber != "לא אושרו הרשאות") {
-            AppPrefs.saveLineNumber(this, lineNumber)
-        }
-
-        val savedBalance = AppPrefs.getLastBalance(this)
-        val savedCheckTime = AppPrefs.getLastCheckTime(this)
-        val savedStatus = AppPrefs.getLastStatus(this)
-
-        tvLineNumber.text = if (lineNumber.isBlank()) "לא זוהה מספר" else lineNumber
-        tvLastBalance.text = if (savedBalance.isBlank()) "לא בוצעה בדיקה" else savedBalance
-        tvLastCheck.text = if (savedCheckTime.isBlank()) "לא בוצעה בדיקה" else savedCheckTime
-        tvStatusText.text = if (savedStatus.isBlank()) "מוכן לבדיקה" else savedStatus
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
+        super.onPause()
     }
 
-    private fun handleLogoTap() {
+    private fun updateSummary() {
+        val line = TelephonyUtils.getLineNumber(this)
+        tvLine.text = if (line.isBlank()) "לא זוהה מספר" else line
+        val mb = AppPrefs.getBalanceMb(this)
+        tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
+        tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
+        tvStatus.text = Formatter.balanceStatus(mb)
+    }
+
+    private fun onLogoTapped() {
         val now = System.currentTimeMillis()
-
-        if (now - lastLogoTapTime > 3000) {
-            logoTapCount = 0
-        }
-
+        if (now - lastTapTime > 4000) logoTapCount = 0
+        lastTapTime = now
         logoTapCount++
-        lastLogoTapTime = now
-
         if (logoTapCount >= 7) {
             logoTapCount = 0
             startActivity(Intent(this, TechnicianActivity::class.java))
+        }
+    }
+
+    private fun askForRequiredPermissionsIfNeeded() {
+        val permissions = mutableListOf(
+            Manifest.permission.READ_SMS,
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.CALL_PHONE
+        )
+        if (Build.VERSION.SDK_INT >= 33) {
+            // kept intentionally blank, app doesn't require notification permission
+        }
+        val missing = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("נדרשות הרשאות להפעלת האפליקציה")
+                .setMessage("האפליקציה זקוקה להרשאות כדי לבדוק יתרה, לזהות מספר קו ולקבל הודעות מהמערכת. נא לאשר הכל.")
+                .setPositiveButton("הפעל את האפליקציה") { _, _ -> permissionLauncher.launch(missing.toTypedArray()) }
+                .setCancelable(false)
+                .show()
         }
     }
 }

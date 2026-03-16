@@ -32,7 +32,7 @@ object TelephonyUtils {
             if (!allowed) return "לא אושרו הרשאות"
 
             val line = tm.line1Number
-            if (line.isNullOrBlank()) "לא זוהה מספר" else line
+            if (line.isNullOrBlank()) "לא זוהה מספר" else normalizePhoneNumber(line)
         } catch (_: Exception) {
             "לא זוהה מספר"
         }
@@ -127,9 +127,19 @@ object TelephonyUtils {
                 }
             } ?: "לא נגיש"
         } catch (_: SecurityException) {
-            "לא נגיש לאפליקציה"
+            "לא זמין במכשיר זה"
         } catch (_: Exception) {
-            "לא זוהה"
+            "לא זמין"
         }
     }
+    private fun normalizePhoneNumber(raw: String): String {
+        val cleaned = raw.replace(" ", "").replace("-", "")
+        return when {
+            cleaned.startsWith("+972") -> cleaned
+            cleaned.startsWith("972") -> "+$cleaned"
+            cleaned.startsWith("0") -> "+972" + cleaned.removePrefix("0")
+            else -> cleaned
+        }
+    }
+
 }
