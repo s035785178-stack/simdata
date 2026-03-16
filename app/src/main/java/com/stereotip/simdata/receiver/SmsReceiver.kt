@@ -3,50 +3,49 @@ package com.stereotip.simdata.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.provider.Telephony
+import android.os.Bundle
 import android.telephony.SmsMessage
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.SmsParser
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class SmsReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
-        val bundle = intent.extras ?: return
-        val pdus = bundle.get("pdus") as? Array<*> ?: return
-        val format = bundle.getString("format")
 
-        val parts = mutableListOf<SmsMessage>()
-        pdus.forEach { pdu ->
-            val msg = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                SmsMessage.createFromPdu(pdu as ByteArray, format)
-            } else {
-                @Suppress("DEPRECATION")
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != "android.provider.Telephony.SMS_RECEIVED") return
+
+        val bundle: Bundle = intent.extras ?: return
+        val pdus = bundle.get("pdus") as? Array<*> ?: return
+
+        val messages = pdus.mapNotNull { pdu ->
+            try {
                 SmsMessage.createFromPdu(pdu as ByteArray)
+            } catch (_: Exception) {
+                null
             }
-            parts.add(msg)
         }
 
-        val body = parts.joinToString(separator = "") { it.messageBody ?: "" }
-        val sender = parts.firstOrNull()?.displayOriginatingAddress.orEmpty()
+        val body = messages.joinToString(separator = "") { it.messageBody ?: "" }
+        if (body.isBlank()) return
 
-        if (!isLikelyCarrierSms(sender, body)) return
+        val balance = SmsParser.extractBalance(body)
+        val valid = SmsParser.extractValid(body)
+        val updated = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
 
-        val parsed = SmsParser.parse(body) ?: return
-        AppPrefs.saveBalance(context, parsed)
-        LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(ACTION_BALANCE_UPDATED))
-    }
+        if (balance.isNotBlank()) {
+            AppPrefs.saveBalance(context, balance)
+        }
+        if (valid.isNotBlank()) {
+            AppPrefs.saveValid(context, valid)
+        }
 
-    private fun isLikelyCarrierSms(sender: String, body: String): Boolean {
-        if (sender.contains("019", true)) return true
-        return body.contains("Your Balance", true) ||
-            body.contains("Data Internet", true) ||
-            body.contains("Your number is", true) ||
-            body.contains("Valid", true)
-    }
-
-    companion object {
-        const val ACTION_BALANCE_UPDATED = "com.stereotip.simdata.ACTION_BALANCE_UPDATED"
+        AppPrefs.saveUpdated(context, updated)
+        AppPrefs.saveStatus(context, "התקבל SMS מ-019")
+        AppPrefs.appendHistory(
+            context,
+            "$updated | יתרה: ${if (balance.isBlank()) "לא זוהתה" else balance} | תוקף: ${if (valid.isBlank()) "לא זוהה" else valid}"
+        )
     }
 }
