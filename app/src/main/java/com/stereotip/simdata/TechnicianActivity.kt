@@ -1,72 +1,56 @@
 package com.stereotip.simdata
 
 import android.os.Bundle
-import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.Formatter
-import com.stereotip.simdata.util.QrUtils
 import com.stereotip.simdata.util.TelephonyUtils
-import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TechnicianActivity : AppCompatActivity() {
-    private lateinit var tvInfo: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_technician)
-        tvInfo = findViewById(R.id.tvTechInfo)
 
-        findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
-            startActivity(android.content.Intent(this, NetworkCheckActivity::class.java))
+        val scroll = ScrollView(this)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 32, 32, 32)
         }
-        findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener { showTechQr() }
-        findViewById<Button>(R.id.btnClearHistory).setOnClickListener {
-            AppPrefs.clearHistory(this)
-            bindInfo()
-            Toast.makeText(this, "ההיסטוריה נוקתה", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<Button>(R.id.btnClearAll).setOnClickListener {
-            AppPrefs.clearAll(this)
-            bindInfo()
-            Toast.makeText(this, "נתוני הלקוח אופסו", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<Button>(R.id.btnBackTech).setOnClickListener { finish() }
 
-        bindInfo()
-    }
+        val line = TelephonyUtils.getLineNumber(this)
+        val balance = AppPrefs.getBalanceMb(this)
+        val valid = AppPrefs.getValid(this)
+        val updated = AppPrefs.getUpdated(this)
+        val history = AppPrefs.getHistory(this)
+        val installTimestamp = AppPrefs.getInstallTimestamp(this)
 
-    private fun bindInfo() {
-        val network = TelephonyUtils.checkNetwork(this)
-        val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
-        val history = AppPrefs.getHistory(this).take(5).joinToString("\n\n")
-        tvInfo.text = buildString {
-            appendLine("📱 מספר קו: ${network.lineNumber}")
-            appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
-            appendLine("🧩 גרסת אפליקציה: 1.0")
-            appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
-            appendLine()
-            appendLine("📊 יתרה אחרונה: $balance")
-            appendLine("📅 תוקף אחרון: ${AppPrefs.getValid(this@TechnicianActivity) ?: "---"}")
-            appendLine("🕒 בדיקה אחרונה: ${Formatter.formatDateTime(AppPrefs.getUpdated(this@TechnicianActivity))}")
-            appendLine()
-            appendLine("📶 SIM: ${network.simStatus}")
-            appendLine("📡 רשת: ${network.networkType}")
-            appendLine("🌍 נדידה: ${network.roamingStatus}")
-            appendLine("⚙ APN: ${network.apnStatus}")
-            appendLine("🌐 אינטרנט: ${network.internetStatus}")
-            appendLine()
-            appendLine("היסטוריית בדיקות אחרונות:")
-            appendLine(if (history.isBlank()) "אין היסטוריה" else history)
+        val installText = if (installTimestamp == 0L) {
+            "לא נשמר"
+        } else {
+            SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(installTimestamp))
         }
-    }
 
-    private fun showTechQr() {
-        val text = tvInfo.text.toString()
-        val wa = "https://wa.me/972559911336?text=${URLEncoder.encode("דוח אבחון StereoTip\n\n$text", "UTF-8")}"
-        val bitmap = QrUtils.createQrBitmap(wa)
-        QrDialogFragment.newInstance(bitmap, "סרקו לשליחת דוח אבחון").show(supportFragmentManager, "tech_qr")
+        val text = TextView(this).apply {
+            textSize = 18f
+            text = buildString {
+                append("מצב טכנאי\n\n")
+                append("מספר קו: ${if (line.isBlank()) "לא זוהה" else line}\n")
+                append("יתרה אחרונה: ${if (balance.isBlank()) "לא התקבלה" else balance}\n")
+                append("תוקף: ${if (valid.isBlank()) "לא התקבל" else valid}\n")
+                append("עודכן: ${if (updated.isBlank()) "לא עודכן" else updated}\n")
+                append("תאריך התקנה: $installText\n\n")
+                append("היסטוריה:\n")
+                append(if (history.isBlank()) "אין היסטוריה" else history)
+            }
+        }
+
+        container.addView(text)
+        scroll.addView(container)
+        setContentView(scroll)
     }
 }
