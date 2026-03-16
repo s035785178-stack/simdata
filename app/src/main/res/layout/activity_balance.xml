@@ -1,70 +1,33 @@
-package com.stereotip.simdata.util
+<?xml version="1.0" encoding="utf-8"?>
 
-import android.content.Context
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
 
-object AppPrefs {
+    <TextView
+        android:id="@+id/txtBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="יתרת גלישה"
+        android:textSize="22sp"
+        android:textStyle="bold"/>
 
-    private const val PREFS = "simdata_prefs"
+    <TextView
+        android:id="@+id/txtValid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="תוקף"
+        android:layout_marginTop="12dp"
+        android:textSize="18sp"/>
 
-    private const val KEY_LINE = "line"
-    private const val KEY_BALANCE = "balance"
-    private const val KEY_VALID = "valid"
-    private const val KEY_UPDATED = "updated"
-    private const val KEY_HISTORY = "history"
-    private const val KEY_INSTALL = "install"
+    <TextView
+        android:id="@+id/txtUpdated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="עודכן"
+        android:layout_marginTop="12dp"
+        android:textSize="16sp"/>
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-
-    fun saveLineNumber(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_LINE, value).apply()
-    }
-
-    fun getLineNumber(context: Context): String {
-        return prefs(context).getString(KEY_LINE, "") ?: ""
-    }
-
-    fun saveBalance(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_BALANCE, value).apply()
-    }
-
-    fun getBalanceMb(context: Context): String {
-        return prefs(context).getString(KEY_BALANCE, "") ?: ""
-    }
-
-    fun saveValid(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_VALID, value).apply()
-    }
-
-    fun getValid(context: Context): String {
-        return prefs(context).getString(KEY_VALID, "") ?: ""
-    }
-
-    fun saveUpdated(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_UPDATED, value).apply()
-    }
-
-    fun getUpdated(context: Context): String {
-        return prefs(context).getString(KEY_UPDATED, "") ?: ""
-    }
-
-    fun saveHistory(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_HISTORY, value).apply()
-    }
-
-    fun getHistory(context: Context): String {
-        return prefs(context).getString(KEY_HISTORY, "") ?: ""
-    }
-
-    fun clearHistory(context: Context) {
-        prefs(context).edit().remove(KEY_HISTORY).apply()
-    }
-
-    fun saveInstallTimestamp(context: Context, value: Long) {
-        prefs(context).edit().putLong(KEY_INSTALL, value).apply()
-    }
-
-    fun getInstallTimestamp(context: Context): Long {
-        return prefs(context).getLong(KEY_INSTALL, 0)
-    }
-}
+</LinearLayout>
