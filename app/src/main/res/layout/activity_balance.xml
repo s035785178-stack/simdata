@@ -1,143 +1,70 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_screen"
-    android:orientation="vertical"
-    android:layoutDirection="rtl"
-    android:padding="18dp">
+package com.stereotip.simdata.util
 
-    <ImageView
-        android:layout_width="220dp"
-        android:layout_height="78dp"
-        android:layout_gravity="center_horizontal"
-        android:src="@drawable/logo"
-        android:scaleType="fitCenter" />
+import android.content.Context
 
-    <TextView
-        android:id="@+id/tvBalanceStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_card"
-        android:padding="14dp"
-        android:text="📶 בדיקת יתרת גלישה"
-        android:textAlignment="center"
-        android:textColor="@color/text_primary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+object AppPrefs {
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_card"
-        android:orientation="vertical"
-        android:padding="18dp">
+    private const val PREFS = "simdata_prefs"
 
-        <TextView
-            android:id="@+id/tvProgress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="מוכן לבדיקה"
-            android:textColor="@color/text_secondary"
-            android:textSize="18sp" />
+    private const val KEY_LINE = "line"
+    private const val KEY_BALANCE = "balance"
+    private const val KEY_VALID = "valid"
+    private const val KEY_UPDATED = "updated"
+    private const val KEY_HISTORY = "history"
+    private const val KEY_INSTALL = "install"
 
-        <TextView
-            android:id="@+id/tvLineBalance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="📱 מספר קו: ---"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+    private fun prefs(context: Context) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-        <TextView
-            android:id="@+id/tvData"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="📊 יתרת גלישה: ---"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+    fun saveLineNumber(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_LINE, value).apply()
+    }
 
-        <TextView
-            android:id="@+id/tvValid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="📅 תוקף חבילה: ---"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+    fun getLineNumber(context: Context): String {
+        return prefs(context).getString(KEY_LINE, "") ?: ""
+    }
 
-        <TextView
-            android:id="@+id/tvUpdatedBalance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="🕒 עודכן: ---"
-            android:textColor="@color/text_secondary"
-            android:textSize="18sp" />
+    fun saveBalance(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_BALANCE, value).apply()
+    }
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="נגמרה החבילה? לא בעיה — לחצו כאן לחידוש מהיר"
-            android:textAlignment="center"
-            android:textColor="@color/text_secondary"
-            android:textSize="18sp" />
-    </LinearLayout>
+    fun getBalanceMb(context: Context): String {
+        return prefs(context).getString(KEY_BALANCE, "") ?: ""
+    }
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
+    fun saveValid(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_VALID, value).apply()
+    }
 
-        <Button
-            android:id="@+id/btnCheckBalance"
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="6dp"
-            android:background="@drawable/bg_button_green"
-            android:text="🔄 בדוק שוב"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+    fun getValid(context: Context): String {
+        return prefs(context).getString(KEY_VALID, "") ?: ""
+    }
 
-        <Button
-            android:id="@+id/btnRenewFromBalance"
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_weight="1"
-            android:layout_marginHorizontal="6dp"
-            android:background="@drawable/bg_button_orange"
-            android:text="💳 חידוש חבילה"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+    fun saveUpdated(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_UPDATED, value).apply()
+    }
 
-        <Button
-            android:id="@+id/btnBackBalance"
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_weight="1"
-            android:layout_marginStart="6dp"
-            android:background="@drawable/bg_button_gray"
-            android:text="⬅ חזרה"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+    fun getUpdated(context: Context): String {
+        return prefs(context).getString(KEY_UPDATED, "") ?: ""
+    }
 
-</LinearLayout>
+    fun saveHistory(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_HISTORY, value).apply()
+    }
+
+    fun getHistory(context: Context): String {
+        return prefs(context).getString(KEY_HISTORY, "") ?: ""
+    }
+
+    fun clearHistory(context: Context) {
+        prefs(context).edit().remove(KEY_HISTORY).apply()
+    }
+
+    fun saveInstallTimestamp(context: Context, value: Long) {
+        prefs(context).edit().putLong(KEY_INSTALL, value).apply()
+    }
+
+    fun getInstallTimestamp(context: Context): Long {
+        return prefs(context).getLong(KEY_INSTALL, 0)
+    }
+}
