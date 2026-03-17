@@ -33,7 +33,7 @@ class BalanceActivity : AppCompatActivity() {
                 return
             }
 
-            handler.postDelayed(this, 2000) // כל 2 שניות
+            handler.postDelayed(this, 2000)
         }
     }
 
@@ -42,7 +42,7 @@ class BalanceActivity : AppCompatActivity() {
         setContentView(R.layout.activity_balance)
 
         tvProgress = findViewById(R.id.tvProgress)
-        btnCheck = findViewById(R.id.btnCheck)
+        btnCheck = findViewById(R.id.btnCheckBalance) // 🔥 תיקון כאן
 
         btnCheck.setOnClickListener {
             startBalanceCheck()
@@ -64,14 +64,11 @@ class BalanceActivity : AppCompatActivity() {
 
         tvProgress.text = "⏳ מתחיל בדיקה..."
 
-        // 🔥 שומר זמן התחלה לפני חיוג
         startTimestamp = System.currentTimeMillis()
         isChecking = true
 
-        // 🔥 מתחיל polling
         handler.post(checkRunnable)
 
-        // ⏳ timeout 70 שניות
         handler.postDelayed({
             if (isChecking) {
                 isChecking = false
@@ -79,7 +76,6 @@ class BalanceActivity : AppCompatActivity() {
             }
         }, 70000)
 
-        // 📞 חיוג
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:${Uri.encode("*019")}")
         }
