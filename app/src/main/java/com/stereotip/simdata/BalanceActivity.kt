@@ -35,7 +35,7 @@ class BalanceActivity : AppCompatActivity() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             timer?.cancel()
-            tvProgress.text = "✔ הבדיקה הושלמה בהצלחה"
+            tvProgress.text = "✔ הנתונים עודכנו"
             bindLatest()
         }
     }
@@ -101,12 +101,13 @@ class BalanceActivity : AppCompatActivity() {
             return
         }
 
-        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 60 שניות"
-
+        // 🔥 מתחילים מעקב לפני החיוג
         startTimestamp = System.currentTimeMillis()
 
+        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 70 שניות"
+
         timer?.cancel()
-        timer = object : CountDownTimer(60000, 1000) {
+        timer = object : CountDownTimer(70_000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 tvProgress.text = "⏳ בודק יתרה... נותרו ${millisUntilFinished / 1000} שניות"
             }
@@ -138,7 +139,7 @@ class BalanceActivity : AppCompatActivity() {
         cursor?.use {
             if (it.moveToFirst()) {
                 timer?.cancel()
-                tvProgress.text = "✔ נקלטה הודעה (fallback)"
+                tvProgress.text = "✔ הנתונים עודכנו"
                 bindLatest()
             }
         }
