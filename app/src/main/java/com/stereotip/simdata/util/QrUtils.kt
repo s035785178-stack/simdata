@@ -1,40 +1,35 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+package com.stereotip.simdata.util
 
-    <!-- הרשאות -->
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.READ_SMS"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
+import android.graphics.Bitmap
+import android.graphics.Color
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
 
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+object QrUtils {
+    fun createQrBitmap(content: String, size: Int = 900): Bitmap {
+        val hints = hashMapOf<EncodeHintType, Any>()
+        hints[EncodeHintType.MARGIN] = 1
 
-        <!-- כל ה-Activities -->
-        <activity android:name=".TechnicianActivity"/>
-        <activity android:name=".SupportActivity"/>
-        <activity android:name=".PackagesActivity"/>
-        <activity android:name=".NetworkCheckActivity"/>
-        <activity android:name=".BalanceActivity"/>
+        val matrix: BitMatrix = MultiFormatWriter().encode(
+            content,
+            BarcodeFormat.QR_CODE,
+            size,
+            size,
+            hints
+        )
 
-        <!-- Main Activity -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
+        val width = matrix.width
+        val height = matrix.height
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
-        <!-- ❌ הסרנו את SmsReceiver כדי למנוע קריסה -->
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
 
-    </application>
-
-</manifest>
+        return bitmap
+    }
+}
