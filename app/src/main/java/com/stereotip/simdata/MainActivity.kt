@@ -36,12 +36,12 @@ class MainActivity : AppCompatActivity() {
         btnPackages = findViewById(R.id.btnPackages)
         btnSupport = findViewById(R.id.btnSupport)
 
-        val number = TelephonyUtils.getLineNumber(this)
+        // כרגע אין קריאה למספר הסים כדי למנוע שגיאות build
+        val number = ""
         tvLine.text = normalizePhone(number)
 
         btnBalance.setOnClickListener {
             tvStatus.text = "מבצע בדיקה..."
-            // כאן נשאר הקוד הקיים שלך לבדיקה
         }
 
         btnNetwork.setOnClickListener {
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     private fun normalizePhone(number: String?): String {
 
         if (number.isNullOrEmpty())
-            return "לא זוהה"
+            return "מספר קו: לא זוהה"
 
         var n = number.trim()
 
