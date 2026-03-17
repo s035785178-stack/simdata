@@ -1,38 +1,39 @@
 package com.stereotip.simdata
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
-import android.os.Bundle
-import android.os.CountDownTimer
+import android.os.*
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.stereotip.simdata.receiver.SmsReceiver
-import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.Formatter
 
 class BalanceActivity : AppCompatActivity() {
-    private lateinit var tvStatus: TextView
-    private lateinit var tvProgress: TextView
-    private lateinit var tvLine: TextView
-    private lateinit var tvData: TextView
-    private lateinit var tvValid: TextView
-    private lateinit var tvUpdated: TextView
-    private var timer: CountDownTimer? = null
 
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            timer?.cancel()
-            tvProgress.text = "✔ הבדיקה הושלמה בהצלחה"
-            bindLatest()
+    private lateinit var tvProgress: TextView
+    private lateinit var btnCheck: Button
+
+    private var handler: Handler = Handler(Looper.getMainLooper())
+    private var isChecking = false
+    private var startTimestamp: Long = 0
+
+    private val checkRunnable = object : Runnable {
+        override fun run() {
+            if (!isChecking) return
+
+            val sms = getLatestSmsSince(startTimestamp)
+
+            if (sms != null) {
+                isChecking = false
+                tvProgress.text = "📩 התקבלה הודעה:\n\n$sms"
+                return
+            }
+
+            handler.postDelayed(this, 2000) // כל 2 שניות
         }
     }
 
@@ -40,74 +41,76 @@ class BalanceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_balance)
 
-        tvStatus = findViewById(R.id.tvBalanceStatus)
         tvProgress = findViewById(R.id.tvProgress)
-        tvLine = findViewById(R.id.tvLineBalance)
-        tvData = findViewById(R.id.tvData)
-        tvValid = findViewById(R.id.tvValid)
-        tvUpdated = findViewById(R.id.tvUpdatedBalance)
+        btnCheck = findViewById(R.id.btnCheck)
 
-        findViewById<Button>(R.id.btnCheckBalance).setOnClickListener { startBalanceCheck() }
-        findViewById<Button>(R.id.btnRenewFromBalance).setOnClickListener { startActivity(Intent(this, PackagesActivity::class.java)) }
-        findViewById<Button>(R.id.btnBackBalance).setOnClickListener { finish() }
-
-        bindLatest()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
-    }
-
-    override fun onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        timer?.cancel()
-        super.onDestroy()
-    }
-
-    private fun bindLatest() {
-        val line = AppPrefs.getLineNumber(this) ?: "לא זוהה"
-        val mb = AppPrefs.getBalanceMb(this)
-        val valid = AppPrefs.getValid(this) ?: "---"
-        val updated = AppPrefs.getUpdated(this)
-
-        tvLine.text = "📱 מספר קו: $line"
-        tvData.text = "📊 יתרת גלישה: ${mb?.let { Formatter.mbToDisplay(it) } ?: "---"}"
-        tvValid.text = "📅 תוקף חבילה: $valid"
-        tvUpdated.text = "🕒 עודכן: ${Formatter.formatDateTime(updated)}"
-        tvStatus.text = Formatter.balanceStatus(mb)
+        btnCheck.setOnClickListener {
+            startBalanceCheck()
+        }
     }
 
     private fun startBalanceCheck() {
-        val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) ==
-            PackageManager.PERMISSION_GRANTED
 
-        if (!hasCall) {
-            Toast.makeText(this, "אין הרשאת שיחה", Toast.LENGTH_SHORT).show()
+        val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) ==
+                PackageManager.PERMISSION_GRANTED
+
+        val hasSms = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
+                PackageManager.PERMISSION_GRANTED
+
+        if (!hasCall || !hasSms) {
+            Toast.makeText(this, "חסרות הרשאות", Toast.LENGTH_SHORT).show()
             return
         }
 
-        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 60 שניות"
+        tvProgress.text = "⏳ מתחיל בדיקה..."
 
-        timer?.cancel()
-        timer = object : CountDownTimer(60_000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                tvProgress.text = "⏳ בודק יתרה... נותרו ${millisUntilFinished / 1000} שניות"
+        // 🔥 שומר זמן התחלה לפני חיוג
+        startTimestamp = System.currentTimeMillis()
+        isChecking = true
+
+        // 🔥 מתחיל polling
+        handler.post(checkRunnable)
+
+        // ⏳ timeout 70 שניות
+        handler.postDelayed({
+            if (isChecking) {
+                isChecking = false
+                tvProgress.text = "❌ לא התקבלה תשובה"
             }
+        }, 70000)
 
-            override fun onFinish() {
-                tvProgress.text = "לא התקבלה תשובה, נסו שוב"
-            }
-        }.start()
-
+        // 📞 חיוג
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:${Uri.encode("*019")}")
         }
         startActivity(intent)
+    }
+
+    private fun getLatestSmsSince(timestamp: Long): String? {
+
+        val uri = Uri.parse("content://sms/inbox")
+
+        val cursor: Cursor? = contentResolver.query(
+            uri,
+            null,
+            "date > ?",
+            arrayOf(timestamp.toString()),
+            "date DESC"
+        )
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val body = it.getString(it.getColumnIndexOrThrow("body"))
+                return body
+            }
+        }
+
+        return null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isChecking = false
+        handler.removeCallbacksAndMessages(null)
     }
 }
