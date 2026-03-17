@@ -10,6 +10,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.telephony.TelephonyManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -31,12 +32,38 @@ class BalanceActivity : AppCompatActivity() {
 
     private var timer: CountDownTimer? = null
     private var startTimestamp: Long = 0
+    private var isCallActive = false
 
+    // 🔥 קבלת SMS
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             timer?.cancel()
             tvProgress.text = "✔ הנתונים עודכנו"
             bindLatest()
+        }
+    }
+
+    // 🔥 זיהוי מצב שיחה
+    private val callReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val state = intent?.getStringExtra(TelephonyManager.EXTRA_STATE)
+
+            when (state) {
+                TelephonyManager.EXTRA_STATE_OFFHOOK -> {
+                    isCallActive = true
+                }
+
+                TelephonyManager.EXTRA_STATE_IDLE -> {
+                    if (isCallActive) {
+                        isCallActive = false
+
+                        // 🔥 חזרה לאפליקציה
+                        val i = Intent(this@BalanceActivity, BalanceActivity::class.java)
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        startActivity(i)
+                    }
+                }
+            }
         }
     }
 
@@ -63,14 +90,20 @@ class BalanceActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        // SMS listener
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
 
+        // Call listener
+        registerReceiver(callReceiver, IntentFilter("android.intent.action.PHONE_STATE"))
+
+        // fallback
         checkSmsFallback()
     }
 
     override fun onPause() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
+        unregisterReceiver(callReceiver)
         super.onPause()
     }
 
@@ -101,7 +134,7 @@ class BalanceActivity : AppCompatActivity() {
             return
         }
 
-        // 🔥 מתחילים מעקב לפני החיוג
+        // 🔥 מתחיל מעקב לפני חיוג
         startTimestamp = System.currentTimeMillis()
 
         tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 70 שניות"
@@ -109,7 +142,7 @@ class BalanceActivity : AppCompatActivity() {
         timer?.cancel()
         timer = object : CountDownTimer(70_000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                tvProgress.text = "⏳ בודק יתרה... נותרו ${millisUntilFinished / 1000} שניות"
+                tvProgress.text = "⏳ נותרו ${millisUntilFinished / 1000} שניות"
             }
 
             override fun onFinish() {
