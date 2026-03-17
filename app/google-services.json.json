@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "83990372992",
+    "project_id": "stereotip-system",
+    "storage_bucket": "stereotip-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83990372992:android:3457f3a5cc1fa38fbc3c65",
+        "android_client_info": {
+          "package_name": "com.stereotip.simdata"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6W_WXhcIEP67sa-_352UNuN6W_6uSfek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
