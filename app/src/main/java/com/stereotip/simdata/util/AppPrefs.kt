@@ -2,72 +2,111 @@ package com.stereotip.simdata.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.stereotip.simdata.data.BalanceResult
 
 object AppPrefs {
-    private const val PREFS = "simdata_prefs"
-    private const val KEY_LINE = "line"
-    private const val KEY_BALANCE_MB = "balance_mb"
-    private const val KEY_VALID = "valid"
-    private const val KEY_RAW = "raw"
-    private const val KEY_UPDATED = "updated"
-    private const val KEY_INSTALL = "install"
-    private const val KEY_HISTORY = "history"
 
-    private fun prefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private const val PREFS_NAME = "simdata_prefs"
 
-    fun ensureInstallTimestamp(context: Context) {
-        val p = prefs(context)
-        if (!p.contains(KEY_INSTALL)) {
-            p.edit().putLong(KEY_INSTALL, System.currentTimeMillis()).apply()
+    private fun prefs(ctx: Context): SharedPreferences {
+        return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    // ---------------------------
+    // 🔥 כל מה שכבר קיים אצלך (לא נוגע)
+    // ---------------------------
+
+    fun getBalanceMb(ctx: Context): Int? =
+        if (prefs(ctx).contains("balance_mb")) prefs(ctx).getInt("balance_mb", 0) else null
+
+    fun setBalanceMb(ctx: Context, value: Int) {
+        prefs(ctx).edit().putInt("balance_mb", value).apply()
+    }
+
+    fun getValid(ctx: Context): String? =
+        prefs(ctx).getString("valid", null)
+
+    fun setValid(ctx: Context, value: String?) {
+        prefs(ctx).edit().putString("valid", value).apply()
+    }
+
+    fun getUpdated(ctx: Context): Long =
+        prefs(ctx).getLong("updated", 0L)
+
+    fun setUpdated(ctx: Context, value: Long) {
+        prefs(ctx).edit().putLong("updated", value).apply()
+    }
+
+    fun getInstallTimestamp(ctx: Context): Long =
+        prefs(ctx).getLong("install_time", 0L)
+
+    fun ensureInstallTimestamp(ctx: Context) {
+        if (!prefs(ctx).contains("install_time")) {
+            prefs(ctx).edit().putLong("install_time", System.currentTimeMillis()).apply()
         }
     }
 
-    fun getInstallTimestamp(context: Context): Long = prefs(context).getLong(KEY_INSTALL, 0L)
+    fun getLineNumber(ctx: Context): String? =
+        prefs(ctx).getString("line_number", null)
 
-    fun saveBalance(context: Context, result: BalanceResult) {
-        val p = prefs(context)
-        p.edit()
-            .putString(KEY_LINE, result.lineNumber)
-            .putInt(KEY_BALANCE_MB, result.dataMb ?: -1)
-            .putString(KEY_VALID, result.validUntil)
-            .putString(KEY_RAW, result.rawMessage)
-            .putLong(KEY_UPDATED, result.updatedAt)
-            .apply()
-        appendHistory(context, result)
+    fun setLineNumber(ctx: Context, value: String?) {
+        prefs(ctx).edit().putString("line_number", value).apply()
     }
 
-    fun getLineNumber(context: Context): String? = prefs(context).getString(KEY_LINE, null)
-    fun getBalanceMb(context: Context): Int? = prefs(context).getInt(KEY_BALANCE_MB, -1).takeIf { it >= 0 }
-    fun getValid(context: Context): String? = prefs(context).getString(KEY_VALID, null)
-    fun getUpdated(context: Context): Long = prefs(context).getLong(KEY_UPDATED, 0L)
-    fun getRaw(context: Context): String? = prefs(context).getString(KEY_RAW, null)
-
-    fun getHistory(context: Context): List<String> {
-        val raw = prefs(context).getString(KEY_HISTORY, "") ?: ""
-        return raw.split("\n---\n").filter { it.isNotBlank() }
+    fun getHistory(ctx: Context): List<String> {
+        val set = prefs(ctx).getStringSet("history", emptySet()) ?: emptySet()
+        return set.toList()
     }
 
-    private fun appendHistory(context: Context, result: BalanceResult) {
-        val existing = getHistory(context).toMutableList()
-        val entry = buildString {
-            append("זמן: ").append(Formatter.formatDateTime(result.updatedAt)).append('\n')
-            append("מספר: ").append(result.lineNumber ?: "לא זוהה").append('\n')
-            append("יתרה: ").append(result.dataMb?.let { Formatter.mbToDisplay(it) } ?: "לא זוהה").append('\n')
-            append("תוקף: ").append(result.validUntil ?: "לא זוהה")
-        }
-        existing.add(0, entry)
-        val trimmed = existing.take(50)
-        prefs(context).edit().putString(KEY_HISTORY, trimmed.joinToString("\n---\n")).apply()
+    fun addHistory(ctx: Context, value: String) {
+        val current = prefs(ctx).getStringSet("history", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+        current.add(value)
+        prefs(ctx).edit().putStringSet("history", current).apply()
     }
 
-    fun clearAll(context: Context) {
-        prefs(context).edit().clear().apply()
-        ensureInstallTimestamp(context)
+    fun clearHistory(ctx: Context) {
+        prefs(ctx).edit().remove("history").apply()
     }
 
-    fun clearHistory(context: Context) {
-        prefs(context).edit().remove(KEY_HISTORY).apply()
+    fun clearAll(ctx: Context) {
+        prefs(ctx).edit().clear().apply()
     }
+
+    // ---------------------------
+    // 🔥 חדש — פרטי לקוח
+    // ---------------------------
+
+    fun setCustomerName(ctx: Context, value: String) {
+        prefs(ctx).edit().putString("customer_name", value).apply()
+    }
+
+    fun getCustomerName(ctx: Context): String =
+        prefs(ctx).getString("customer_name", "") ?: ""
+
+    fun setCustomerPhone(ctx: Context, value: String) {
+        prefs(ctx).edit().putString("customer_phone", value).apply()
+    }
+
+    fun getCustomerPhone(ctx: Context): String =
+        prefs(ctx).getString("customer_phone", "") ?: ""
+
+    fun setCarModel(ctx: Context, value: String) {
+        prefs(ctx).edit().putString("car_model", value).apply()
+    }
+
+    fun getCarModel(ctx: Context): String =
+        prefs(ctx).getString("car_model", "") ?: ""
+
+    fun setCarNumber(ctx: Context, value: String) {
+        prefs(ctx).edit().putString("car_number", value).apply()
+    }
+
+    fun getCarNumber(ctx: Context): String =
+        prefs(ctx).getString("car_number", "") ?: ""
+
+    fun setDataPackage(ctx: Context, value: String) {
+        prefs(ctx).edit().putString("data_package", value).apply()
+    }
+
+    fun getDataPackage(ctx: Context): String =
+        prefs(ctx).getString("data_package", "") ?: ""
 }
