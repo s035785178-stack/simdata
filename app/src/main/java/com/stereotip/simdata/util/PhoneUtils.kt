@@ -7,28 +7,20 @@ object PhoneUtils {
 
         var p = phone.trim()
 
-        // הסרת כל מה שלא מספרים
+        // הסרת כל מה שלא ספרות
         p = p.replace(Regex("[^0-9]"), "")
 
         return when {
-            // 9725XXXXXXXX → 05XXXXXXXX
-            p.startsWith("9725") && p.length >= 12 -> {
-                "0" + p.substring(3)
-            }
+            // +9725XXXXXXXX / 9725XXXXXXXX -> 05XXXXXXXX
+            p.startsWith("9725") && p.length >= 12 -> "0" + p.substring(3)
 
-            // 5XXXXXXXX → 05XXXXXXXX
-            p.startsWith("5") && p.length == 9 -> {
-                "0$p"
-            }
+            // 5XXXXXXXX -> 05XXXXXXXX
+            p.startsWith("5") && p.length == 9 -> "0$p"
 
             // כבר תקין
-            p.startsWith("05") && p.length == 10 -> {
-                p
-            }
+            p.startsWith("05") && p.length == 10 -> p
 
-            else -> {
-                p
-            }
+            else -> p
         }
     }
 }
