@@ -6,10 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -30,7 +31,7 @@ class BalanceActivity : AppCompatActivity() {
     private lateinit var tvUpdated: TextView
 
     private var timer: CountDownTimer? = null
-    private var startTimestamp: Long = 0
+    private val handler = Handler(Looper.getMainLooper())
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -62,11 +63,10 @@ class BalanceActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(receiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
 
-        checkSmsFallback()
+        bindLatest()
     }
 
     override fun onPause() {
@@ -76,6 +76,7 @@ class BalanceActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         timer?.cancel()
+        handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -94,19 +95,17 @@ class BalanceActivity : AppCompatActivity() {
 
     private fun startBalanceCheck() {
         val hasCall = ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) ==
-                PackageManager.PERMISSION_GRANTED
+            PackageManager.PERMISSION_GRANTED
 
         if (!hasCall) {
             Toast.makeText(this, "אין הרשאת שיחה", Toast.LENGTH_SHORT).show()
             return
         }
 
-        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 60 שניות"
-
-        startTimestamp = System.currentTimeMillis()
+        tvProgress.text = "⏳ בודק יתרה... אנא המתן עד 25 שניות"
 
         timer?.cancel()
-        timer = object : CountDownTimer(60000, 1000) {
+        timer = object : CountDownTimer(25_000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 tvProgress.text = "⏳ בודק יתרה... נותרו ${millisUntilFinished / 1000} שניות"
             }
@@ -120,27 +119,16 @@ class BalanceActivity : AppCompatActivity() {
             data = Uri.parse("tel:${Uri.encode("*019")}")
         }
         startActivity(intent)
-    }
 
-    private fun checkSmsFallback() {
-        if (startTimestamp == 0L) return
-
-        val uri = Uri.parse("content://sms/inbox")
-
-        val cursor: Cursor? = contentResolver.query(
-            uri,
-            null,
-            "date > ?",
-            arrayOf(startTimestamp.toString()),
-            "date DESC"
-        )
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                timer?.cancel()
-                tvProgress.text = "✔ נקלטה הודעה (fallback)"
-                bindLatest()
+        // ניסיון בטוח להחזיר את המשתמש לאפליקציה אחרי כמה שניות
+        handler.postDelayed({
+            try {
+                val backIntent = Intent(this, BalanceActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                startActivity(backIntent)
+            } catch (_: Exception) {
             }
-        }
+        }, 6000)
     }
 }
