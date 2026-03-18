@@ -22,6 +22,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
+import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.TelephonyUtils
 
 class MainActivity : AppCompatActivity() {
@@ -76,8 +77,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSummary() {
-        val line = TelephonyUtils.getLineNumber(this)
-        tvLine.text = if (line.isBlank()) "לא זוהה מספר" else line
+        val rawLine = TelephonyUtils.getLineNumber(this)
+
+        // 🔥 פה הקסם
+        val line = PhoneUtils.normalizeToLocal(rawLine)
+
+        tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
+
         val mb = AppPrefs.getBalanceMb(this)
         tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
         tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
@@ -104,7 +110,7 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.CALL_PHONE
         )
         if (Build.VERSION.SDK_INT >= 33) {
-            // kept intentionally blank, app doesn't require notification permission
+            // אין צורך כרגע
         }
         val missing = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
