@@ -8,12 +8,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -33,10 +30,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var logo: ImageView
     private var logoTapCount = 0
     private var lastTapTime = 0L
+    private var firebaseTestSent = false
 
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        updateSummary()
-    }
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            updateSummary()
+        }
 
     private val balanceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -55,19 +54,33 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         logo = findViewById(R.id.logo)
 
-        findViewById<Button>(R.id.btnBalance).setOnClickListener { startActivity(Intent(this, BalanceActivity::class.java)) }
-        findViewById<Button>(R.id.btnNetwork).setOnClickListener { startActivity(Intent(this, NetworkCheckActivity::class.java)) }
-        findViewById<Button>(R.id.btnPackages).setOnClickListener { startActivity(Intent(this, PackagesActivity::class.java)) }
-        findViewById<Button>(R.id.btnSupport).setOnClickListener { startActivity(Intent(this, SupportActivity::class.java)) }
+        findViewById<Button>(R.id.btnBalance).setOnClickListener {
+            startActivity(Intent(this, BalanceActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnNetwork).setOnClickListener {
+            startActivity(Intent(this, NetworkCheckActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnPackages).setOnClickListener {
+            startActivity(Intent(this, PackagesActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnSupport).setOnClickListener {
+            startActivity(Intent(this, SupportActivity::class.java))
+        }
 
         logo.setOnClickListener { onLogoTapped() }
         askForRequiredPermissionsIfNeeded()
         updateSummary()
+
+        if (!firebaseTestSent) {
+            firebaseTestSent = true
+            FirebaseTest.sendTest()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this).registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
         updateSummary()
     }
 
@@ -77,11 +90,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSummary() {
-        val rawLine = TelephonyUtils.getLineNumber(this)
+        val savedLine = AppPrefs.getLineNumber(this)
+        val deviceLine = TelephonyUtils.getLineNumber(this)
 
-        // 🔥 פה הקסם
+        val rawLine = when {
+            !savedLine.isNullOrBlank() -> savedLine
+            deviceLine.isNotBlank() -> deviceLine
+            else -> null
+        }
+
         val line = PhoneUtils.normalizeToLocal(rawLine)
-
         tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
 
         val mb = AppPrefs.getBalanceMb(this)
@@ -109,17 +127,22 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.READ_PHONE_NUMBERS,
             Manifest.permission.CALL_PHONE
         )
+
         if (Build.VERSION.SDK_INT >= 33) {
-            // אין צורך כרגע
+            // kept intentionally blank, app doesn't require notification permission
         }
+
         val missing = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
+
         if (missing.isNotEmpty()) {
             AlertDialog.Builder(this)
                 .setTitle("נדרשות הרשאות להפעלת האפליקציה")
                 .setMessage("האפליקציה זקוקה להרשאות כדי לבדוק יתרה, לזהות מספר קו ולקבל הודעות מהמערכת. נא לאשר הכל.")
-                .setPositiveButton("הפעל את האפליקציה") { _, _ -> permissionLauncher.launch(missing.toTypedArray()) }
+                .setPositiveButton("הפעל את האפליקציה") { _, _ ->
+                    permissionLauncher.launch(missing.toTypedArray())
+                }
                 .setCancelable(false)
                 .show()
         }
