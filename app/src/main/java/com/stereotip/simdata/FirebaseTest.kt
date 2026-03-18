@@ -1,31 +1,30 @@
 package com.stereotip.simdata
 
 import android.util.Log
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 
 object FirebaseTest {
 
     fun sendTest() {
         try {
-            val db = FirebaseDatabase.getInstance().reference
+            val db = FirebaseFirestore.getInstance()
 
-            val payload = mapOf(
-                "message" to "hello from simdata",
-                "timestamp" to System.currentTimeMillis(),
-                "source" to "v1.04-stable"
+            val data = hashMapOf(
+                "test" to "ok",
+                "time" to System.currentTimeMillis()
             )
 
-            db.child("test")
-                .push()
-                .setValue(payload)
+            db.collection("test")
+                .add(data)
                 .addOnSuccessListener {
-                    Log.d("FirebaseTest", "Test data sent successfully")
+                    Log.d("FirebaseTest", "SUCCESS")
                 }
                 .addOnFailureListener { e ->
-                    Log.e("FirebaseTest", "Failed to send test data", e)
+                    Log.e("FirebaseTest", "ERROR", e)
                 }
+
         } catch (e: Exception) {
-            Log.e("FirebaseTest", "Unexpected error", e)
+            Log.e("FirebaseTest", "CRASH", e)
         }
     }
 }
