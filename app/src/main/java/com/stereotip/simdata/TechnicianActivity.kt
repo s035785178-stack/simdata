@@ -23,6 +23,9 @@ class TechnicianActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, NetworkCheckActivity::class.java))
         }
         findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener { showTechQr() }
+        findViewById<Button>(R.id.btnEditCustomer).setOnClickListener {
+            startActivity(android.content.Intent(this, CustomerDetailsActivity::class.java))
+        }
         findViewById<Button>(R.id.btnClearHistory).setOnClickListener {
             AppPrefs.clearHistory(this)
             bindInfo()
