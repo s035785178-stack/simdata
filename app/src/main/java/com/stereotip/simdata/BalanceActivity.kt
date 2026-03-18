@@ -22,6 +22,7 @@ import com.stereotip.simdata.data.BalanceResult
 import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
+import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.SmsParser
 import com.stereotip.simdata.util.TelephonyUtils
 
@@ -107,11 +108,13 @@ class BalanceActivity : AppCompatActivity() {
         val savedLine = AppPrefs.getLineNumber(this)
         val deviceLine = TelephonyUtils.getLineNumber(this)
 
-        val line = when {
+        val rawLine = when {
             !savedLine.isNullOrBlank() -> savedLine
             deviceLine.isNotBlank() -> deviceLine
             else -> "לא זוהה"
         }
+
+        val line = PhoneUtils.normalizeToLocal(rawLine)
 
         val mb = AppPrefs.getBalanceMb(this)
         val valid = AppPrefs.getValid(this) ?: "---"
@@ -237,13 +240,15 @@ class BalanceActivity : AppCompatActivity() {
 
                     val parsed = SmsParser.parse(body) ?: continue
 
-                    val finalLine = when {
+                    val finalLineRaw = when {
                         !parsed.lineNumber.isNullOrBlank() -> parsed.lineNumber
                         else -> {
                             val deviceLine = TelephonyUtils.getLineNumber(this)
                             if (deviceLine.startsWith("לא")) null else deviceLine
                         }
                     }
+
+                    val finalLine = PhoneUtils.normalizeToLocal(finalLineRaw)
 
                     val merged = BalanceResult(
                         lineNumber = finalLine,
