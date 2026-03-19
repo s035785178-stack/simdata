@@ -2,10 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_screen"
-    android:orientation="vertical"
     android:layoutDirection="rtl"
-    android:padding="10dp">
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:background="@drawable/bg_screen">
 
     <TextView
         android:layout_width="match_parent"
@@ -34,9 +34,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:alignmentMode="alignMargins"
         android:columnCount="2"
-        android:useDefaultMargins="true">
+        android:useDefaultMargins="true"
+        android:alignmentMode="alignMargins">
 
         <Button
             android:id="@+id/btnEditCustomer"
@@ -80,4 +80,30 @@
             android:text="🧹 נקה היסטוריה"
             android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:textStyle="bold"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnClearAll"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_columnWeight="1"
+            android:background="@drawable/bg_button_brand"
+            android:text="♻ אפס נתוני לקוח"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnBackTech"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_columnWeight="1"
+            android:background="@drawable/bg_button_gray"
+            android:text="⬅ חזרה"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
+    </GridLayout>
+
+</LinearLayout>
