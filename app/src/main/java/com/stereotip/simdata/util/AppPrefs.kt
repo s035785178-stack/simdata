@@ -3,7 +3,6 @@ package com.stereotip.simdata.util
 import android.content.Context
 import android.content.SharedPreferences
 import com.stereotip.simdata.data.BalanceResult
-import com.stereotip.simdata.firebase.FirebaseManager
 
 object AppPrefs {
 
@@ -14,6 +13,7 @@ object AppPrefs {
     private const val KEY_VALID = "valid"
     private const val KEY_UPDATED = "updated"
     private const val KEY_INSTALL = "install"
+    private const val KEY_HISTORY = "history"
 
     private const val KEY_CUSTOMER_NAME = "customer_name"
     private const val KEY_CUSTOMER_PHONE = "customer_phone"
@@ -21,8 +21,9 @@ object AppPrefs {
     private const val KEY_CAR_NUMBER = "car_number"
     private const val KEY_DATA_PACKAGE = "data_package"
 
-    private fun prefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private fun prefs(context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    }
 
     fun ensureInstallTimestamp(context: Context) {
         val p = prefs(context)
@@ -31,8 +32,9 @@ object AppPrefs {
         }
     }
 
-    fun getInstallTimestamp(context: Context): Long =
-        prefs(context).getLong(KEY_INSTALL, 0L)
+    fun getInstallTimestamp(context: Context): Long {
+        return prefs(context).getLong(KEY_INSTALL, 0L)
+    }
 
     fun saveBalance(context: Context, result: BalanceResult) {
         prefs(context).edit()
@@ -42,49 +44,99 @@ object AppPrefs {
             .putLong(KEY_UPDATED, result.updatedAt)
             .apply()
 
-        // 🔥 זה החיבור החשוב
-        FirebaseManager.updateCustomer(context)
+        addHistory(
+            context,
+            buildString {
+                append("זמן: ").append(Formatter.formatDateTime(result.updatedAt)).append('\n')
+                append("מספר: ").append(result.lineNumber ?: "לא זוהה").append('\n')
+                append("יתרה: ").append(result.dataMb?.let { Formatter.mbToDisplay(it) } ?: "לא זוהה").append('\n')
+                append("תוקף: ").append(result.validUntil ?: "לא זוהה")
+            }
+        )
     }
 
-    fun getLineNumber(context: Context) =
-        prefs(context).getString(KEY_LINE, null)
+    fun getLineNumber(context: Context): String? {
+        return prefs(context).getString(KEY_LINE, null)
+    }
 
-    fun getBalanceMb(context: Context) =
-        prefs(context).getInt(KEY_BALANCE_MB, -1).takeIf { it >= 0 }
+    fun setLineNumber(context: Context, value: String?) {
+        prefs(context).edit().putString(KEY_LINE, value).apply()
+    }
 
-    fun getValid(context: Context) =
-        prefs(context).getString(KEY_VALID, null)
+    fun getBalanceMb(context: Context): Int? {
+        val value = prefs(context).getInt(KEY_BALANCE_MB, -1)
+        return value.takeIf { it >= 0 }
+    }
 
-    fun getUpdated(context: Context) =
-        prefs(context).getLong(KEY_UPDATED, 0L)
+    fun getValid(context: Context): String? {
+        return prefs(context).getString(KEY_VALID, null)
+    }
 
-    fun setCustomerName(context: Context, value: String) =
+    fun getUpdated(context: Context): Long {
+        return prefs(context).getLong(KEY_UPDATED, 0L)
+    }
+
+    fun getHistory(context: Context): List<String> {
+        val raw = prefs(context).getString(KEY_HISTORY, "") ?: ""
+        if (raw.isBlank()) return emptyList()
+        return raw.split("\n---\n").filter { it.isNotBlank() }
+    }
+
+    fun addHistory(context: Context, entry: String) {
+        val current = getHistory(context).toMutableList()
+        current.add(0, entry)
+        val trimmed = current.take(50)
+        prefs(context).edit()
+            .putString(KEY_HISTORY, trimmed.joinToString("\n---\n"))
+            .apply()
+    }
+
+    fun clearHistory(context: Context) {
+        prefs(context).edit().remove(KEY_HISTORY).apply()
+    }
+
+    fun clearAll(context: Context) {
+        prefs(context).edit().clear().apply()
+        ensureInstallTimestamp(context)
+    }
+
+    fun setCustomerName(context: Context, value: String) {
         prefs(context).edit().putString(KEY_CUSTOMER_NAME, value).apply()
+    }
 
-    fun getCustomerName(context: Context) =
-        prefs(context).getString(KEY_CUSTOMER_NAME, "") ?: ""
+    fun getCustomerName(context: Context): String {
+        return prefs(context).getString(KEY_CUSTOMER_NAME, "") ?: ""
+    }
 
-    fun setCustomerPhone(context: Context, value: String) =
+    fun setCustomerPhone(context: Context, value: String) {
         prefs(context).edit().putString(KEY_CUSTOMER_PHONE, value).apply()
+    }
 
-    fun getCustomerPhone(context: Context) =
-        prefs(context).getString(KEY_CUSTOMER_PHONE, "") ?: ""
+    fun getCustomerPhone(context: Context): String {
+        return prefs(context).getString(KEY_CUSTOMER_PHONE, "") ?: ""
+    }
 
-    fun setCarModel(context: Context, value: String) =
+    fun setCarModel(context: Context, value: String) {
         prefs(context).edit().putString(KEY_CAR_MODEL, value).apply()
+    }
 
-    fun getCarModel(context: Context) =
-        prefs(context).getString(KEY_CAR_MODEL, "") ?: ""
+    fun getCarModel(context: Context): String {
+        return prefs(context).getString(KEY_CAR_MODEL, "") ?: ""
+    }
 
-    fun setCarNumber(context: Context, value: String) =
+    fun setCarNumber(context: Context, value: String) {
         prefs(context).edit().putString(KEY_CAR_NUMBER, value).apply()
+    }
 
-    fun getCarNumber(context: Context) =
-        prefs(context).getString(KEY_CAR_NUMBER, "") ?: ""
+    fun getCarNumber(context: Context): String {
+        return prefs(context).getString(KEY_CAR_NUMBER, "") ?: ""
+    }
 
-    fun setDataPackage(context: Context, value: String) =
+    fun setDataPackage(context: Context, value: String) {
         prefs(context).edit().putString(KEY_DATA_PACKAGE, value).apply()
+    }
 
-    fun getDataPackage(context: Context) =
-        prefs(context).getString(KEY_DATA_PACKAGE, "לא ידוע / אין") ?: "לא ידוע / אין"
+    fun getDataPackage(context: Context): String {
+        return prefs(context).getString(KEY_DATA_PACKAGE, "לא ידוע / אין") ?: "לא ידוע / אין"
+    }
 }
