@@ -8,7 +8,6 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.FirebaseCustomerSync
 import com.stereotip.simdata.util.PhoneUtils
 
 class CustomerDetailsActivity : AppCompatActivity() {
@@ -22,6 +21,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
     private lateinit var btnBack: Button
 
     private val packages = listOf(
+        "לא ידוע / אין",
         "100GB לשנתיים",
         "36GB ל-60 חודשים",
         "4GB לחודשיים"
@@ -47,6 +47,8 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener {
             saveCustomerData()
+            Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
+            finish()
         }
 
         btnBack.setOnClickListener {
@@ -56,15 +58,13 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
     private fun loadExistingData() {
         etName.setText(AppPrefs.getCustomerName(this))
-        etPhone.setText(PhoneUtils.normalizeToLocal(AppPrefs.getCustomerPhone(this)))
+        etPhone.setText(normalizeDisplayPhone(AppPrefs.getCustomerPhone(this)))
         etCarModel.setText(AppPrefs.getCarModel(this))
         etCarNumber.setText(AppPrefs.getCarNumber(this))
 
         val savedPackage = AppPrefs.getDataPackage(this)
-        val packageIndex = packages.indexOf(savedPackage)
-        if (packageIndex >= 0) {
-            spinnerPackage.setSelection(packageIndex)
-        }
+        val index = packages.indexOf(savedPackage).takeIf { it >= 0 } ?: 0
+        spinnerPackage.setSelection(index)
     }
 
     private fun saveCustomerData() {
@@ -73,20 +73,10 @@ class CustomerDetailsActivity : AppCompatActivity() {
         AppPrefs.setCarModel(this, etCarModel.text.toString().trim())
         AppPrefs.setCarNumber(this, etCarNumber.text.toString().trim())
         AppPrefs.setDataPackage(this, spinnerPackage.selectedItem.toString())
+    }
 
-        FirebaseCustomerSync.saveCustomer(this) { success, error ->
-            runOnUiThread {
-                if (success) {
-                    Toast.makeText(this, "פרטי הלקוח נשמרו ונשלחו ל-Firebase", Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "נשמר מקומית, אך שליחה ל-Firebase נכשלה${if (!error.isNullOrBlank()) ": $error" else ""}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
+    private fun normalizeDisplayPhone(phone: String): String {
+        val normalized = PhoneUtils.normalizeToLocal(phone)
+        return if (normalized == "לא זוהה") "" else normalized
     }
 }
