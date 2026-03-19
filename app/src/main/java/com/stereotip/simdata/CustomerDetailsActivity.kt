@@ -8,6 +8,8 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
+import com.stereotip.simdata.util.FirebaseCustomerSync
+import com.stereotip.simdata.util.PhoneUtils
 
 class CustomerDetailsActivity : AppCompatActivity() {
 
@@ -45,8 +47,6 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener {
             saveCustomerData()
-            Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
-            finish()
         }
 
         btnBack.setOnClickListener {
@@ -56,7 +56,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
     private fun loadExistingData() {
         etName.setText(AppPrefs.getCustomerName(this))
-        etPhone.setText(AppPrefs.getCustomerPhone(this))
+        etPhone.setText(PhoneUtils.normalizeToLocal(AppPrefs.getCustomerPhone(this)))
         etCarModel.setText(AppPrefs.getCarModel(this))
         etCarNumber.setText(AppPrefs.getCarNumber(this))
 
@@ -73,5 +73,20 @@ class CustomerDetailsActivity : AppCompatActivity() {
         AppPrefs.setCarModel(this, etCarModel.text.toString().trim())
         AppPrefs.setCarNumber(this, etCarNumber.text.toString().trim())
         AppPrefs.setDataPackage(this, spinnerPackage.selectedItem.toString())
+
+        FirebaseCustomerSync.saveCustomer(this) { success, error ->
+            runOnUiThread {
+                if (success) {
+                    Toast.makeText(this, "פרטי הלקוח נשמרו ונשלחו ל-Firebase", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "נשמר מקומית, אך שליחה ל-Firebase נכשלה${if (!error.isNullOrBlank()) ": $error" else ""}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 }
