@@ -11,41 +11,37 @@ object FirebaseManager {
     private val db = FirebaseFirestore.getInstance()
 
     fun updateCustomer(context: Context) {
-        try {
-            val phone = AppPrefs.getCustomerPhone(context)
 
-            if (phone.isBlank()) {
-                Log.e("FIREBASE", "אין טלפון לקוח - לא שומר")
-                return
-            }
+        val phone = AppPrefs.getCustomerPhone(context)
 
-            val data = hashMapOf(
-                "customerName" to AppPrefs.getCustomerName(context),
-                "customerPhone" to phone,
-                "carModel" to AppPrefs.getCarModel(context),
-                "carNumber" to AppPrefs.getCarNumber(context),
-                "dataPackage" to AppPrefs.getDataPackage(context),
-
-                "lineNumber" to AppPrefs.getLineNumber(context),
-                "balanceMb" to AppPrefs.getBalanceMb(context),
-                "validUntil" to AppPrefs.getValid(context),
-
-                "lastUpdate" to AppPrefs.getUpdated(context),
-                "lastUpdateFormatted" to Formatter.formatDateTime(AppPrefs.getUpdated(context))
-            )
-
-            db.collection("customers")
-                .document(phone) // 👈 מזהה ייחודי
-                .set(data)
-                .addOnSuccessListener {
-                    Log.d("FIREBASE", "עודכן בהצלחה")
-                }
-                .addOnFailureListener {
-                    Log.e("FIREBASE", "שגיאה", it)
-                }
-
-        } catch (e: Exception) {
-            Log.e("FIREBASE", "קריסה", e)
+        if (phone.isBlank()) {
+            Log.e("FIREBASE", "אין טלפון - לא שולח")
+            return
         }
+
+        val data = hashMapOf(
+            "customerName" to AppPrefs.getCustomerName(context),
+            "customerPhone" to phone,
+            "carModel" to AppPrefs.getCarModel(context),
+            "carNumber" to AppPrefs.getCarNumber(context),
+            "dataPackage" to AppPrefs.getDataPackage(context),
+
+            "lineNumber" to AppPrefs.getLineNumber(context),
+            "balanceMb" to AppPrefs.getBalanceMb(context),
+            "validUntil" to AppPrefs.getValid(context),
+
+            "lastUpdate" to AppPrefs.getUpdated(context),
+            "lastUpdateFormatted" to Formatter.formatDateTime(AppPrefs.getUpdated(context))
+        )
+
+        db.collection("customers")
+            .document(phone)
+            .set(data)
+            .addOnSuccessListener {
+                Log.d("FIREBASE", "עודכן ✔")
+            }
+            .addOnFailureListener {
+                Log.e("FIREBASE", "שגיאה ❌", it)
+            }
     }
 }
