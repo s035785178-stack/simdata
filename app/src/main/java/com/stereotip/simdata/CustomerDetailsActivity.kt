@@ -1,10 +1,14 @@
 package com.stereotip.simdata
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
@@ -39,10 +43,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
         btnSave = findViewById(R.id.btnSaveCustomer)
         btnBack = findViewById(R.id.btnBackCustomer)
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerPackage.adapter = adapter
-
+        setupPackageSpinner()
         loadExistingData()
 
         btnSave.setOnClickListener {
@@ -54,6 +55,36 @@ class CustomerDetailsActivity : AppCompatActivity() {
         btnBack.setOnClickListener {
             finish()
         }
+    }
+
+    private fun setupPackageSpinner() {
+        val adapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            packages
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent) as TextView
+                view.setTextColor(Color.WHITE)
+                view.textAlignment = View.TEXT_ALIGNMENT_VIEW_END
+                view.textDirection = View.TEXT_DIRECTION_RTL
+                view.text = packages[position]
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent) as TextView
+                view.setTextColor(Color.WHITE)
+                view.textAlignment = View.TEXT_ALIGNMENT_VIEW_END
+                view.textDirection = View.TEXT_DIRECTION_RTL
+                view.text = packages[position]
+                view.setPadding(24, 24, 24, 24)
+                return view
+            }
+        }
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPackage.adapter = adapter
     }
 
     private fun loadExistingData() {
