@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
+import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.QrUtils
 import com.stereotip.simdata.util.TelephonyUtils
 import java.net.URLEncoder
@@ -23,7 +24,9 @@ class TechnicianActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
             startActivity(Intent(this, NetworkCheckActivity::class.java))
         }
-        findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener { showTechQr() }
+        findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener {
+            showTechQr()
+        }
         findViewById<Button>(R.id.btnEditCustomer).setOnClickListener {
             startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
@@ -37,8 +40,15 @@ class TechnicianActivity : AppCompatActivity() {
             bindInfo()
             Toast.makeText(this, "נתוני הלקוח אופסו", Toast.LENGTH_SHORT).show()
         }
-        findViewById<Button>(R.id.btnBackTech).setOnClickListener { finish() }
+        findViewById<Button>(R.id.btnBackTech).setOnClickListener {
+            finish()
+        }
 
+        bindInfo()
+    }
+
+    override fun onResume() {
+        super.onResume()
         bindInfo()
     }
 
@@ -47,14 +57,17 @@ class TechnicianActivity : AppCompatActivity() {
         val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
         val history = AppPrefs.getHistory(this).take(5).joinToString("\n\n")
 
+        val normalizedLine = PhoneUtils.normalizeToLocal(network.lineNumber)
+        val normalizedCustomerPhone = PhoneUtils.normalizeToLocal(AppPrefs.getCustomerPhone(this))
+
         tvInfo.text = buildString {
-            appendLine("📱 מספר קו: ${network.lineNumber}")
+            appendLine("📱 מספר קו: ${if (normalizedLine == "לא זוהה") "---" else normalizedLine}")
             appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
             appendLine("🧩 גרסת אפליקציה: 1.0")
             appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
             appendLine()
             appendLine("👤 שם לקוח: ${AppPrefs.getCustomerName(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("☎ טלפון: ${AppPrefs.getCustomerPhone(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("☎ טלפון: ${if (normalizedCustomerPhone == "לא זוהה") "---" else normalizedCustomerPhone}")
             appendLine("🚘 דגם רכב: ${AppPrefs.getCarModel(this@TechnicianActivity).ifBlank { "---" }}")
             appendLine("🔢 מספר רכב: ${AppPrefs.getCarNumber(this@TechnicianActivity).ifBlank { "---" }}")
             appendLine("📦 חבילה: ${AppPrefs.getDataPackage(this@TechnicianActivity).ifBlank { "---" }}")
@@ -78,7 +91,8 @@ class TechnicianActivity : AppCompatActivity() {
         val text = tvInfo.text.toString()
         val wa = "https://wa.me/972559911336?text=${URLEncoder.encode("דוח אבחון StereoTip\n\n$text", "UTF-8")}"
         val bitmap = QrUtils.createQrBitmap(wa)
-        QrDialogFragment.newInstance(bitmap, "סרקו לשליחת דוח אבחון")
+        QrDialogFragment
+            .newInstance(bitmap, "סרקו לשליחת דוח אבחון")
             .show(supportFragmentManager, "tech_qr")
     }
 }
