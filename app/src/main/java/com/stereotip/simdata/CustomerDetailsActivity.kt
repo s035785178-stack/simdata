@@ -1,113 +1,49 @@
 package com.stereotip.simdata
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.PhoneUtils
 
 class CustomerDetailsActivity : AppCompatActivity() {
-
-    private lateinit var etName: EditText
-    private lateinit var etPhone: EditText
-    private lateinit var etCarModel: EditText
-    private lateinit var etCarNumber: EditText
-    private lateinit var spinnerPackage: Spinner
-    private lateinit var btnSave: Button
-    private lateinit var btnBack: Button
-
-    private val packages = listOf(
-        "לא ידוע / אין",
-        "100GB לשנתיים",
-        "36GB ל-60 חודשים",
-        "4GB לחודשיים"
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_customer_details)
 
-        etName = findViewById(R.id.etName)
-        etPhone = findViewById(R.id.etPhone)
-        etCarModel = findViewById(R.id.etCarModel)
-        etCarNumber = findViewById(R.id.etCarNumber)
-        spinnerPackage = findViewById(R.id.spinnerPackage)
-        btnSave = findViewById(R.id.btnSaveCustomer)
-        btnBack = findViewById(R.id.btnBackCustomer)
+        val spinner = findViewById<Spinner>(R.id.spinnerPackage)
 
-        setupPackageSpinner()
-        loadExistingData()
+        val packages = listOf(
+            "לא ידוע / אין",
+            "חבילה 10GB",
+            "חבילה 50GB",
+            "חבילה ללא הגבלה"
+        )
 
-        btnSave.setOnClickListener {
-            saveCustomerData()
-            Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-
-        btnBack.setOnClickListener {
-            finish()
-        }
-    }
-
-    private fun setupPackageSpinner() {
         val adapter = object : ArrayAdapter<String>(
             this,
             android.R.layout.simple_spinner_item,
             packages
         ) {
+
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getView(position, convertView, parent) as TextView
-                view.setTextColor(Color.WHITE)
+                view.setTextColor(android.graphics.Color.WHITE)
                 view.textAlignment = View.TEXT_ALIGNMENT_VIEW_END
-                view.textDirection = View.TEXT_DIRECTION_RTL
-                view.text = packages[position]
                 return view
             }
 
             override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getDropDownView(position, convertView, parent) as TextView
-                view.setTextColor(Color.WHITE)
+                view.setTextColor(android.graphics.Color.WHITE)
+                view.setBackgroundColor(android.graphics.Color.BLACK)
                 view.textAlignment = View.TEXT_ALIGNMENT_VIEW_END
-                view.textDirection = View.TEXT_DIRECTION_RTL
-                view.text = packages[position]
-                view.setPadding(24, 24, 24, 24)
                 return view
             }
         }
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerPackage.adapter = adapter
-    }
-
-    private fun loadExistingData() {
-        etName.setText(AppPrefs.getCustomerName(this))
-        etPhone.setText(normalizeDisplayPhone(AppPrefs.getCustomerPhone(this)))
-        etCarModel.setText(AppPrefs.getCarModel(this))
-        etCarNumber.setText(AppPrefs.getCarNumber(this))
-
-        val savedPackage = AppPrefs.getDataPackage(this)
-        val index = packages.indexOf(savedPackage).takeIf { it >= 0 } ?: 0
-        spinnerPackage.setSelection(index)
-    }
-
-    private fun saveCustomerData() {
-        AppPrefs.setCustomerName(this, etName.text.toString().trim())
-        AppPrefs.setCustomerPhone(this, etPhone.text.toString().trim())
-        AppPrefs.setCarModel(this, etCarModel.text.toString().trim())
-        AppPrefs.setCarNumber(this, etCarNumber.text.toString().trim())
-        AppPrefs.setDataPackage(this, spinnerPackage.selectedItem.toString())
-    }
-
-    private fun normalizeDisplayPhone(phone: String): String {
-        val normalized = PhoneUtils.normalizeToLocal(phone)
-        return if (normalized == "לא זוהה") "" else normalized
+        spinner.adapter = adapter
+        spinner.setSelection(0)
     }
 }
