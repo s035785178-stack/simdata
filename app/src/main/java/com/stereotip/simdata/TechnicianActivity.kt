@@ -24,22 +24,27 @@ class TechnicianActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
             startActivity(Intent(this, NetworkCheckActivity::class.java))
         }
+
         findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener {
             showTechQr()
         }
+
         findViewById<Button>(R.id.btnEditCustomer).setOnClickListener {
             startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
+
         findViewById<Button>(R.id.btnClearHistory).setOnClickListener {
             AppPrefs.clearHistory(this)
             bindInfo()
             Toast.makeText(this, "ההיסטוריה נוקתה", Toast.LENGTH_SHORT).show()
         }
+
         findViewById<Button>(R.id.btnClearAll).setOnClickListener {
             AppPrefs.clearAll(this)
             bindInfo()
             Toast.makeText(this, "נתוני הלקוח אופסו", Toast.LENGTH_SHORT).show()
         }
+
         findViewById<Button>(R.id.btnBackTech).setOnClickListener {
             finish()
         }
@@ -55,22 +60,22 @@ class TechnicianActivity : AppCompatActivity() {
     private fun bindInfo() {
         val network = TelephonyUtils.checkNetwork(this)
         val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
-        val history = AppPrefs.getHistory(this).take(5).joinToString("\n\n")
+        val history = AppPrefs.getHistory(this).take(4).joinToString("\n\n")
 
-        val normalizedLine = PhoneUtils.normalizeToLocal(network.lineNumber)
-        val normalizedCustomerPhone = PhoneUtils.normalizeToLocal(AppPrefs.getCustomerPhone(this))
+        val normalizedLine = normalizeDisplayPhone(network.lineNumber)
+        val normalizedCustomerPhone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
 
         tvInfo.text = buildString {
-            appendLine("📱 מספר קו: ${if (normalizedLine == "לא זוהה") "---" else normalizedLine}")
+            appendLine("📱 מספר קו: ${if (normalizedLine.isBlank()) "---" else normalizedLine}")
             appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
             appendLine("🧩 גרסת אפליקציה: 1.0")
             appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
             appendLine()
             appendLine("👤 שם לקוח: ${AppPrefs.getCustomerName(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("☎ טלפון: ${if (normalizedCustomerPhone == "לא זוהה") "---" else normalizedCustomerPhone}")
+            appendLine("☎ טלפון: ${if (normalizedCustomerPhone.isBlank()) "---" else normalizedCustomerPhone}")
             appendLine("🚘 דגם רכב: ${AppPrefs.getCarModel(this@TechnicianActivity).ifBlank { "---" }}")
             appendLine("🔢 מספר רכב: ${AppPrefs.getCarNumber(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("📦 חבילה: ${AppPrefs.getDataPackage(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("📦 חבילה: ${AppPrefs.getDataPackage(this@TechnicianActivity).ifBlank { "לא ידוע / אין" }}")
             appendLine()
             appendLine("📊 יתרה אחרונה: $balance")
             appendLine("📅 תוקף אחרון: ${AppPrefs.getValid(this@TechnicianActivity) ?: "---"}")
@@ -85,6 +90,11 @@ class TechnicianActivity : AppCompatActivity() {
             appendLine("היסטוריית בדיקות אחרונות:")
             appendLine(if (history.isBlank()) "אין היסטוריה" else history)
         }
+    }
+
+    private fun normalizeDisplayPhone(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return if (normalized == "לא זוהה") "" else normalized
     }
 
     private fun showTechQr() {
