@@ -83,8 +83,6 @@ class TechnicianActivity : AppCompatActivity() {
             appendLine()
             appendLine("📶 SIM: ${network.simStatus}")
             appendLine("📡 רשת: ${network.networkType}")
-            appendLine("🌍 נדידה: ${network.roamingStatus}")
-            appendLine("⚙ APN: ${network.apnStatus}")
             appendLine("🌐 אינטרנט: ${network.internetStatus}")
             appendLine()
             appendLine("היסטוריית בדיקות אחרונות:")
