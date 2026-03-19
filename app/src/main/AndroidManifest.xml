@@ -30,6 +30,10 @@
         </receiver>
 
         <activity
+            android:name=".CustomerDetailsActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+        <activity
             android:name=".TechnicianActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
