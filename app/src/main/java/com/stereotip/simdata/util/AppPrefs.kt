@@ -41,26 +41,24 @@ object AppPrefs {
             .putString(KEY_LINE, result.lineNumber)
             .putInt(KEY_BALANCE_MB, result.dataMb ?: -1)
             .putString(KEY_VALID, result.validUntil)
-            .putLong(KEY_UPDATED, result.updatedAt)
+            .putLong(KEY_UPDATED, System.currentTimeMillis())
             .apply()
 
         addHistory(
             context,
             buildString {
-                append("זמן: ").append(Formatter.formatDateTime(result.updatedAt)).append('\n')
                 append("מספר: ").append(result.lineNumber ?: "לא זוהה").append('\n')
-                append("יתרה: ").append(result.dataMb?.let { Formatter.mbToDisplay(it) } ?: "לא זוהה").append('\n')
+                append("יתרה: ").append(result.dataMb?.toString() ?: "לא זוהה").append('\n')
                 append("תוקף: ").append(result.validUntil ?: "לא זוהה")
             }
         )
+
+        // 🔥 זה החיבור ל-Firebase
+        FirebaseCustomerSync.sync(context)
     }
 
     fun getLineNumber(context: Context): String? {
         return prefs(context).getString(KEY_LINE, null)
-    }
-
-    fun setLineNumber(context: Context, value: String?) {
-        prefs(context).edit().putString(KEY_LINE, value).apply()
     }
 
     fun getBalanceMb(context: Context): Int? {
