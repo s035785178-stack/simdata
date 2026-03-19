@@ -60,7 +60,6 @@ class TechnicianActivity : AppCompatActivity() {
     private fun bindInfo() {
         val network = TelephonyUtils.checkNetwork(this)
         val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
-        val history = AppPrefs.getHistory(this).take(4).joinToString("\n\n")
 
         val normalizedLine = normalizeDisplayPhone(network.lineNumber)
         val normalizedCustomerPhone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
@@ -84,9 +83,6 @@ class TechnicianActivity : AppCompatActivity() {
             appendLine("📶 SIM: ${network.simStatus}")
             appendLine("📡 רשת: ${network.networkType}")
             appendLine("🌐 אינטרנט: ${network.internetStatus}")
-            appendLine()
-            appendLine("היסטוריית בדיקות אחרונות:")
-            appendLine(if (history.isBlank()) "אין היסטוריה" else history)
         }
     }
 
