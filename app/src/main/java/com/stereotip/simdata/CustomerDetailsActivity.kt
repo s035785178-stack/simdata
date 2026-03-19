@@ -1,7 +1,11 @@
 package com.stereotip.simdata
 
 import android.os.Bundle
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.stereotip.simdata.util.AppPrefs
 
@@ -13,6 +17,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
     private lateinit var etCarNumber: EditText
     private lateinit var spinnerPackage: Spinner
     private lateinit var btnSave: Button
+    private lateinit var btnBack: Button
 
     private val packages = listOf(
         "100GB לשנתיים",
@@ -29,37 +34,44 @@ class CustomerDetailsActivity : AppCompatActivity() {
         etCarModel = findViewById(R.id.etCarModel)
         etCarNumber = findViewById(R.id.etCarNumber)
         spinnerPackage = findViewById(R.id.spinnerPackage)
-        btnSave = findViewById(R.id.btnSave)
+        btnSave = findViewById(R.id.btnSaveCustomer)
+        btnBack = findViewById(R.id.btnBackCustomer)
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
 
-        loadData()
+        loadExistingData()
 
         btnSave.setOnClickListener {
-            saveData()
-            Toast.makeText(this, "נשמר בהצלחה", Toast.LENGTH_SHORT).show()
+            saveCustomerData()
+            Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+
+        btnBack.setOnClickListener {
             finish()
         }
     }
 
-    private fun loadData() {
-        etName.setText(AppPrefs.get(this, "customer_name"))
-        etPhone.setText(AppPrefs.get(this, "customer_phone"))
-        etCarModel.setText(AppPrefs.get(this, "car_model"))
-        etCarNumber.setText(AppPrefs.get(this, "car_number"))
+    private fun loadExistingData() {
+        etName.setText(AppPrefs.getCustomerName(this))
+        etPhone.setText(AppPrefs.getCustomerPhone(this))
+        etCarModel.setText(AppPrefs.getCarModel(this))
+        etCarNumber.setText(AppPrefs.getCarNumber(this))
 
-        val savedPackage = AppPrefs.get(this, "data_package")
-        val index = packages.indexOf(savedPackage)
-        if (index >= 0) spinnerPackage.setSelection(index)
+        val savedPackage = AppPrefs.getDataPackage(this)
+        val packageIndex = packages.indexOf(savedPackage)
+        if (packageIndex >= 0) {
+            spinnerPackage.setSelection(packageIndex)
+        }
     }
 
-    private fun saveData() {
-        AppPrefs.set(this, "customer_name", etName.text.toString())
-        AppPrefs.set(this, "customer_phone", etPhone.text.toString())
-        AppPrefs.set(this, "car_model", etCarModel.text.toString())
-        AppPrefs.set(this, "car_number", etCarNumber.text.toString())
-        AppPrefs.set(this, "data_package", spinnerPackage.selectedItem.toString())
+    private fun saveCustomerData() {
+        AppPrefs.setCustomerName(this, etName.text.toString().trim())
+        AppPrefs.setCustomerPhone(this, etPhone.text.toString().trim())
+        AppPrefs.setCarModel(this, etCarModel.text.toString().trim())
+        AppPrefs.setCarNumber(this, etCarNumber.text.toString().trim())
+        AppPrefs.setDataPackage(this, spinnerPackage.selectedItem.toString())
     }
 }
