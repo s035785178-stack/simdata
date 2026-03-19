@@ -14,7 +14,6 @@ object AppPrefs {
     private const val KEY_INSTALL = "install"
     private const val KEY_HISTORY = "history"
 
-    // פרטי לקוח
     private const val KEY_CUSTOMER_NAME = "customer_name"
     private const val KEY_CUSTOMER_PHONE = "customer_phone"
     private const val KEY_CAR_MODEL = "car_model"
@@ -87,10 +86,6 @@ object AppPrefs {
         prefs(context).edit().remove(KEY_HISTORY).apply()
     }
 
-    // ---------------------------
-    // פרטי לקוח
-    // ---------------------------
-
     fun setCustomerName(context: Context, value: String) {
         prefs(context).edit().putString(KEY_CUSTOMER_NAME, value).apply()
     }
@@ -124,5 +119,5 @@ object AppPrefs {
     }
 
     fun getDataPackage(context: Context): String =
-        prefs(context).getString(KEY_DATA_PACKAGE, "") ?: ""
+        prefs(context).getString(KEY_DATA_PACKAGE, "לא ידוע / אין") ?: "לא ידוע / אין"
 }
