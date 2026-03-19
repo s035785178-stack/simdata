@@ -1,5 +1,6 @@
 package com.stereotip.simdata
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -20,11 +21,11 @@ class TechnicianActivity : AppCompatActivity() {
         tvInfo = findViewById(R.id.tvTechInfo)
 
         findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
-            startActivity(android.content.Intent(this, NetworkCheckActivity::class.java))
+            startActivity(Intent(this, NetworkCheckActivity::class.java))
         }
         findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener { showTechQr() }
         findViewById<Button>(R.id.btnEditCustomer).setOnClickListener {
-            startActivity(android.content.Intent(this, CustomerDetailsActivity::class.java))
+            startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
         findViewById<Button>(R.id.btnClearHistory).setOnClickListener {
             AppPrefs.clearHistory(this)
@@ -45,11 +46,18 @@ class TechnicianActivity : AppCompatActivity() {
         val network = TelephonyUtils.checkNetwork(this)
         val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
         val history = AppPrefs.getHistory(this).take(5).joinToString("\n\n")
+
         tvInfo.text = buildString {
             appendLine("📱 מספר קו: ${network.lineNumber}")
             appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
             appendLine("🧩 גרסת אפליקציה: 1.0")
             appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
+            appendLine()
+            appendLine("👤 שם לקוח: ${AppPrefs.getCustomerName(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("☎ טלפון: ${AppPrefs.getCustomerPhone(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("🚘 דגם רכב: ${AppPrefs.getCarModel(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("🔢 מספר רכב: ${AppPrefs.getCarNumber(this@TechnicianActivity).ifBlank { "---" }}")
+            appendLine("📦 חבילה: ${AppPrefs.getDataPackage(this@TechnicianActivity).ifBlank { "---" }}")
             appendLine()
             appendLine("📊 יתרה אחרונה: $balance")
             appendLine("📅 תוקף אחרון: ${AppPrefs.getValid(this@TechnicianActivity) ?: "---"}")
@@ -70,6 +78,7 @@ class TechnicianActivity : AppCompatActivity() {
         val text = tvInfo.text.toString()
         val wa = "https://wa.me/972559911336?text=${URLEncoder.encode("דוח אבחון StereoTip\n\n$text", "UTF-8")}"
         val bitmap = QrUtils.createQrBitmap(wa)
-        QrDialogFragment.newInstance(bitmap, "סרקו לשליחת דוח אבחון").show(supportFragmentManager, "tech_qr")
+        QrDialogFragment.newInstance(bitmap, "סרקו לשליחת דוח אבחון")
+            .show(supportFragmentManager, "tech_qr")
     }
 }
