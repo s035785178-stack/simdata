@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/bg_screen"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:layoutDirection="rtl">
 
     <TextView
         android:layout_width="match_parent"
@@ -12,7 +13,8 @@
         android:text="⚙ מצב טכנאי"
         android:textColor="@color/text_primary"
         android:textSize="20sp"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
 
     <TextView
         android:id="@+id/tvTechInfo"
@@ -20,69 +22,92 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@drawable/bg_card"
-        android:layout_marginTop="10dp"
         android:padding="10dp"
-        android:textColor="@color/text_primary"/>
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textAlignment="viewStart" />
 
-    <!-- כפתורים -->
-    <LinearLayout
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginTop="8dp"
+        android:columnCount="3"
+        android:rowCount="2"
+        android:useDefaultMargins="true"
+        android:alignmentMode="alignMargins">
 
         <Button
             android:id="@+id/btnEditCustomer"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="👤 עריכת לקוח"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_green"
-            android:textColor="@color/text_primary"/>
+            android:text="👤 עריכת לקוח"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnTechNetwork"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="📡 בדיקת רשת"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_blue"
+            android:text="📡 בדיקת רשת"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="6dp"/>
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnTechSupportQr"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="📤 שליחת נתונים"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_orange"
+            android:text="📤 שליחת נתונים"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="6dp"/>
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnClearHistory"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="🧹 נקה היסטוריה"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_gray"
+            android:text="🧹 היסטוריה"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="6dp"/>
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnClearAll"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="♻ אפס נתונים"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_brand"
+            android:text="♻ איפוס"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="6dp"/>
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnBackTech"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="⬅ חזרה"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_columnWeight="1"
             android:background="@drawable/bg_button_gray"
+            android:text="⬅ חזרה"
+            android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="6dp"/>
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-    </LinearLayout>
+    </GridLayout>
 
 </LinearLayout>
