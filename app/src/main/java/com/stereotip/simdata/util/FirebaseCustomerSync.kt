@@ -1,50 +1,56 @@
 package com.stereotip.simdata.util
 
 import android.content.Context
+import android.os.Build
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 object FirebaseCustomerSync {
 
     fun sync(context: Context) {
         val db = FirebaseFirestore.getInstance()
 
-        val lineNumber = PhoneUtils.normalizeToLocal(TelephonyUtils.getLineNumber(context))
-            .let {
-                if (it == "לא זוהה" || it == "לא זוהה מספר" || it == "לא אושרו הרשאות") "" else it
-            }
+        val lineNumber = normalizeLine(
+            TelephonyUtils.getLineNumber(context)
+        )
 
         if (lineNumber.isBlank()) return
 
         val now = System.currentTimeMillis()
 
-        val balanceMb = AppPrefs.getBalanceMb(context)
-        val validUntil = AppPrefs.getValid(context).orEmpty()
-
         val data = hashMapOf(
             "lineNumber" to lineNumber,
 
-            // נתונים דינמיים שהלקוח באמת יודע
-            "balanceMb" to balanceMb,
-            "currentBalanceMb" to balanceMb,
-            "validUntil" to validUntil,
+            // נתונים דינמיים שהאפליקציה באמת יודעת
+            "balanceMb" to AppPrefs.getBalanceMb(context),
+            "currentBalanceMb" to AppPrefs.getBalanceMb(context),
+            "validUntil" to AppPrefs.getValid(context),
             "lastUpdate" to now,
             "lastBalanceCheck" to now,
 
             // מידע טכני
-            "deviceName" to "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim()
+            "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim()
         )
 
         val docRef = db.collection("customers").document(lineNumber)
 
-        docRef.set(data, com.google.firebase.firestore.SetOptions.merge())
+        docRef.set(data, SetOptions.merge())
             .addOnSuccessListener {
                 val history = hashMapOf(
                     "checkedAt" to now,
-                    "balanceMb" to balanceMb,
+                    "balanceMb" to AppPrefs.getBalanceMb(context),
                     "lineNumber" to lineNumber,
-                    "validUntil" to validUntil
+                    "validUntil" to AppPrefs.getValid(context).orEmpty()
                 )
                 docRef.collection("balance_checks").add(history)
             }
+    }
+
+    private fun normalizeLine(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> normalized
+        }
     }
 }
