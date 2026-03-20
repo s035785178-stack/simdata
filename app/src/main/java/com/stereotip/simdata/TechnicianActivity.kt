@@ -1,102 +1,88 @@
 package com.stereotip.simdata
 
-import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FirebaseFirestore
 import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.Formatter
-import com.stereotip.simdata.util.PhoneUtils
-import com.stereotip.simdata.util.QrUtils
-import com.stereotip.simdata.util.TelephonyUtils
-import java.net.URLEncoder
 
 class TechnicianActivity : AppCompatActivity() {
-    private lateinit var tvInfo: TextView
+
+    private lateinit var tvCustomerName: TextView
+    private lateinit var tvCustomerPhone: TextView
+    private lateinit var tvCarModel: TextView
+    private lateinit var tvCarNumber: TextView
+    private lateinit var tvPackage: TextView
+    private lateinit var tvBalance: TextView
+    private lateinit var tvValidUntil: TextView
+    private lateinit var tvLastCheck: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_technician)
-        tvInfo = findViewById(R.id.tvTechInfo)
 
-        findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
-            startActivity(Intent(this, NetworkCheckActivity::class.java))
-        }
+        tvCustomerName = findViewById(R.id.tvCustomerName)
+        tvCustomerPhone = findViewById(R.id.tvCustomerPhone)
+        tvCarModel = findViewById(R.id.tvCarModel)
+        tvCarNumber = findViewById(R.id.tvCarNumber)
+        tvPackage = findViewById(R.id.tvPackage)
+        tvBalance = findViewById(R.id.tvBalance)
+        tvValidUntil = findViewById(R.id.tvValidUntil)
+        tvLastCheck = findViewById(R.id.tvLastCheck)
 
-        findViewById<Button>(R.id.btnTechSupportQr).setOnClickListener {
-            showTechQr()
-        }
-
-        findViewById<Button>(R.id.btnEditCustomer).setOnClickListener {
-            startActivity(Intent(this, CustomerDetailsActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnClearHistory).setOnClickListener {
-            AppPrefs.clearHistory(this)
-            bindInfo()
-            Toast.makeText(this, "ההיסטוריה נוקתה", Toast.LENGTH_SHORT).show()
-        }
-
-        findViewById<Button>(R.id.btnClearAll).setOnClickListener {
-            AppPrefs.clearAll(this)
-            bindInfo()
-            Toast.makeText(this, "נתוני הלקוח אופסו", Toast.LENGTH_SHORT).show()
-        }
-
-        findViewById<Button>(R.id.btnBackTech).setOnClickListener {
-            finish()
-        }
-
-        bindInfo()
+        loadCustomerData()
     }
 
-    override fun onResume() {
-        super.onResume()
-        bindInfo()
+    private fun loadCustomerData() {
+        val rawLine = AppPrefs.getLineNumber(this).orEmpty()
+        val lineNumber = normalizeIsraeliNumber(rawLine)
+
+        if (lineNumber.isBlank()) return
+
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", lineNumber)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+
+                if (result.isEmpty) {
+                    tvCustomerName.text = "לא נמצא לקוח"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents[0]
+
+                tvCustomerName.text = doc.getString("customerName") ?: "---"
+                tvCustomerPhone.text = doc.getString("customerPhone") ?: "---"
+                tvCarModel.text = doc.getString("carModel") ?: "---"
+                tvCarNumber.text = doc.getString("carNumber") ?: "---"
+                tvPackage.text = doc.getString("dataPackage") ?: "---"
+
+                val balance = doc.getLong("currentBalanceMb")
+                tvBalance.text = balance?.let { "${it}MB" } ?: "---"
+
+                tvValidUntil.text = doc.getString("validUntil") ?: "---"
+
+                val lastCheck = doc.getLong("lastBalanceCheck")
+                tvLastCheck.text = lastCheck?.let {
+                    android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", it).toString()
+                } ?: "---"
+            }
     }
 
-    private fun bindInfo() {
-        val network = TelephonyUtils.checkNetwork(this)
-        val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
+    private fun normalizeIsraeliNumber(value: String): String {
+        var v = value.trim().replace(" ", "").replace("-", "")
 
-        val normalizedLine = normalizeDisplayPhone(network.lineNumber)
-        val normalizedCustomerPhone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
-
-        tvInfo.text = buildString {
-            appendLine("📱 מספר קו: ${if (normalizedLine.isBlank()) "---" else normalizedLine}")
-            appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
-            appendLine("🧩 גרסת אפליקציה: 1.0")
-            appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
-            appendLine()
-            appendLine("👤 שם לקוח: ${AppPrefs.getCustomerName(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("☎ טלפון: ${if (normalizedCustomerPhone.isBlank()) "---" else normalizedCustomerPhone}")
-            appendLine("🚘 דגם רכב: ${AppPrefs.getCarModel(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("🔢 מספר רכב: ${AppPrefs.getCarNumber(this@TechnicianActivity).ifBlank { "---" }}")
-            appendLine("📦 חבילה: ${AppPrefs.getDataPackage(this@TechnicianActivity).ifBlank { "לא ידוע / אין" }}")
-            appendLine()
-            appendLine("📊 יתרה אחרונה: $balance")
-            appendLine("📅 תוקף אחרון: ${AppPrefs.getValid(this@TechnicianActivity) ?: "---"}")
-            appendLine("🕒 בדיקה אחרונה: ${Formatter.formatDateTime(AppPrefs.getUpdated(this@TechnicianActivity))}")
-            appendLine()
-            appendLine("📶 SIM: ${network.simStatus}")
-            appendLine("📡 רשת: ${network.networkType}")
-            appendLine("🌐 אינטרנט: ${network.internetStatus}")
+        if (v.startsWith("+972")) {
+            v = "0" + v.removePrefix("+972")
+        } else if (v.startsWith("972")) {
+            v = "0" + v.removePrefix("972")
+        } else if (v.startsWith("5")) {
+            v = "0$v"
         }
-    }
 
-    private fun normalizeDisplayPhone(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return if (normalized == "לא זוהה") "" else normalized
-    }
-
-    private fun showTechQr() {
-        val text = tvInfo.text.toString()
-        val wa = "https://wa.me/972559911336?text=${URLEncoder.encode("דוח אבחון StereoTip\n\n$text", "UTF-8")}"
-        val bitmap = QrUtils.createQrBitmap(wa)
-        QrDialogFragment
-            .newInstance(bitmap, "סרקו לשליחת דוח אבחון")
-            .show(supportFragmentManager, "tech_qr")
+        return v
     }
 }
