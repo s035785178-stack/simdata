@@ -39,32 +39,26 @@
             android:name=".CustomerDetailsActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".TechnicianActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".SupportActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".PackagesActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".NetworkCheckActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".BalanceActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
