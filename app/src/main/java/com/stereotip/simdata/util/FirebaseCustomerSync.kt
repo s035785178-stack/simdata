@@ -8,57 +8,45 @@ object FirebaseCustomerSync {
     fun sync(context: Context) {
         val db = FirebaseFirestore.getInstance()
 
-        val phone = AppPrefs.getCustomerPhone(context).ifBlank { return }
-        val docId = phone.replace(" ", "").replace("-", "")
+        // טלפון לקוח (מההרשמה)
+        val rawCustomerPhone = AppPrefs.getCustomerPhone(context)
+        val customerPhone = normalizeIsraeli(rawCustomerPhone)
+
+        if (customerPhone.isBlank()) return
+
+        val docId = customerPhone
+
+        // מספר קו מהמכשיר
+        val rawLine = AppPrefs.getLineNumber(context)
+        val lineNumber = normalizeIsraeli(rawLine)
 
         val now = System.currentTimeMillis()
 
-        // מושכים מהמכשיר / Prefs כמו בדף הבית
-        val rawLineNumber = AppPrefs.getLineNumber(context).orEmpty()
-        val normalizedLineNumber = normalizeIsraeliLineNumber(rawLineNumber)
-
-        val balanceMb = AppPrefs.getBalanceMb(context)
-        val validUntil = AppPrefs.getValid(context).orEmpty()
-        val customerName = AppPrefs.getCustomerName(context)
-        val customerPhone = phone
-        val carModel = AppPrefs.getCarModel(context)
-        val carNumber = AppPrefs.getCarNumber(context)
-        val dataPackage = AppPrefs.getDataPackage(context)
-
         val data = hashMapOf(
-            "customerName" to customerName,
-            "customerPhone" to customerPhone,
-            "carModel" to carModel,
-            "carNumber" to carNumber,
-            "dataPackage" to dataPackage,
+            "customerName" to AppPrefs.getCustomerName(context),
+            "customerPhone" to customerPhone,   // ✅ טלפון לקוח
+            "lineNumber" to lineNumber,         // ✅ מספר קו אמיתי
 
-            // שדות קיימים
-            "lineNumber" to normalizedLineNumber,
-            "balanceMb" to balanceMb,
-            "validUntil" to validUntil,
-            "lastUpdate" to now,
+            "carModel" to AppPrefs.getCarModel(context),
+            "carNumber" to AppPrefs.getCarNumber(context),
+            "dataPackage" to AppPrefs.getDataPackage(context),
 
-            // שדות חדשים לאפליקציית הצי
-            "currentBalanceMb" to balanceMb,
-            "lastBalanceCheck" to now
+            "currentBalanceMb" to AppPrefs.getBalanceMb(context),
+            "balanceMb" to AppPrefs.getBalanceMb(context),
+
+            "validUntil" to AppPrefs.getValid(context),
+            "lastBalanceCheck" to now,
+            "lastUpdate" to now
         )
 
-        val docRef = db.collection("customers").document(docId)
-
-        docRef.set(data)
-            .addOnSuccessListener {
-                val history = hashMapOf(
-                    "checkedAt" to now,
-                    "balanceMb" to balanceMb,
-                    "lineNumber" to normalizedLineNumber,
-                    "validUntil" to validUntil
-                )
-
-                docRef.collection("balance_checks").add(history)
-            }
+        db.collection("customers")
+            .document(docId)
+            .set(data)
     }
 
-    private fun normalizeIsraeliLineNumber(value: String): String {
+    private fun normalizeIsraeli(value: String?): String {
+        if (value.isNullOrBlank()) return ""
+
         var v = value.trim()
             .replace(" ", "")
             .replace("-", "")
