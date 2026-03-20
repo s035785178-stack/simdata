@@ -15,14 +15,12 @@ import com.stereotip.simdata.util.TelephonyUtils
 import java.net.URLEncoder
 
 class TechnicianActivity : AppCompatActivity() {
-
     private lateinit var tvInfo: TextView
     private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_technician)
-
         tvInfo = findViewById(R.id.tvTechInfo)
 
         findViewById<Button>(R.id.btnTechNetwork).setOnClickListener {
@@ -66,7 +64,7 @@ class TechnicianActivity : AppCompatActivity() {
         val normalizedLine = normalizeDisplayPhone(network.lineNumber)
 
         if (normalizedLine.isBlank()) {
-            bindFallbackInfo(network)
+            bindFallbackInfo()
             return
         }
 
@@ -76,15 +74,14 @@ class TechnicianActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    bindFallbackInfo(network)
+                    bindFallbackInfo()
                     return@addOnSuccessListener
                 }
 
                 val doc = result.documents.first()
 
                 val customerName = doc.getString("customerName").orEmpty().ifBlank { "---" }
-                val customerPhone = normalizeDisplayPhone(doc.getString("customerPhone"))
-                    .ifBlank { "---" }
+                val customerPhone = normalizeDisplayPhone(doc.getString("customerPhone")).ifBlank { "---" }
                 val carModel = doc.getString("carModel").orEmpty().ifBlank { "---" }
                 val carNumber = doc.getString("carNumber").orEmpty().ifBlank { "---" }
                 val dataPackage = doc.getString("dataPackage").orEmpty().ifBlank { "לא ידוע / אין" }
@@ -93,10 +90,10 @@ class TechnicianActivity : AppCompatActivity() {
 
                 val balanceText = when {
                     doc.getLong("currentBalanceMb") != null -> {
-                        Formatter.mbToDisplay(doc.getLong("currentBalanceMb")!!)
+                        Formatter.mbToDisplay(doc.getLong("currentBalanceMb")!!.toInt())
                     }
                     doc.getLong("balanceMb") != null -> {
-                        Formatter.mbToDisplay(doc.getLong("balanceMb")!!)
+                        Formatter.mbToDisplay(doc.getLong("balanceMb")!!.toInt())
                     }
                     else -> "לא בוצעה בדיקה"
                 }
@@ -128,12 +125,14 @@ class TechnicianActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                bindFallbackInfo(network)
+                bindFallbackInfo()
             }
     }
 
-    private fun bindFallbackInfo(network: com.stereotip.simdata.util.TelephonyUtils.NetworkInfo) {
+    private fun bindFallbackInfo() {
+        val network = TelephonyUtils.checkNetwork(this)
         val balance = AppPrefs.getBalanceMb(this)?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
+
         val normalizedLine = normalizeDisplayPhone(network.lineNumber)
         val normalizedCustomerPhone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
 
