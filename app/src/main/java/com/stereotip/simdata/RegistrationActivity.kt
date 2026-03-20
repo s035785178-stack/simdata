@@ -9,16 +9,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.PhoneUtils
-import com.stereotip.simdata.util.QrUtils
 import com.stereotip.simdata.util.TelephonyUtils
-import java.net.URLEncoder
 
 class RegistrationActivity : AppCompatActivity() {
 
     private lateinit var etName: EditText
     private lateinit var etPhone: EditText
     private lateinit var btnRegister: Button
-    private lateinit var btnHelp: Button
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -29,14 +26,9 @@ class RegistrationActivity : AppCompatActivity() {
         etName = findViewById(R.id.etRegistrationName)
         etPhone = findViewById(R.id.etRegistrationPhone)
         btnRegister = findViewById(R.id.btnRegisterCustomer)
-        btnHelp = findViewById(R.id.btnRegistrationHelp)
 
         btnRegister.setOnClickListener {
             registerCustomer()
-        }
-
-        btnHelp.setOnClickListener {
-            openHelpQr()
         }
     }
 
@@ -64,10 +56,7 @@ class RegistrationActivity : AppCompatActivity() {
             "customerPhone" to phone,
             "lineNumber" to lineNumber,
             "createdAt" to now,
-            "lastUpdate" to now,
-            "warrantyFirstActivationUsed" to false,
-            "warrantyActivationRequested" to false,
-            "warrantyActivatedByFleet" to false
+            "lastUpdate" to now
         )
 
         db.collection("customers")
@@ -86,16 +75,6 @@ class RegistrationActivity : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, "שגיאה בהרשמה, נסה שוב", Toast.LENGTH_SHORT).show()
             }
-    }
-
-    private fun openHelpQr() {
-        val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
-        val wa = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
-        val bitmap = QrUtils.createQrBitmap(wa)
-
-        QrDialogFragment
-            .newInstance(bitmap, "סרקו לעזרה בהרשמה")
-            .show(supportFragmentManager, "registration_help_qr")
     }
 
     private fun normalizePhone(raw: String?): String {
