@@ -11,21 +11,47 @@ object FirebaseCustomerSync {
         val phone = AppPrefs.getCustomerPhone(context).ifBlank { return }
         val docId = phone.replace(" ", "").replace("-", "")
 
-        val data = hashMapOf(
-            "customerName" to AppPrefs.getCustomerName(context),
-            "customerPhone" to phone,
-            "carModel" to AppPrefs.getCarModel(context),
-            "carNumber" to AppPrefs.getCarNumber(context),
-            "dataPackage" to AppPrefs.getDataPackage(context),
+        val now = System.currentTimeMillis()
+        val lineNumber = AppPrefs.getLineNumber(context).orEmpty()
+        val balanceMb = AppPrefs.getBalanceMb(context)
+        val validUntil = AppPrefs.getValid(context).orEmpty()
+        val customerName = AppPrefs.getCustomerName(context)
+        val customerPhone = phone
+        val carModel = AppPrefs.getCarModel(context)
+        val carNumber = AppPrefs.getCarNumber(context)
+        val dataPackage = AppPrefs.getDataPackage(context)
 
-            "lineNumber" to AppPrefs.getLineNumber(context),
-            "balanceMb" to AppPrefs.getBalanceMb(context),
-            "validUntil" to AppPrefs.getValid(context),
-            "lastUpdate" to System.currentTimeMillis()
+        val data = hashMapOf(
+            "customerName" to customerName,
+            "customerPhone" to customerPhone,
+            "carModel" to carModel,
+            "carNumber" to carNumber,
+            "dataPackage" to dataPackage,
+
+            // שדות קיימים
+            "lineNumber" to lineNumber,
+            "balanceMb" to balanceMb,
+            "validUntil" to validUntil,
+            "lastUpdate" to now,
+
+            // שדות חדשים לאפליקציית הצי
+            "currentBalanceMb" to balanceMb,
+            "lastBalanceCheck" to now
         )
 
-        db.collection("customers")
-            .document(docId)
-            .set(data)
+        val docRef = db.collection("customers").document(docId)
+
+        docRef.set(data)
+            .addOnSuccessListener {
+                // היסטוריית בדיקות
+                val history = hashMapOf(
+                    "checkedAt" to now,
+                    "balanceMb" to balanceMb,
+                    "lineNumber" to lineNumber,
+                    "validUntil" to validUntil
+                )
+
+                docRef.collection("balance_checks").add(history)
+            }
     }
 }
