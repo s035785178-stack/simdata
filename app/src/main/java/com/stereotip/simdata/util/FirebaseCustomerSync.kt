@@ -12,7 +12,11 @@ object FirebaseCustomerSync {
         val docId = phone.replace(" ", "").replace("-", "")
 
         val now = System.currentTimeMillis()
-        val lineNumber = AppPrefs.getLineNumber(context).orEmpty()
+
+        // מושכים מהמכשיר / Prefs כמו בדף הבית
+        val rawLineNumber = AppPrefs.getLineNumber(context).orEmpty()
+        val normalizedLineNumber = normalizeIsraeliLineNumber(rawLineNumber)
+
         val balanceMb = AppPrefs.getBalanceMb(context)
         val validUntil = AppPrefs.getValid(context).orEmpty()
         val customerName = AppPrefs.getCustomerName(context)
@@ -29,7 +33,7 @@ object FirebaseCustomerSync {
             "dataPackage" to dataPackage,
 
             // שדות קיימים
-            "lineNumber" to lineNumber,
+            "lineNumber" to normalizedLineNumber,
             "balanceMb" to balanceMb,
             "validUntil" to validUntil,
             "lastUpdate" to now,
@@ -43,15 +47,30 @@ object FirebaseCustomerSync {
 
         docRef.set(data)
             .addOnSuccessListener {
-                // היסטוריית בדיקות
                 val history = hashMapOf(
                     "checkedAt" to now,
                     "balanceMb" to balanceMb,
-                    "lineNumber" to lineNumber,
+                    "lineNumber" to normalizedLineNumber,
                     "validUntil" to validUntil
                 )
 
                 docRef.collection("balance_checks").add(history)
             }
+    }
+
+    private fun normalizeIsraeliLineNumber(value: String): String {
+        var v = value.trim()
+            .replace(" ", "")
+            .replace("-", "")
+
+        if (v.startsWith("+972")) {
+            v = "0" + v.removePrefix("+972")
+        } else if (v.startsWith("972")) {
+            v = "0" + v.removePrefix("972")
+        } else if (v.startsWith("5")) {
+            v = "0$v"
+        }
+
+        return v
     }
 }
