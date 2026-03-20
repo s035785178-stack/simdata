@@ -8,57 +8,43 @@ object FirebaseCustomerSync {
     fun sync(context: Context) {
         val db = FirebaseFirestore.getInstance()
 
-        // טלפון לקוח (מההרשמה)
-        val rawCustomerPhone = AppPrefs.getCustomerPhone(context)
-        val customerPhone = normalizeIsraeli(rawCustomerPhone)
+        val lineNumber = PhoneUtils.normalizeToLocal(TelephonyUtils.getLineNumber(context))
+            .let {
+                if (it == "לא זוהה" || it == "לא זוהה מספר" || it == "לא אושרו הרשאות") "" else it
+            }
 
-        if (customerPhone.isBlank()) return
-
-        val docId = customerPhone
-
-        // מספר קו מהמכשיר
-        val rawLine = AppPrefs.getLineNumber(context)
-        val lineNumber = normalizeIsraeli(rawLine)
+        if (lineNumber.isBlank()) return
 
         val now = System.currentTimeMillis()
 
+        val balanceMb = AppPrefs.getBalanceMb(context)
+        val validUntil = AppPrefs.getValid(context).orEmpty()
+
         val data = hashMapOf(
-            "customerName" to AppPrefs.getCustomerName(context),
-            "customerPhone" to customerPhone,   // ✅ טלפון לקוח
-            "lineNumber" to lineNumber,         // ✅ מספר קו אמיתי
+            "lineNumber" to lineNumber,
 
-            "carModel" to AppPrefs.getCarModel(context),
-            "carNumber" to AppPrefs.getCarNumber(context),
-            "dataPackage" to AppPrefs.getDataPackage(context),
-
-            "currentBalanceMb" to AppPrefs.getBalanceMb(context),
-            "balanceMb" to AppPrefs.getBalanceMb(context),
-
-            "validUntil" to AppPrefs.getValid(context),
+            // נתונים דינמיים שהלקוח באמת יודע
+            "balanceMb" to balanceMb,
+            "currentBalanceMb" to balanceMb,
+            "validUntil" to validUntil,
+            "lastUpdate" to now,
             "lastBalanceCheck" to now,
-            "lastUpdate" to now
+
+            // מידע טכני
+            "deviceName" to "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim()
         )
 
-        db.collection("customers")
-            .document(docId)
-            .set(data)
-    }
+        val docRef = db.collection("customers").document(lineNumber)
 
-    private fun normalizeIsraeli(value: String?): String {
-        if (value.isNullOrBlank()) return ""
-
-        var v = value.trim()
-            .replace(" ", "")
-            .replace("-", "")
-
-        if (v.startsWith("+972")) {
-            v = "0" + v.removePrefix("+972")
-        } else if (v.startsWith("972")) {
-            v = "0" + v.removePrefix("972")
-        } else if (v.startsWith("5")) {
-            v = "0$v"
-        }
-
-        return v
+        docRef.set(data, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener {
+                val history = hashMapOf(
+                    "checkedAt" to now,
+                    "balanceMb" to balanceMb,
+                    "lineNumber" to lineNumber,
+                    "validUntil" to validUntil
+                )
+                docRef.collection("balance_checks").add(history)
+            }
     }
 }
