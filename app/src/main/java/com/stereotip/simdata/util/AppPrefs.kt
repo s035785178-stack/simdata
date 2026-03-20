@@ -53,8 +53,11 @@ object AppPrefs {
             }
         )
 
-        // 🔥 זה החיבור ל-Firebase
         FirebaseCustomerSync.sync(context)
+    }
+
+    fun setLineNumber(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_LINE, value).apply()
     }
 
     fun getLineNumber(context: Context): String? {
