@@ -1,10 +1,7 @@
 package com.stereotip.simdata
 
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -17,6 +14,9 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var tvLineNumber: TextView
     private lateinit var etName: EditText
     private lateinit var etPhone: EditText
+    private lateinit var etCarModel: EditText
+    private lateinit var etCarNumber: EditText
+    private lateinit var spinnerPackage: Spinner
     private lateinit var btnRegister: Button
 
     private val db = FirebaseFirestore.getInstance()
@@ -29,7 +29,26 @@ class RegistrationActivity : AppCompatActivity() {
         tvLineNumber = findViewById(R.id.tvRegistrationLineNumber)
         etName = findViewById(R.id.etRegistrationName)
         etPhone = findViewById(R.id.etRegistrationPhone)
+        etCarModel = findViewById(R.id.etCarModel)
+        etCarNumber = findViewById(R.id.etCarNumber)
+        spinnerPackage = findViewById(R.id.spinnerPackage)
         btnRegister = findViewById(R.id.btnRegisterCustomer)
+
+        // חבילות
+        val packages = listOf(
+            "100GB",
+            "200GB",
+            "300GB",
+            "ללא הגבלה",
+            "לא ידוע / אין"
+        )
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPackage.adapter = adapter
+
+        // ברירת מחדל 100GB
+        spinnerPackage.setSelection(0)
 
         detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
         tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
@@ -46,17 +65,18 @@ class RegistrationActivity : AppCompatActivity() {
     private fun registerCustomer() {
         val name = etName.text.toString().trim()
         val phone = normalizePhone(etPhone.text.toString())
+        val carModel = etCarModel.text.toString().trim()
+        val carNumber = etCarNumber.text.toString().trim()
+        val dataPackage = spinnerPackage.selectedItem.toString()
         val lineNumber = detectedLineNumber
 
         if (name.isBlank()) {
             etName.error = "יש להזין שם"
-            etName.requestFocus()
             return
         }
 
         if (phone.length != 10 || !phone.startsWith("05")) {
-            etPhone.error = "יש להזין טלפון תקין"
-            etPhone.requestFocus()
+            etPhone.error = "טלפון לא תקין"
             return
         }
 
@@ -66,6 +86,9 @@ class RegistrationActivity : AppCompatActivity() {
             "customerName" to name,
             "customerPhone" to phone,
             "lineNumber" to lineNumber,
+            "carModel" to carModel,
+            "carNumber" to carNumber,
+            "dataPackage" to dataPackage,
             "createdAt" to now,
             "lastUpdate" to now
         )
@@ -76,6 +99,10 @@ class RegistrationActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
+                AppPrefs.setCarModel(this, carModel)
+                AppPrefs.setCarNumber(this, carNumber)
+                AppPrefs.setDataPackage(this, dataPackage)
+
                 if (lineNumber.isNotBlank()) {
                     AppPrefs.setLineNumber(this, lineNumber)
                 }
@@ -84,7 +111,7 @@ class RegistrationActivity : AppCompatActivity() {
                 finish()
             }
             .addOnFailureListener {
-                Toast.makeText(this, "שגיאה בהרשמה, נסה שוב", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
             }
     }
 
