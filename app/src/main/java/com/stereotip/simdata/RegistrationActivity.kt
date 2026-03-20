@@ -3,6 +3,7 @@ package com.stereotip.simdata
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,19 +14,29 @@ import com.stereotip.simdata.util.TelephonyUtils
 
 class RegistrationActivity : AppCompatActivity() {
 
+    private lateinit var tvLineNumber: TextView
     private lateinit var etName: EditText
     private lateinit var etPhone: EditText
     private lateinit var btnRegister: Button
 
     private val db = FirebaseFirestore.getInstance()
+    private var detectedLineNumber: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
+        tvLineNumber = findViewById(R.id.tvRegistrationLineNumber)
         etName = findViewById(R.id.etRegistrationName)
         etPhone = findViewById(R.id.etRegistrationPhone)
         btnRegister = findViewById(R.id.btnRegisterCustomer)
+
+        detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
+        tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
+            "מספר קו במכשיר: $detectedLineNumber"
+        } else {
+            "מספר קו במכשיר: לא זוהה"
+        }
 
         btnRegister.setOnClickListener {
             registerCustomer()
@@ -35,7 +46,7 @@ class RegistrationActivity : AppCompatActivity() {
     private fun registerCustomer() {
         val name = etName.text.toString().trim()
         val phone = normalizePhone(etPhone.text.toString())
-        val lineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
+        val lineNumber = detectedLineNumber
 
         if (name.isBlank()) {
             etName.error = "יש להזין שם"
