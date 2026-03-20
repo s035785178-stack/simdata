@@ -18,6 +18,18 @@
         android:gravity="center"
         android:layout_marginBottom="20dp" />
 
+    <TextView
+        android:id="@+id/tvRegistrationLineNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="מספר קו במכשיר: לא זוהה"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:gravity="end"
+        android:textAlignment="viewEnd"
+        android:layout_marginBottom="16dp" />
+
     <EditText
         android:id="@+id/etRegistrationName"
         android:layout_width="match_parent"
