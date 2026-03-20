@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.firebase.firestore.FirebaseFirestore
 import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
@@ -28,12 +29,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUpdated: TextView
     private lateinit var tvStatus: TextView
     private lateinit var logo: ImageView
+
     private var logoTapCount = 0
     private var lastTapTime = 0L
+    private var registrationCheckDone = false
+
+    private val db = FirebaseFirestore.getInstance()
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             updateSummary()
+            checkRegistrationIfNeeded()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -67,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         logo.setOnClickListener { onLogoTapped() }
+
         askForRequiredPermissionsIfNeeded()
         updateSummary()
     }
@@ -76,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
         updateSummary()
+        checkRegistrationIfNeeded()
     }
 
     override fun onPause() {
@@ -102,6 +110,42 @@ class MainActivity : AppCompatActivity() {
         tvStatus.text = Formatter.balanceStatus(mb)
     }
 
+    private fun checkRegistrationIfNeeded() {
+        if (registrationCheckDone) return
+        if (!hasPhonePermissions()) return
+
+        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+        if (normalizedLine.isBlank()) return
+
+        registrationCheckDone = true
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    startActivity(Intent(this, RegistrationActivity::class.java))
+                } else {
+                    val doc = result.documents.first()
+
+                    val customerName = doc.getString("customerName").orEmpty()
+                    val customerPhone = normalizePhone(doc.getString("customerPhone"))
+
+                    if (customerName.isNotBlank()) {
+                        AppPrefs.setCustomerName(this, customerName)
+                    }
+                    if (customerPhone.isNotBlank()) {
+                        AppPrefs.setCustomerPhone(this, customerPhone)
+                    }
+                    AppPrefs.setLineNumber(this, normalizedLine)
+                }
+            }
+            .addOnFailureListener {
+                registrationCheckDone = false
+            }
+    }
+
     private fun onLogoTapped() {
         val now = System.currentTimeMillis()
         if (now - lastTapTime > 4000) logoTapCount = 0
@@ -122,10 +166,6 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.CALL_PHONE
         )
 
-        if (Build.VERSION.SDK_INT >= 33) {
-            // kept intentionally blank, app doesn't require notification permission
-        }
-
         val missing = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -140,5 +180,29 @@ class MainActivity : AppCompatActivity() {
                 .setCancelable(false)
                 .show()
         }
+    }
+
+    private fun hasPhonePermissions(): Boolean {
+        val required = listOf(
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_PHONE_NUMBERS
+        )
+
+        return required.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun normalizeLine(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> normalized
+        }
+    }
+
+    private fun normalizePhone(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return if (normalized == "לא זוהה") "" else normalized
     }
 }
