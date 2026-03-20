@@ -72,61 +72,81 @@ class TechnicianActivity : AppCompatActivity() {
             .whereEqualTo("lineNumber", normalizedLine)
             .limit(1)
             .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    bindFallbackInfo()
+            .addOnSuccessListener { byLine ->
+                if (!byLine.isEmpty) {
+                    bindFromDocument(byLine.documents.first(), network)
                     return@addOnSuccessListener
                 }
 
-                val doc = result.documents.first()
-
-                val customerName = doc.getString("customerName").orEmpty().ifBlank { "---" }
-                val customerPhone = normalizeDisplayPhone(doc.getString("customerPhone")).ifBlank { "---" }
-                val carModel = doc.getString("carModel").orEmpty().ifBlank { "---" }
-                val carNumber = doc.getString("carNumber").orEmpty().ifBlank { "---" }
-                val dataPackage = doc.getString("dataPackage").orEmpty().ifBlank { "לא ידוע / אין" }
-                val validUntil = doc.getString("validUntil").orEmpty().ifBlank { "---" }
-                val warrantyEnd = doc.getString("warrantyEnd").orEmpty().ifBlank { "---" }
-
-                val balanceText = when {
-                    doc.getLong("currentBalanceMb") != null -> {
-                        Formatter.mbToDisplay(doc.getLong("currentBalanceMb")!!.toInt())
+                db.collection("customers")
+                    .whereEqualTo("customerPhone", normalizedLine)
+                    .limit(1)
+                    .get()
+                    .addOnSuccessListener { byPhone ->
+                        if (!byPhone.isEmpty) {
+                            bindFromDocument(byPhone.documents.first(), network)
+                        } else {
+                            bindFallbackInfo()
+                        }
                     }
-                    doc.getLong("balanceMb") != null -> {
-                        Formatter.mbToDisplay(doc.getLong("balanceMb")!!.toInt())
+                    .addOnFailureListener {
+                        bindFallbackInfo()
                     }
-                    else -> "לא בוצעה בדיקה"
-                }
-
-                val lastCheckText = formatLastCheck(
-                    doc.getLong("lastBalanceCheck") ?: doc.getLong("lastUpdate")
-                )
-
-                tvInfo.text = buildString {
-                    appendLine("📱 מספר קו: $normalizedLine")
-                    appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
-                    appendLine("🧩 גרסת אפליקציה: 1.0")
-                    appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
-                    appendLine()
-                    appendLine("👤 שם לקוח: $customerName")
-                    appendLine("☎ טלפון: $customerPhone")
-                    appendLine("🚘 דגם רכב: $carModel")
-                    appendLine("🔢 מספר רכב: $carNumber")
-                    appendLine("📦 חבילה: $dataPackage")
-                    appendLine()
-                    appendLine("📊 יתרה אחרונה: $balanceText")
-                    appendLine("📅 תוקף אחרון: $validUntil")
-                    appendLine("🕒 בדיקה אחרונה: $lastCheckText")
-                    appendLine("🛡️ אחריות עד: $warrantyEnd")
-                    appendLine()
-                    appendLine("📶 SIM: ${network.simStatus}")
-                    appendLine("📡 רשת: ${network.networkType}")
-                    appendLine("🌐 אינטרנט: ${network.internetStatus}")
-                }
             }
             .addOnFailureListener {
                 bindFallbackInfo()
             }
+    }
+
+    private fun bindFromDocument(
+        doc: com.google.firebase.firestore.DocumentSnapshot,
+        network: com.stereotip.simdata.data.NetworkCheckResult
+    ) {
+        val normalizedLine = normalizeDisplayPhone(network.lineNumber)
+
+        val customerName = doc.getString("customerName").orEmpty().ifBlank { "---" }
+        val customerPhone = normalizeDisplayPhone(doc.getString("customerPhone")).ifBlank { "---" }
+        val carModel = doc.getString("carModel").orEmpty().ifBlank { "---" }
+        val carNumber = doc.getString("carNumber").orEmpty().ifBlank { "---" }
+        val dataPackage = doc.getString("dataPackage").orEmpty().ifBlank { "לא ידוע / אין" }
+        val validUntil = doc.getString("validUntil").orEmpty().ifBlank { "---" }
+        val warrantyEnd = doc.getString("warrantyEnd").orEmpty().ifBlank { "---" }
+
+        val balanceText = when {
+            doc.getLong("currentBalanceMb") != null -> {
+                Formatter.mbToDisplay(doc.getLong("currentBalanceMb")!!.toInt())
+            }
+            doc.getLong("balanceMb") != null -> {
+                Formatter.mbToDisplay(doc.getLong("balanceMb")!!.toInt())
+            }
+            else -> "לא בוצעה בדיקה"
+        }
+
+        val lastCheckText = formatLastCheck(
+            doc.getLong("lastBalanceCheck") ?: doc.getLong("lastUpdate")
+        )
+
+        tvInfo.text = buildString {
+            appendLine("📱 מספר קו: $normalizedLine")
+            appendLine("📡 דגם מכשיר: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+            appendLine("🧩 גרסת אפליקציה: 1.0")
+            appendLine("🕒 זמן התקנה: ${Formatter.formatDateTime(AppPrefs.getInstallTimestamp(this@TechnicianActivity))}")
+            appendLine()
+            appendLine("👤 שם לקוח: $customerName")
+            appendLine("☎ טלפון: $customerPhone")
+            appendLine("🚘 דגם רכב: $carModel")
+            appendLine("🔢 מספר רכב: $carNumber")
+            appendLine("📦 חבילה: $dataPackage")
+            appendLine()
+            appendLine("📊 יתרה אחרונה: $balanceText")
+            appendLine("📅 תוקף אחרון: $validUntil")
+            appendLine("🕒 בדיקה אחרונה: $lastCheckText")
+            appendLine("🛡️ אחריות עד: $warrantyEnd")
+            appendLine()
+            appendLine("📶 SIM: ${network.simStatus}")
+            appendLine("📡 רשת: ${network.networkType}")
+            appendLine("🌐 אינטרנט: ${network.internetStatus}")
+        }
     }
 
     private fun bindFallbackInfo() {
