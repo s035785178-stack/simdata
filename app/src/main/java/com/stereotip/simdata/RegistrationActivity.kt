@@ -8,7 +8,12 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
 import android.view.animation.OvershootInterpolator
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Spinner
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -41,7 +46,6 @@ class RegistrationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
-        // Views
         logoRegistration = findViewById(R.id.logoRegistration)
         headerCard = findViewById(R.id.headerRegistrationCard)
         formCard = findViewById(R.id.formRegistrationCard)
@@ -56,7 +60,6 @@ class RegistrationActivity : AppCompatActivity() {
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
 
-        // Spinner data
         val packages = listOf(
             "לא ידוע / אין",
             "100 ג׳יגה או שנתיים",
@@ -69,7 +72,6 @@ class RegistrationActivity : AppCompatActivity() {
         spinnerPackage.adapter = adapter
         spinnerPackage.setSelection(1)
 
-        // Detect line number
         detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
         tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
             "מספר קו במכשיר: $detectedLineNumber"
@@ -85,14 +87,9 @@ class RegistrationActivity : AppCompatActivity() {
             openHelpWhatsapp()
         }
 
-        // Animations
         playEntranceAnimation()
         playLogoPulse()
     }
-
-    // ======================
-    // 🎬 Animations
-    // ======================
 
     private fun playEntranceAnimation() {
         animateEntrance(logoRegistration, 0L, 0.92f)
@@ -113,7 +110,7 @@ class RegistrationActivity : AppCompatActivity() {
             .scaleX(1f)
             .scaleY(1f)
             .setStartDelay(delay)
-            .setDuration(500)
+            .setDuration(500L)
             .setInterpolator(OvershootInterpolator(0.8f))
             .start()
     }
@@ -122,13 +119,12 @@ class RegistrationActivity : AppCompatActivity() {
         val pulseX = ObjectAnimator.ofFloat(logoRegistration, View.SCALE_X, 1f, 1.03f, 1f)
         val pulseY = ObjectAnimator.ofFloat(logoRegistration, View.SCALE_Y, 1f, 1.03f, 1f)
 
-        pulseX.duration = 2000
-        pulseY.duration = 2000
+        pulseX.duration = 2000L
+        pulseY.duration = 2000L
         pulseX.repeatCount = ObjectAnimator.INFINITE
         pulseY.repeatCount = ObjectAnimator.INFINITE
         pulseX.interpolator = AccelerateDecelerateInterpolator()
         pulseY.interpolator = AccelerateDecelerateInterpolator()
-
         pulseX.start()
         pulseY.start()
     }
@@ -143,78 +139,113 @@ class RegistrationActivity : AppCompatActivity() {
         view.startAnimation(anim)
     }
 
-    // ======================
-    // 🚀 Registration
-    // ======================
-
     private fun attemptRegistration() {
-
         val name = etName.text.toString().trim()
-        val phone = etPhone.text.toString().trim()
+        val phone = normalizePhone(etPhone.text.toString())
+
+        if (name.isBlank()) {
+            etName.error = "יש להזין שם"
+            etName.requestFocus()
+            showError(etName)
+            return
+        }
+
+        if (phone.length != 10 || !phone.startsWith("05")) {
+            etPhone.error = "יש להזין טלפון תקין"
+            etPhone.requestFocus()
+            showError(etPhone)
+            return
+        }
+
+        if (!NetworkUtils.isOnline(this)) {
+            showError(btnRegister)
+
+            val intent = Intent(this, ResultActivity::class.java)
+            intent.putExtra("success", false)
+            intent.putExtra("return_to_registration", true)
+            intent.putExtra("seconds", 10)
+            startActivity(intent)
+            finish()
+            return
+        }
+
+        registerCustomer()
+    }
+
+    private fun registerCustomer() {
+        val name = etName.text.toString().trim()
+        val phone = normalizePhone(etPhone.text.toString())
         val carModel = etCarModel.text.toString().trim()
         val carNumber = etCarNumber.text.toString().trim()
-        val selectedPackage = spinnerPackage.selectedItem.toString()
+        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
+        val lineNumber = detectedLineNumber
+        val now = System.currentTimeMillis()
 
-        if (name.isEmpty() || phone.isEmpty()) {
-            showError(btnRegister)
-            Toast.makeText(this, "נא למלא שם וטלפון", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (!NetworkUtils.isConnected(this)) {
-            showError(btnRegister)
-            Toast.makeText(this, "אין חיבור לאינטרנט", Toast.LENGTH_SHORT).show()
-            return
-        }
+        btnRegister.isEnabled = false
 
         val data = hashMapOf(
-            "name" to name,
-            "phone" to phone,
+            "customerName" to name,
+            "customerPhone" to phone,
+            "lineNumber" to lineNumber,
             "carModel" to carModel,
             "carNumber" to carNumber,
-            "package" to selectedPackage,
-            "lineNumber" to detectedLineNumber,
-            "timestamp" to System.currentTimeMillis()
+            "dataPackage" to dataPackage,
+            "createdAt" to now,
+            "lastUpdate" to now
         )
 
         db.collection("customers")
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
-
                 showSuccess(btnRegister)
 
-                AppPrefs.setRegistered(this, true)
+                AppPrefs.setCustomerName(this, name)
+                AppPrefs.setCustomerPhone(this, phone)
+                AppPrefs.setCarModel(this, carModel)
+                AppPrefs.setCarNumber(this, carNumber)
+                AppPrefs.setDataPackage(this, dataPackage)
 
-                Toast.makeText(this, "נרשמת בהצלחה", Toast.LENGTH_SHORT).show()
+                if (lineNumber.isNotBlank()) {
+                    AppPrefs.setLineNumber(this, lineNumber)
+                }
 
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("success", true)
+                intent.putExtra("return_to_registration", false)
+                intent.putExtra("seconds", 5)
+                startActivity(intent)
                 finish()
             }
             .addOnFailureListener {
+                btnRegister.isEnabled = true
                 showError(btnRegister)
-                Toast.makeText(this, "שגיאה בשליחה", Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("success", false)
+                intent.putExtra("return_to_registration", true)
+                intent.putExtra("seconds", 10)
+                startActivity(intent)
+                finish()
             }
     }
 
-    // ======================
-    // 📞 WhatsApp Help
-    // ======================
-
     private fun openHelpWhatsapp() {
-        val message = "היי, צריך עזרה עם אפליקציית SIM"
-        val url = "https://wa.me/972559911336?text=" + URLEncoder.encode(message, "UTF-8")
-
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(url)
-        startActivity(intent)
+        val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
+        val url = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
-    // ======================
-    // 📱 Utils
-    // ======================
+    private fun normalizePhone(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return if (normalized == "לא זוהה") "" else normalized
+    }
 
-    private fun normalizeLine(line: String?): String {
-        if (line.isNullOrBlank()) return ""
-        return PhoneUtils.normalize(line)
+    private fun normalizeLine(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> normalized
+        }
     }
 }
