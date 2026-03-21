@@ -2,11 +2,12 @@ package com.stereotip.simdata
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -23,8 +24,15 @@ class WarrantyPromptActivity : AppCompatActivity() {
     private lateinit var btnActivateWarranty: Button
     private lateinit var btnSkipWarranty: Button
 
+    private lateinit var successContainer: View
+    private lateinit var tvSuccessIcon: TextView
+    private lateinit var tvSuccessTitle: TextView
+    private lateinit var tvSuccessCountdown: TextView
+
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
+    private var countdownTimer: CountDownTimer? = null
+    private var isContinuing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +44,11 @@ class WarrantyPromptActivity : AppCompatActivity() {
         btnActivateWarranty = findViewById(R.id.btnActivateWarrantyPrompt)
         btnSkipWarranty = findViewById(R.id.btnSkipWarrantyPrompt)
 
+        successContainer = findViewById(R.id.successContainer)
+        tvSuccessIcon = findViewById(R.id.tvSuccessIcon)
+        tvSuccessTitle = findViewById(R.id.tvSuccessTitle)
+        tvSuccessCountdown = findViewById(R.id.tvSuccessCountdown)
+
         btnActivateWarranty.setOnClickListener {
             activateWarrantyAndContinue()
         }
@@ -46,6 +59,8 @@ class WarrantyPromptActivity : AppCompatActivity() {
     }
 
     private fun activateWarrantyAndContinue() {
+        if (isContinuing) return
+
         val savedPhone = AppPrefs.getCustomerPhone(this).orEmpty().trim()
         val savedLine = AppPrefs.getLineNumber(this).orEmpty().trim()
 
@@ -75,7 +90,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
                     val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
                     if (existingWarrantyStart != null && existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
-                        showAlreadyActivatedDialog()
+                        showSuccessState("האחריות כבר פעילה על מכשיר זה")
                         return@addOnSuccessListener
                     }
 
@@ -93,7 +108,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
                     doc.reference.set(data, SetOptions.merge())
                         .addOnSuccessListener {
-                            showSuccessDialog()
+                            showSuccessState("האחריות הופעלה בהצלחה")
                         }
                         .addOnFailureListener {
                             restoreButtons()
@@ -125,7 +140,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
                 val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
                 if (existingWarrantyStart != null && existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
-                    showAlreadyActivatedDialog()
+                    showSuccessState("האחריות כבר פעילה על מכשיר זה")
                     return@addOnSuccessListener
                 }
 
@@ -143,7 +158,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
                 doc.reference.set(data, SetOptions.merge())
                     .addOnSuccessListener {
-                        showSuccessDialog()
+                        showSuccessState("האחריות הופעלה בהצלחה")
                     }
                     .addOnFailureListener {
                         restoreButtons()
@@ -156,30 +171,28 @@ class WarrantyPromptActivity : AppCompatActivity() {
             }
     }
 
-    private fun showSuccessDialog() {
-        btnActivateWarranty.text = "✔️ האחריות הופעלה"
+    private fun showSuccessState(message: String) {
+        if (isContinuing) return
 
-        AlertDialog.Builder(this)
-            .setTitle("✅")
-            .setMessage("האחריות הופעלה בהצלחה")
-            .setCancelable(false)
-            .setPositiveButton("המשך לבדיקה") { _, _ ->
+        btnActivateWarranty.visibility = View.GONE
+        btnSkipWarranty.visibility = View.GONE
+
+        successContainer.visibility = View.VISIBLE
+        tvSuccessIcon.text = "✅"
+        tvSuccessTitle.text = message
+
+        countdownTimer?.cancel()
+        countdownTimer = object : CountDownTimer(3000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                val seconds = (millisUntilFinished / 1000L).toInt().coerceAtLeast(1)
+                tvSuccessCountdown.text = "מעביר לבדיקה אוטומטית בעוד $seconds שניות..."
+            }
+
+            override fun onFinish() {
+                tvSuccessCountdown.text = "מעביר לבדיקה אוטומטית..."
                 continueToBalance()
             }
-            .show()
-    }
-
-    private fun showAlreadyActivatedDialog() {
-        btnActivateWarranty.text = "✔️ האחריות כבר פעילה"
-
-        AlertDialog.Builder(this)
-            .setTitle("🛡️")
-            .setMessage("האחריות כבר הופעלה על מכשיר זה")
-            .setCancelable(false)
-            .setPositiveButton("המשך לבדיקה") { _, _ ->
-                continueToBalance()
-            }
-            .show()
+        }.start()
     }
 
     private fun restoreButtons() {
@@ -189,6 +202,11 @@ class WarrantyPromptActivity : AppCompatActivity() {
     }
 
     private fun continueToBalance() {
+        if (isContinuing) return
+        isContinuing = true
+
+        countdownTimer?.cancel()
+
         val intent = Intent(this, BalanceActivity::class.java).apply {
             putExtra("auto_start_check", true)
             putExtra("from_registration", true)
@@ -197,6 +215,11 @@ class WarrantyPromptActivity : AppCompatActivity() {
         startActivity(intent)
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         finish()
+    }
+
+    override fun onDestroy() {
+        countdownTimer?.cancel()
+        super.onDestroy()
     }
 
     override fun finish() {
