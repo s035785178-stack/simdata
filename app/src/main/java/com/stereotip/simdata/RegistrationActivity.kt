@@ -101,7 +101,9 @@ class RegistrationActivity : AppCompatActivity() {
             return
         }
 
+        // 🔥 שינוי UX
         btnRegister.isEnabled = false
+        btnRegister.text = "נרשם..."
 
         val now = System.currentTimeMillis()
         val data = hashMapOf(
@@ -138,6 +140,8 @@ class RegistrationActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 btnRegister.isEnabled = true
+                btnRegister.text = "הרשמה"
+
                 Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
             }
     }
