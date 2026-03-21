@@ -114,4 +114,377 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnNetwork).setOnClickListener {
             startActivity(Intent(this, NetworkCheckActivity::class.java))
         }
-        findView
+        findViewById<Button>(R.id.btnPackages).setOnClickListener {
+            startActivity(Intent(this, PackagesActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnSupport).setOnClickListener {
+            startActivity(Intent(this, SupportActivity::class.java))
+        }
+
+        btnActivateWarranty.setOnClickListener {
+            activateWarranty()
+        }
+
+        logo.setOnClickListener { onLogoTapped() }
+
+        askForRequiredPermissionsIfNeeded()
+        updateSummary()
+        loadWarrantyStatus()
+        loadPackageStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (!balanceReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this)
+                .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+            balanceReceiverRegistered = true
+        }
+
+        if (movedToRegistration) return
+
+        updateSummary()
+        checkRegistrationIfNeeded()
+        loadWarrantyStatus()
+        loadPackageStatus()
+    }
+
+    override fun onPause() {
+        if (balanceReceiverRegistered) {
+            try {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
+            } catch (_: Exception) {
+            }
+            balanceReceiverRegistered = false
+        }
+        super.onPause()
+    }
+
+    private fun updateSummary() {
+        val savedLine = AppPrefs.getLineNumber(this)
+        val deviceLine = TelephonyUtils.getLineNumber(this)
+
+        val rawLine = when {
+            !savedLine.isNullOrBlank() -> savedLine
+            deviceLine.isNotBlank() -> deviceLine
+            else -> null
+        }
+
+        val line = PhoneUtils.normalizeToLocal(rawLine)
+        tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
+
+        val mb = AppPrefs.getBalanceMb(this)
+        tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
+        tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
+        tvStatus.text = Formatter.balanceStatus(mb)
+    }
+
+    private fun checkRegistrationIfNeeded() {
+        if (registrationCheckDone || movedToRegistration) return
+
+        val savedPhone = AppPrefs.getCustomerPhone(this)
+        val savedName = AppPrefs.getCustomerName(this)
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val deviceLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+
+        val normalizedLine = when {
+            deviceLine.isNotBlank() -> deviceLine
+            savedLine.isNotBlank() -> savedLine
+            else -> ""
+        }
+
+        if (!hasPhonePermissions() && savedPhone.isBlank() && savedName.isBlank() && normalizedLine.isBlank()) {
+            moveToRegistration(clearLocal = false)
+            return
+        }
+
+        if (normalizedLine.isBlank() && savedPhone.isBlank() && savedName.isBlank()) {
+            moveToRegistration(clearLocal = false)
+            return
+        }
+
+        if (!NetworkUtils.isOnline(this)) {
+            if (savedPhone.isNotBlank() || savedName.isNotBlank()) {
+                registrationCheckDone = true
+                return
+            }
+            moveToRegistration(clearLocal = false)
+            return
+        }
+
+        registrationCheckDone = true
+
+        if (normalizedLine.isNotBlank()) {
+            db.collection("customers")
+                .whereEqualTo("lineNumber", normalizedLine)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { result ->
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                    if (result.isEmpty) {
+                        moveToRegistration(clearLocal = true)
+                    } else {
+                        val doc = result.documents.first()
+
+                        val customerName = doc.getString("customerName").orEmpty()
+                        val customerPhone = normalizePhone(doc.getString("customerPhone"))
+                        val carModel = doc.getString("carModel").orEmpty()
+                        val carNumber = doc.getString("carNumber").orEmpty()
+                        val dataPackage = doc.getString("dataPackage").orEmpty()
+
+                        if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
+                        if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
+                        if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
+                        if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
+                        if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
+
+                        AppPrefs.setLineNumber(this, normalizedLine)
+                    }
+                }
+                .addOnFailureListener {
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+
+                    if (savedPhone.isBlank() && savedName.isBlank()) {
+                        registrationCheckDone = false
+                        moveToRegistration(clearLocal = false)
+                    }
+                }
+            return
+        }
+
+        if (savedPhone.isNotBlank()) {
+            db.collection("customers")
+                .document(savedPhone)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+                    if (!doc.exists()) {
+                        moveToRegistration(clearLocal = true)
+                    }
+                }
+                .addOnFailureListener {
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+                    if (savedName.isBlank()) {
+                        registrationCheckDone = false
+                        moveToRegistration(clearLocal = false)
+                    }
+                }
+            return
+        }
+
+        moveToRegistration(clearLocal = false)
+    }
+
+    private fun moveToRegistration(clearLocal: Boolean) {
+        if (movedToRegistration) return
+
+        movedToRegistration = true
+
+        if (clearLocal) {
+            clearLocalCustomer()
+        }
+
+        val intent = Intent(this, RegistrationActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun loadPackageStatus() {
+        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+        if (normalizedLine.isBlank()) {
+            btnPackageStatus.text = "📦 מצב חבילה\nלא זוהה"
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
+                if (result.isEmpty) {
+                    btnPackageStatus.text = "📦 מצב חבילה\nלא ידוע"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val pkg = doc.getString("dataPackage").orEmpty()
+
+                btnPackageStatus.text = if (pkg.isBlank()) {
+                    "📦 מצב חבילה\nלא ידוע"
+                } else {
+                    "📦 מצב חבילה\n$pkg"
+                }
+            }
+            .addOnFailureListener {
+                if (!isFinishing && !isDestroyed) {
+                    btnPackageStatus.text = "📦 מצב חבילה\nשגיאה"
+                }
+            }
+    }
+
+    private fun loadWarrantyStatus() {
+        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+        if (normalizedLine.isBlank()) {
+            btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא זוהה"
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
+                if (result.isEmpty) {
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
+                val warrantyStart = doc.getLong("warrantyStart")
+
+                if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
+                } else {
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\n$warrantyEnd"
+                }
+            }
+            .addOnFailureListener {
+                if (!isFinishing && !isDestroyed) {
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nשגיאה"
+                }
+            }
+    }
+
+    private fun activateWarranty() {
+        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+        if (normalizedLine.isBlank()) {
+            Toast.makeText(this, "לא זוהה מספר קו", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val existingWarrantyStart = doc.getLong("warrantyStart")
+                val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
+
+                if (existingWarrantyStart != null && existingWarrantyEnd.isNotBlank()) {
+                    Toast.makeText(
+                        this,
+                        "האחריות כבר הופעלה במכשיר זה. לשינויים יש לפנות לסטריאו טיפ אביזרי רכב",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                val startMillis = System.currentTimeMillis()
+                val cal = Calendar.getInstance()
+                cal.timeInMillis = startMillis
+                cal.add(Calendar.YEAR, 1)
+                val endDate = dateFormat.format(cal.time)
+
+                val data: HashMap<String, Any?> = hashMapOf(
+                    "warrantyStart" to startMillis,
+                    "warrantyEnd" to endDate,
+                    "lastUpdate" to System.currentTimeMillis()
+                )
+
+                doc.reference.set(data, SetOptions.merge())
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "האחריות הופעלה בהצלחה", Toast.LENGTH_SHORT).show()
+                        loadWarrantyStatus()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "שגיאה בהפעלת אחריות", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun onLogoTapped() {
+        val now = System.currentTimeMillis()
+        if (now - lastTapTime > 4000) logoTapCount = 0
+        lastTapTime = now
+        logoTapCount++
+        if (logoTapCount >= 7) {
+            logoTapCount = 0
+            startActivity(Intent(this, TechnicianActivity::class.java))
+        }
+    }
+
+    private fun askForRequiredPermissionsIfNeeded() {
+        val requiredPermissions = buildRequiredPermissions()
+
+        val missing = requiredPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missing.isNotEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("נדרשות הרשאות להפעלת האפליקציה")
+                .setMessage("האפליקציה זקוקה לכל ההרשאות כדי לבדוק יתרה, לזהות מספר קו, לקבל הודעות ולהוציא שיחה לבדיקה. נא לאשר הכל.")
+                .setPositiveButton("אשר הרשאות") { _, _ ->
+                    permissionLauncher.launch(missing.toTypedArray())
+                }
+                .setCancelable(false)
+                .show()
+        }
+    }
+
+    private fun hasPhonePermissions(): Boolean {
+        val required = mutableListOf(
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.RECEIVE_SMS
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            required.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        return required.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun clearLocalCustomer() {
+        AppPrefs.setCustomerName(this, "")
+        AppPrefs.setCustomerPhone(this, "")
+        AppPrefs.setCarModel(this, "")
+        AppPrefs.setCarNumber(this, "")
+        AppPrefs.setDataPackage(this, "לא ידוע / אין")
+    }
+
+    private fun normalizeLine(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> normalized
+        }
+    }
+
+    private fun normalizePhone(raw: String?): String {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return if (normalized == "לא זוהה") "" else normalized
+    }
+}
