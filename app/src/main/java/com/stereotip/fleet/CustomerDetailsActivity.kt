@@ -9,7 +9,9 @@ import java.util.*
 
 class CustomerDetailsActivity : AppCompatActivity() {
 
-    private lateinit var tvInfo: TextView
+    private lateinit var tvSummary: TextView
+    private lateinit var tvCustomerInfo: TextView
+
     private val db = FirebaseFirestore.getInstance()
     private val df = SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault())
 
@@ -17,24 +19,24 @@ class CustomerDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_customer_details)
 
-        tvInfo = findViewById(R.id.tvCustomerInfo)
+        tvSummary = findViewById(R.id.tvCustomerSummary)
+        tvCustomerInfo = findViewById(R.id.tvCustomerInfo)
 
         val docId = intent.getStringExtra("docId") ?: return
 
-        loadCustomer(docId)
+        loadSummary(docId)
+        loadCustomerDetails(docId)
     }
 
-    private fun loadCustomer(docId: String) {
+    private fun loadSummary(docId: String) {
         db.collection("customers")
             .document(docId)
             .get()
             .addOnSuccessListener { doc ->
 
-                val name = doc.getString("customerName") ?: "---"
-                val phone = doc.getString("customerPhone") ?: "---"
                 val line = doc.getString("lineNumber") ?: "---"
                 val pkg = doc.getString("dataPackage") ?: "---"
-                val warranty = doc.getString("warrantyEnd") ?: "---"
+                val warranty = doc.getString("warrantyEnd") ?: "לא הופעלה"
                 val balance = doc.getLong("currentBalanceMb") ?: 0
                 val lastCheck = doc.getLong("lastBalanceCheck")
 
@@ -42,17 +44,42 @@ class CustomerDetailsActivity : AppCompatActivity() {
                     df.format(Date(lastCheck))
                 else "---"
 
-                tvInfo.text = """
-👤 $name
-☎ $phone
-📱 $line
+                tvSummary.text = """
+📱 קו: $line
 
 📦 חבילה: $pkg
 📊 יתרה: ${balance}MB
 🕒 בדיקה: $lastCheckText
 
-🛡️ אחריות עד: $warranty
+🛡️ אחריות: $warranty
                 """.trimIndent()
+            }
+            .addOnFailureListener {
+                tvSummary.text = "שגיאה בטעינת נתונים"
+            }
+    }
+
+    private fun loadCustomerDetails(docId: String) {
+        db.collection("customers")
+            .document(docId)
+            .get()
+            .addOnSuccessListener { doc ->
+
+                val name = doc.getString("customerName") ?: "---"
+                val phone = doc.getString("customerPhone") ?: "---"
+                val carModel = doc.getString("carModel") ?: "---"
+                val carNumber = doc.getString("carNumber") ?: "---"
+
+                tvCustomerInfo.text = """
+👤 שם: $name
+☎ טלפון: $phone
+
+🚘 דגם רכב: $carModel
+🔢 מספר רכב: $carNumber
+                """.trimIndent()
+            }
+            .addOnFailureListener {
+                tvCustomerInfo.text = "שגיאה בטעינת פרטי לקוח"
             }
     }
 }
