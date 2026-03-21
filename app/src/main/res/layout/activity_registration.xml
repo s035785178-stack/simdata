@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@drawable/bg_registration_screen">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
             android:id="@+id/tvRegistrationLineNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="מספר קו במכשיר: לא זוהה"
+            android:text="מספר קו במכשיר"
             android:textColor="#FFFFFF"
             android:gravity="end"
             android:layout_marginBottom="16dp" />
@@ -33,49 +33,80 @@
         <EditText
             android:id="@+id/etRegistrationName"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_input_rounded"
             android:hint="שם מלא"
-            android:background="#FFFFFF"
-            android:layout_marginBottom="10dp" />
+            android:gravity="end|center_vertical"/>
 
         <EditText
             android:id="@+id/etRegistrationPhone"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_input_rounded"
             android:hint="טלפון"
-            android:background="#FFFFFF"
-            android:layout_marginBottom="10dp" />
+            android:inputType="phone"
+            android:gravity="end|center_vertical"/>
 
         <EditText
             android:id="@+id/etCarModel"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_input_rounded"
             android:hint="דגם רכב"
-            android:background="#FFFFFF"
-            android:layout_marginBottom="10dp" />
+            android:gravity="end|center_vertical"/>
 
         <EditText
             android:id="@+id/etCarNumber"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_input_rounded"
             android:hint="מספר רכב"
-            android:background="#FFFFFF"
-            android:layout_marginBottom="10dp" />
+            android:gravity="end|center_vertical"/>
 
         <Spinner
             android:id="@+id/spinnerPackage"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="16dp"
-            android:background="#FFFFFF" />
+            android:layout_height="52dp"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/bg_input_rounded"/>
 
-        <Button
-            android:id="@+id/btnRegisterCustomer"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="הרשמה"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#842F1B" />
+            android:layout_height="60dp"
+            android:layoutDirection="rtl"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/btnRegisterCustomer"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_main"
+                android:text="הרשמה"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/btnHelp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="עזרה"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>
