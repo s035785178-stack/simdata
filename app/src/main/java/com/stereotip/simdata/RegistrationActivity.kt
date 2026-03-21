@@ -44,12 +44,7 @@ class RegistrationActivity : AppCompatActivity() {
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
 
-        val packages = listOf(
-            "100GB",
-            "36GB",
-            "4GB",
-            "לא ידוע / אין"
-        )
+        val packages = listOf("100GB", "36GB", "4GB", "לא ידוע / אין")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
