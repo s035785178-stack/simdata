@@ -5,13 +5,16 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FirebaseFirestore
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.PhoneUtils
 
 class CustomerDetailsActivity : AppCompatActivity() {
 
+    private lateinit var tvCustomerSummary: TextView
     private lateinit var etName: EditText
     private lateinit var etPhone: EditText
     private lateinit var etCarModel: EditText
@@ -19,6 +22,8 @@ class CustomerDetailsActivity : AppCompatActivity() {
     private lateinit var spinnerPackage: Spinner
     private lateinit var btnSave: Button
     private lateinit var btnBack: Button
+
+    private val db = FirebaseFirestore.getInstance()
 
     private val packages = listOf(
         "לא ידוע / אין",
@@ -31,6 +36,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_customer_details)
 
+        tvCustomerSummary = findViewById(R.id.tvCustomerSummary)
         etName = findViewById(R.id.etName)
         etPhone = findViewById(R.id.etPhone)
         etCarModel = findViewById(R.id.etCarModel)
@@ -41,6 +47,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
         setupPackageSpinner()
         loadExistingData()
+        loadCustomerSummary()
 
         btnSave.setOnClickListener {
             saveCustomerData()
@@ -74,6 +81,52 @@ class CustomerDetailsActivity : AppCompatActivity() {
         spinnerPackage.setSelection(index)
     }
 
+    private fun loadCustomerSummary() {
+        val lineNumber = normalizeDisplayPhone(AppPrefs.getLineNumber(this) ?: "")
+
+        if (lineNumber.isBlank()) {
+            tvCustomerSummary.text = "📱 קו: ---\n\n📦 חבילה: ---\n📊 יתרה: ---\n🕒 בדיקה: ---\n\n🛡️ אחריות: ---"
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", lineNumber)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    tvCustomerSummary.text = "📱 קו: $lineNumber\n\n📦 חבילה: ---\n📊 יתרה: ---\n🕒 בדיקה: ---\n\n🛡️ אחריות: ---"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val pkg = doc.getString("dataPackage").orEmpty().ifBlank { "---" }
+                val warranty = doc.getString("warrantyEnd").orEmpty().ifBlank { "לא הופעלה" }
+                val balance = doc.getLong("currentBalanceMb") ?: doc.getLong("balanceMb")
+                val lastCheck = doc.getLong("lastBalanceCheck") ?: doc.getLong("lastUpdate")
+
+                val balanceText = if (balance != null) "${balance}MB" else "---"
+                val lastCheckText = if (lastCheck != null && lastCheck > 0L) {
+                    android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", lastCheck).toString()
+                } else {
+                    "---"
+                }
+
+                tvCustomerSummary.text = """
+📱 קו: $lineNumber
+
+📦 חבילה: $pkg
+📊 יתרה: $balanceText
+🕒 בדיקה: $lastCheckText
+
+🛡️ אחריות: $warranty
+                """.trimIndent()
+            }
+            .addOnFailureListener {
+                tvCustomerSummary.text = "שגיאה בטעינת נתוני לקוח"
+            }
+    }
+
     private fun saveCustomerData() {
         AppPrefs.setCustomerName(this, etName.text.toString().trim())
         AppPrefs.setCustomerPhone(this, etPhone.text.toString().trim())
@@ -84,6 +137,14 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
     private fun normalizeDisplayPhone(phone: String): String {
         val normalized = PhoneUtils.normalizeToLocal(phone)
-        return if (normalized == "לא זוהה") "" else normalized
+        return if (
+            normalized == "לא זוהה" ||
+            normalized == "לא זוהה מספר" ||
+            normalized == "לא אושרו הרשאות"
+        ) {
+            ""
+        } else {
+            normalized
+        }
     }
 }
