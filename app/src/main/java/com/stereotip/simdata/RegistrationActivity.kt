@@ -3,6 +3,8 @@ package com.stereotip.simdata
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -101,7 +103,6 @@ class RegistrationActivity : AppCompatActivity() {
             return
         }
 
-        // 🔥 שינוי UX
         btnRegister.isEnabled = false
         btnRegister.text = "נרשם..."
 
@@ -121,6 +122,7 @@ class RegistrationActivity : AppCompatActivity() {
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
+
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
                 AppPrefs.setCarModel(this, carModel)
@@ -131,17 +133,20 @@ class RegistrationActivity : AppCompatActivity() {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
                 }
 
-                Toast.makeText(this, "נרשמת בהצלחה", Toast.LENGTH_SHORT).show()
+                // ✅ אפקט הצלחה
+                btnRegister.text = "✔️ נרשמת בהצלחה"
+                btnRegister.setBackgroundColor(0xFF2E7D32.toInt())
 
-                val intent = Intent(this, MainActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                finish()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
+                }, 1200)
             }
             .addOnFailureListener {
                 btnRegister.isEnabled = true
                 btnRegister.text = "הרשמה"
-
                 Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
             }
     }
