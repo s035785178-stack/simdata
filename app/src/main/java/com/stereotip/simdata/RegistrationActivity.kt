@@ -104,6 +104,7 @@ class RegistrationActivity : AppCompatActivity() {
         }
 
         btnRegister.isEnabled = false
+        btnHelp.isEnabled = false
         btnRegister.text = "נרשם..."
 
         val now = System.currentTimeMillis()
@@ -122,7 +123,6 @@ class RegistrationActivity : AppCompatActivity() {
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
-
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
                 AppPrefs.setCarModel(this, carModel)
@@ -133,19 +133,23 @@ class RegistrationActivity : AppCompatActivity() {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
                 }
 
-                // ✅ אפקט הצלחה
                 btnRegister.text = "✔️ נרשמת בהצלחה"
                 btnRegister.setBackgroundColor(0xFF2E7D32.toInt())
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val intent = Intent(this, MainActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    val intent = Intent(this, BalanceActivity::class.java).apply {
+                        putExtra("auto_start_check", true)
+                        putExtra("from_registration", true)
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
                     startActivity(intent)
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
                     finish()
-                }, 1200)
+                }, 900)
             }
             .addOnFailureListener {
                 btnRegister.isEnabled = true
+                btnHelp.isEnabled = true
                 btnRegister.text = "הרשמה"
                 Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
             }
@@ -155,6 +159,11 @@ class RegistrationActivity : AppCompatActivity() {
         val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
         val url = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
     private fun normalizePhone(raw: String?): String {
