@@ -8,11 +8,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.util.AppPrefs
+import com.stereotip.simdata.util.NetworkUtils
 import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.TelephonyUtils
 import java.net.URLEncoder
@@ -54,8 +54,6 @@ class RegistrationActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, R.layout.spinner_item_white, packages)
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_white)
         spinnerPackage.adapter = adapter
-
-        // ברירת מחדל: 100 ג׳יגה או שנתיים
         spinnerPackage.setSelection(1)
 
         detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
@@ -66,7 +64,7 @@ class RegistrationActivity : AppCompatActivity() {
         }
 
         btnRegister.setOnClickListener {
-            registerCustomer()
+            attemptRegistration()
         }
 
         btnHelp.setOnClickListener {
@@ -74,14 +72,9 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerCustomer() {
+    private fun attemptRegistration() {
         val name = etName.text.toString().trim()
         val phone = normalizePhone(etPhone.text.toString())
-        val carModel = etCarModel.text.toString().trim()
-        val carNumber = etCarNumber.text.toString().trim()
-        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
-        val lineNumber = detectedLineNumber
-        val now = System.currentTimeMillis()
 
         if (name.isBlank()) {
             etName.error = "יש להזין שם"
@@ -94,6 +87,26 @@ class RegistrationActivity : AppCompatActivity() {
             etPhone.requestFocus()
             return
         }
+
+        if (!NetworkUtils.isOnline(this)) {
+            val intent = Intent(this, ResultActivity::class.java)
+            intent.putExtra("success", false)
+            startActivity(intent)
+            finish()
+            return
+        }
+
+        registerCustomer()
+    }
+
+    private fun registerCustomer() {
+        val name = etName.text.toString().trim()
+        val phone = normalizePhone(etPhone.text.toString())
+        val carModel = etCarModel.text.toString().trim()
+        val carNumber = etCarNumber.text.toString().trim()
+        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
+        val lineNumber = detectedLineNumber
+        val now = System.currentTimeMillis()
 
         val data = hashMapOf(
             "customerName" to name,
@@ -119,11 +132,16 @@ class RegistrationActivity : AppCompatActivity() {
                     AppPrefs.setLineNumber(this, lineNumber)
                 }
 
-                Toast.makeText(this, "ההרשמה בוצעה בהצלחה", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("success", true)
+                startActivity(intent)
                 finish()
             }
             .addOnFailureListener {
-                Toast.makeText(this, "שגיאה בהרשמה, נסה שוב", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("success", false)
+                startActivity(intent)
+                finish()
             }
     }
 
