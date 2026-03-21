@@ -32,7 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvBalanceQuick: TextView
     private lateinit var tvUpdated: TextView
     private lateinit var tvStatus: TextView
-    private lateinit var tvWarrantyStatus: TextView
+    private lateinit var btnPackageStatus: Button
+    private lateinit var btnWarrantyStatus: Button
     private lateinit var btnActivateWarranty: Button
     private lateinit var logo: ImageView
 
@@ -48,12 +49,14 @@ class MainActivity : AppCompatActivity() {
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
+            loadPackageStatus()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             updateSummary()
             loadWarrantyStatus()
+            loadPackageStatus()
         }
     }
 
@@ -66,7 +69,8 @@ class MainActivity : AppCompatActivity() {
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
         tvUpdated = findViewById(R.id.tvUpdated)
         tvStatus = findViewById(R.id.tvStatus)
-        tvWarrantyStatus = findViewById(R.id.tvWarrantyStatus)
+        btnPackageStatus = findViewById(R.id.btnPackageStatus)
+        btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
         btnActivateWarranty = findViewById(R.id.btnActivateWarranty)
         logo = findViewById(R.id.logo)
 
@@ -92,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         askForRequiredPermissionsIfNeeded()
         updateSummary()
         loadWarrantyStatus()
+        loadPackageStatus()
     }
 
     override fun onResume() {
@@ -101,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
+        loadPackageStatus()
     }
 
     override fun onPause() {
@@ -163,10 +169,10 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private fun loadWarrantyStatus() {
+    private fun loadPackageStatus() {
         val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
         if (normalizedLine.isBlank()) {
-            tvWarrantyStatus.text = "🛡️ אחריות: לא זוהה מספר קו"
+            btnPackageStatus.text = "📦 לא זוהה"
             return
         }
 
@@ -176,7 +182,38 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    tvWarrantyStatus.text = "🛡️ אחריות: לא הופעלה"
+                    btnPackageStatus.text = "📦 לא ידוע"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val pkg = doc.getString("dataPackage").orEmpty()
+
+                btnPackageStatus.text = if (pkg.isBlank()) {
+                    "📦 לא ידוע"
+                } else {
+                    "📦 $pkg"
+                }
+            }
+            .addOnFailureListener {
+                btnPackageStatus.text = "📦 שגיאה"
+            }
+    }
+
+    private fun loadWarrantyStatus() {
+        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
+        if (normalizedLine.isBlank()) {
+            btnWarrantyStatus.text = "🛡️ לא זוהה"
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    btnWarrantyStatus.text = "🛡️ לא הופעלה"
                     return@addOnSuccessListener
                 }
 
@@ -185,13 +222,13 @@ class MainActivity : AppCompatActivity() {
                 val warrantyStart = doc.getLong("warrantyStart")
 
                 if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
-                    tvWarrantyStatus.text = "🛡️ אחריות: לא הופעלה"
+                    btnWarrantyStatus.text = "🛡️ לא הופעלה"
                 } else {
-                    tvWarrantyStatus.text = "🛡️ אחריות עד: $warrantyEnd"
+                    btnWarrantyStatus.text = "🛡️ $warrantyEnd"
                 }
             }
             .addOnFailureListener {
-                tvWarrantyStatus.text = "🛡️ אחריות: שגיאה בטעינה"
+                btnWarrantyStatus.text = "🛡️ שגיאה"
             }
     }
 
