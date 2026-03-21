@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
@@ -33,12 +32,14 @@ class MainActivity : AppCompatActivity() {
     private var logoTapCount = 0
     private var lastTapTime = 0L
     private var registrationCheckDone = false
+    private var isOpeningRegistration = false
 
     private val db = FirebaseFirestore.getInstance()
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             updateSummary()
+            registrationCheckDone = false
             checkRegistrationIfNeeded()
         }
 
@@ -80,6 +81,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        isOpeningRegistration = false
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
         updateSummary()
@@ -111,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone) return
+        if (registrationCheckDone || isOpeningRegistration) return
         if (!hasPhonePermissions()) return
 
         val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
@@ -125,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
+                    isOpeningRegistration = true
                     startActivity(Intent(this, RegistrationActivity::class.java))
                 } else {
                     val doc = result.documents.first()
