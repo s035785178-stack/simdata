@@ -2,6 +2,7 @@ package com.stereotip.simdata.util
 
 import android.content.Context
 import android.os.Build
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
@@ -15,7 +16,7 @@ object FirebaseCustomerSync {
 
         val now = System.currentTimeMillis()
 
-        val data = hashMapOf(
+        val data: HashMap<String, Any?> = hashMapOf(
             "lineNumber" to lineNumber,
             "balanceMb" to AppPrefs.getBalanceMb(context),
             "currentBalanceMb" to AppPrefs.getBalanceMb(context),
@@ -34,7 +35,6 @@ object FirebaseCustomerSync {
                     val docRef = result.documents.first().reference
                     updateExistingCustomer(docRef, data, lineNumber, now, context)
                 } else {
-                    // אם עדיין אין לקוח רשום, נשמור זמנית לפי lineNumber
                     val docRef = db.collection("customers").document(lineNumber)
                     updateExistingCustomer(docRef, data, lineNumber, now, context)
                 }
@@ -42,7 +42,7 @@ object FirebaseCustomerSync {
     }
 
     private fun updateExistingCustomer(
-        docRef: com.google.firebase.firestore.DocumentReference,
+        docRef: DocumentReference,
         data: HashMap<String, Any?>,
         lineNumber: String,
         now: Long,
@@ -50,7 +50,7 @@ object FirebaseCustomerSync {
     ) {
         docRef.set(data, SetOptions.merge())
             .addOnSuccessListener {
-                val history = hashMapOf(
+                val history: HashMap<String, Any?> = hashMapOf(
                     "checkedAt" to now,
                     "balanceMb" to AppPrefs.getBalanceMb(context),
                     "lineNumber" to lineNumber,
