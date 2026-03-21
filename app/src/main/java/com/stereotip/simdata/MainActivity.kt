@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     private var logoTapCount = 0
     private var lastTapTime = 0L
     private var registrationCheckDone = false
+    private var movedToRegistration = false
+    private var balanceReceiverRegistered = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
@@ -55,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     private val balanceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            if (isFinishing || isDestroyed) return
             updateSummary()
             loadWarrantyStatus()
             loadPackageStatus()
@@ -102,8 +105,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+
+        if (!balanceReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this)
+                .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+            balanceReceiverRegistered = true
+        }
+
+        if (movedToRegistration) return
+
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
@@ -111,7 +121,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
+        if (balanceReceiverRegistered) {
+            try {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
+            } catch (_: Exception) {
+            }
+            balanceReceiverRegistered = false
+        }
         super.onPause()
     }
 
@@ -135,7 +151,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone) return
+        if (registrationCheckDone || movedToRegistration) return
 
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
@@ -148,26 +164,22 @@ class MainActivity : AppCompatActivity() {
             else -> ""
         }
 
-        // אם אין הרשאות ואין בכלל מידע שמור - להרשמה
         if (!hasPhonePermissions() && savedPhone.isBlank() && savedName.isBlank() && normalizedLine.isBlank()) {
-            goToRegistration()
+            moveToRegistration(clearLocal = false)
             return
         }
 
-        // אם אין לנו שום דרך לזהות את הלקוח וגם אין מידע שמור - להרשמה
         if (normalizedLine.isBlank() && savedPhone.isBlank() && savedName.isBlank()) {
-            goToRegistration()
+            moveToRegistration(clearLocal = false)
             return
         }
 
-        // אם אין אינטרנט אבל כבר יש לקוח שמור מקומית - להישאר במסך הראשי
         if (!NetworkUtils.isOnline(this)) {
             if (savedPhone.isNotBlank() || savedName.isNotBlank()) {
                 registrationCheckDone = true
                 return
             }
-
-            goToRegistration()
+            moveToRegistration(clearLocal = false)
             return
         }
 
@@ -179,9 +191,10 @@ class MainActivity : AppCompatActivity() {
                 .limit(1)
                 .get()
                 .addOnSuccessListener { result ->
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
                     if (result.isEmpty) {
-                        clearLocalCustomer()
-                        goToRegistration()
+                        moveToRegistration(clearLocal = true)
                     } else {
                         val doc = result.documents.first()
 
@@ -191,56 +204,62 @@ class MainActivity : AppCompatActivity() {
                         val carNumber = doc.getString("carNumber").orEmpty()
                         val dataPackage = doc.getString("dataPackage").orEmpty()
 
-                        if (customerName.isNotBlank()) {
-                            AppPrefs.setCustomerName(this, customerName)
-                        }
-                        if (customerPhone.isNotBlank()) {
-                            AppPrefs.setCustomerPhone(this, customerPhone)
-                        }
-                        if (carModel.isNotBlank()) {
-                            AppPrefs.setCarModel(this, carModel)
-                        }
-                        if (carNumber.isNotBlank()) {
-                            AppPrefs.setCarNumber(this, carNumber)
-                        }
-                        if (dataPackage.isNotBlank()) {
-                            AppPrefs.setDataPackage(this, dataPackage)
-                        }
+                        if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
+                        if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
+                        if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
+                        if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
+                        if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
 
                         AppPrefs.setLineNumber(this, normalizedLine)
                     }
                 }
                 .addOnFailureListener {
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+
                     if (savedPhone.isBlank() && savedName.isBlank()) {
                         registrationCheckDone = false
-                        goToRegistration()
+                        moveToRegistration(clearLocal = false)
                     }
                 }
-
             return
         }
 
-        // אם אין lineNumber אבל יש טלפון שמור - נבדוק לפי מס' לקוח
         if (savedPhone.isNotBlank()) {
             db.collection("customers")
                 .document(savedPhone)
                 .get()
                 .addOnSuccessListener { doc ->
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
                     if (!doc.exists()) {
-                        clearLocalCustomer()
-                        goToRegistration()
+                        moveToRegistration(clearLocal = true)
                     }
                 }
                 .addOnFailureListener {
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
                     if (savedName.isBlank()) {
                         registrationCheckDone = false
-                        goToRegistration()
+                        moveToRegistration(clearLocal = false)
                     }
                 }
             return
         }
 
-        goToRegistration()
+        moveToRegistration(clearLocal = false)
+    }
+
+    private fun moveToRegistration(clearLocal: Boolean) {
+        if (movedToRegistration) return
+
+        movedToRegistration = true
+
+        if (clearLocal) {
+            clearLocalCustomer()
+        }
+
+        val intent = Intent(this, RegistrationActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        finish()
     }
 
     private fun loadPackageStatus() {
@@ -255,6 +274,8 @@ class MainActivity : AppCompatActivity() {
             .limit(1)
             .get()
             .addOnSuccessListener { result ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
                 if (result.isEmpty) {
                     btnPackageStatus.text = "📦 מצב חבילה\nלא ידוע"
                     return@addOnSuccessListener
@@ -270,7 +291,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                btnPackageStatus.text = "📦 מצב חבילה\nשגיאה"
+                if (!isFinishing && !isDestroyed) {
+                    btnPackageStatus.text = "📦 מצב חבילה\nשגיאה"
+                }
             }
     }
 
@@ -286,6 +309,8 @@ class MainActivity : AppCompatActivity() {
             .limit(1)
             .get()
             .addOnSuccessListener { result ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
                 if (result.isEmpty) {
                     btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
                     return@addOnSuccessListener
@@ -302,7 +327,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                btnWarrantyStatus.text = "🛡️ תוקף אחריות\nשגיאה"
+                if (!isFinishing && !isDestroyed) {
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nשגיאה"
+                }
             }
     }
 
@@ -415,12 +442,6 @@ class MainActivity : AppCompatActivity() {
         AppPrefs.setCarModel(this, "")
         AppPrefs.setCarNumber(this, "")
         AppPrefs.setDataPackage(this, "לא ידוע / אין")
-        AppPrefs.setLineNumber(this, "")
-    }
-
-    private fun goToRegistration() {
-        startActivity(Intent(this, RegistrationActivity::class.java))
-        finish()
     }
 
     private fun normalizeLine(raw: String?): String {
