@@ -91,6 +91,8 @@ class RegistrationActivity : AppCompatActivity() {
         if (!NetworkUtils.isOnline(this)) {
             val intent = Intent(this, ResultActivity::class.java)
             intent.putExtra("success", false)
+            intent.putExtra("return_to_registration", true)
+            intent.putExtra("seconds", 10)
             startActivity(intent)
             finish()
             return
@@ -134,12 +136,16 @@ class RegistrationActivity : AppCompatActivity() {
 
                 val intent = Intent(this, ResultActivity::class.java)
                 intent.putExtra("success", true)
+                intent.putExtra("return_to_registration", false)
+                intent.putExtra("seconds", 5)
                 startActivity(intent)
                 finish()
             }
             .addOnFailureListener {
                 val intent = Intent(this, ResultActivity::class.java)
                 intent.putExtra("success", false)
+                intent.putExtra("return_to_registration", true)
+                intent.putExtra("seconds", 10)
                 startActivity(intent)
                 finish()
             }
