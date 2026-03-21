@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadPackageStatus() {
         val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
         if (normalizedLine.isBlank()) {
-            btnPackageStatus.text = "📦 לא זוהה"
+            btnPackageStatus.text = "📦 מצב חבילה\nלא זוהה"
             return
         }
 
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    btnPackageStatus.text = "📦 לא ידוע"
+                    btnPackageStatus.text = "📦 מצב חבילה\nלא ידוע"
                     return@addOnSuccessListener
                 }
 
@@ -190,20 +190,20 @@ class MainActivity : AppCompatActivity() {
                 val pkg = doc.getString("dataPackage").orEmpty()
 
                 btnPackageStatus.text = if (pkg.isBlank()) {
-                    "📦 לא ידוע"
+                    "📦 מצב חבילה\nלא ידוע"
                 } else {
-                    "📦 $pkg"
+                    "📦 מצב חבילה\n$pkg"
                 }
             }
             .addOnFailureListener {
-                btnPackageStatus.text = "📦 שגיאה"
+                btnPackageStatus.text = "📦 מצב חבילה\nשגיאה"
             }
     }
 
     private fun loadWarrantyStatus() {
         val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
         if (normalizedLine.isBlank()) {
-            btnWarrantyStatus.text = "🛡️ לא זוהה"
+            btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא זוהה"
             return
         }
 
@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    btnWarrantyStatus.text = "🛡️ לא הופעלה"
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
                     return@addOnSuccessListener
                 }
 
@@ -222,13 +222,13 @@ class MainActivity : AppCompatActivity() {
                 val warrantyStart = doc.getLong("warrantyStart")
 
                 if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
-                    btnWarrantyStatus.text = "🛡️ לא הופעלה"
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
                 } else {
-                    btnWarrantyStatus.text = "🛡️ $warrantyEnd"
+                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\n$warrantyEnd"
                 }
             }
             .addOnFailureListener {
-                btnWarrantyStatus.text = "🛡️ שגיאה"
+                btnWarrantyStatus.text = "🛡️ תוקף אחריות\nשגיאה"
             }
     }
 
