@@ -137,9 +137,7 @@ class RegistrationActivity : AppCompatActivity() {
                 btnRegister.setBackgroundColor(0xFF2E7D32.toInt())
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val intent = Intent(this, BalanceActivity::class.java).apply {
-                        putExtra("auto_start_check", true)
-                        putExtra("from_registration", true)
+                    val intent = Intent(this, WarrantyPromptActivity::class.java).apply {
                         addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(intent)
