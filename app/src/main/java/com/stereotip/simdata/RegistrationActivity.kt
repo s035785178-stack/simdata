@@ -3,7 +3,12 @@ package com.stereotip.simdata
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -50,6 +55,7 @@ class RegistrationActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
+        spinnerPackage.setSelection(1)
 
         detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
         tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
@@ -70,9 +76,19 @@ class RegistrationActivity : AppCompatActivity() {
     private fun register() {
         val name = etName.text.toString().trim()
         val phone = normalizePhone(etPhone.text.toString())
+        val carModel = etCarModel.text.toString().trim()
+        val carNumber = etCarNumber.text.toString().trim()
+        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
 
-        if (name.isEmpty() || phone.isEmpty()) {
-            Toast.makeText(this, "נא למלא שם וטלפון", Toast.LENGTH_SHORT).show()
+        if (name.isBlank()) {
+            etName.error = "נא למלא שם"
+            etName.requestFocus()
+            return
+        }
+
+        if (phone.length != 10 || !phone.startsWith("05")) {
+            etPhone.error = "נא למלא טלפון תקין"
+            etPhone.requestFocus()
             return
         }
 
@@ -81,30 +97,42 @@ class RegistrationActivity : AppCompatActivity() {
             return
         }
 
+        btnRegister.isEnabled = false
+
+        val now = System.currentTimeMillis()
         val data = hashMapOf(
             "customerName" to name,
             "customerPhone" to phone,
             "lineNumber" to detectedLineNumber,
-            "carModel" to etCarModel.text.toString(),
-            "carNumber" to etCarNumber.text.toString(),
-            "dataPackage" to spinnerPackage.selectedItem.toString(),
-            "createdAt" to System.currentTimeMillis()
+            "carModel" to carModel,
+            "carNumber" to carNumber,
+            "dataPackage" to dataPackage,
+            "createdAt" to now,
+            "lastUpdate" to now
         )
 
         db.collection("customers")
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
-
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
+                AppPrefs.setCarModel(this, carModel)
+                AppPrefs.setCarNumber(this, carNumber)
+                AppPrefs.setDataPackage(this, dataPackage)
+                if (detectedLineNumber.isNotBlank()) {
+                    AppPrefs.setLineNumber(this, detectedLineNumber)
+                }
 
                 Toast.makeText(this, "נרשמת בהצלחה", Toast.LENGTH_SHORT).show()
 
-                startActivity(Intent(this, MainActivity::class.java))
+                val intent = Intent(this, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
                 finish()
             }
             .addOnFailureListener {
+                btnRegister.isEnabled = true
                 Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
             }
     }
@@ -117,11 +145,17 @@ class RegistrationActivity : AppCompatActivity() {
 
     private fun normalizePhone(raw: String?): String {
         val n = PhoneUtils.normalizeToLocal(raw)
-        return if (n == "לא זוהה") "" else n
+        return when (n) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> n
+        }
     }
 
     private fun normalizeLine(raw: String?): String {
         val n = PhoneUtils.normalizeToLocal(raw)
-        return if (n.contains("לא")) "" else n
+        return when (n) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> n
+        }
     }
 }
