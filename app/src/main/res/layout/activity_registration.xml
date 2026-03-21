@@ -26,8 +26,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/stereo_logo" />
 
-        <!-- כותרת + מספר קו -->
-        <FrameLayout
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginBottom="8dp"
@@ -36,17 +35,7 @@
             android:paddingEnd="12dp">
 
             <TextView
-                android:id="@+id/tvRegistrationLineNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="end|center_vertical"
-                android:gravity="center_vertical"
-                android:text="מספר קו במכשיר: 0559440470"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
+                android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
@@ -54,7 +43,22 @@
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
-        </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvRegistrationLineNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:gravity="end|center_vertical"
+                android:text="מספר קו במכשיר: 0559440470"
+                android:textColor="@color/text_primary"
+                android:textDirection="rtl"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -81,14 +85,15 @@
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
-                android:gravity="end|center_vertical"
+                android:gravity="right|end|center_vertical"
                 android:hint="שם מלא"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:singleLine="true"
                 android:textAlignment="viewEnd"
                 android:textColor="#1B1B1B"
-                android:textColorHint="#6F6F6F" />
+                android:textColorHint="#6F6F6F"
+                android:textDirection="rtl" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -106,7 +111,7 @@
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
-                android:gravity="end|center_vertical"
+                android:gravity="right|end|center_vertical"
                 android:hint="טלפון"
                 android:inputType="phone"
                 android:paddingStart="14dp"
@@ -114,7 +119,8 @@
                 android:singleLine="true"
                 android:textAlignment="viewEnd"
                 android:textColor="#1B1B1B"
-                android:textColorHint="#6F6F6F" />
+                android:textColorHint="#6F6F6F"
+                android:textDirection="rtl" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -132,14 +138,15 @@
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
-                android:gravity="end|center_vertical"
+                android:gravity="right|end|center_vertical"
                 android:hint="דגם רכב"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:singleLine="true"
                 android:textAlignment="viewEnd"
                 android:textColor="#1B1B1B"
-                android:textColorHint="#6F6F6F" />
+                android:textColorHint="#6F6F6F"
+                android:textDirection="rtl" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -157,14 +164,15 @@
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
-                android:gravity="end|center_vertical"
+                android:gravity="right|end|center_vertical"
                 android:hint="מספר רכב"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:singleLine="true"
                 android:textAlignment="viewEnd"
                 android:textColor="#1B1B1B"
-                android:textColorHint="#6F6F6F" />
+                android:textColorHint="#6F6F6F"
+                android:textDirection="rtl" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -178,13 +186,14 @@
             <Spinner
                 android:id="@+id/spinnerPackage"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
                 android:dropDownVerticalOffset="4dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
+                android:minHeight="52dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
                 android:spinnerMode="dropdown" />
         </LinearLayout>
 
@@ -205,6 +214,7 @@
                 android:layout_marginStart="6dp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_button_brand"
+                android:backgroundTint="@null"
                 android:text="הרשמה"
                 android:textAllCaps="false"
                 android:textColor="@color/text_primary"
@@ -219,6 +229,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_button_gray_light"
+                android:backgroundTint="@null"
                 android:text="עזרה"
                 android:textAllCaps="false"
                 android:textColor="#111111"
