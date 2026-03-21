@@ -26,40 +26,35 @@
             android:scaleType="fitCenter"
             android:src="@drawable/stereo_logo" />
 
-        <LinearLayout
+        <!-- כותרת + מספר קו -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/bg_card"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
             android:paddingStart="12dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="10dp"
-            android:weightSum="3">
+            android:paddingEnd="12dp">
 
             <TextView
                 android:id="@+id/tvRegistrationLineNumber"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="start|center_vertical"
-                android:text="מספר קו: לא זוהה"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end|center_vertical"
+                android:gravity="center_vertical"
+                android:text="מספר קו במכשיר: 0559440470"
                 android:textColor="@color/text_primary"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="רישום כלקוח חדש"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
-        </LinearLayout>
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -183,10 +178,11 @@
             <Spinner
                 android:id="@+id/spinnerPackage"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
+                android:dropDownVerticalOffset="4dp"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:spinnerMode="dropdown" />
@@ -197,8 +193,8 @@
             android:layout_height="50dp"
             android:layout_marginTop="10dp"
             android:orientation="horizontal"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:weightSum="2">
 
             <Button
@@ -206,8 +202,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="3dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_button_brand"
                 android:text="הרשמה"
                 android:textAllCaps="false"
@@ -220,12 +216,12 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="5dp"
-                android:background="@drawable/bg_button_gray"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_button_gray_light"
                 android:text="עזרה"
                 android:textAllCaps="false"
-                android:textColor="@color/text_primary"
+                android:textColor="#111111"
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
