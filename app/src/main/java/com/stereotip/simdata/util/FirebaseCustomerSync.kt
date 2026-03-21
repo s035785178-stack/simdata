@@ -10,30 +10,44 @@ object FirebaseCustomerSync {
     fun sync(context: Context) {
         val db = FirebaseFirestore.getInstance()
 
-        val lineNumber = normalizeLine(
-            TelephonyUtils.getLineNumber(context)
-        )
-
+        val lineNumber = normalizeLine(TelephonyUtils.getLineNumber(context))
         if (lineNumber.isBlank()) return
 
         val now = System.currentTimeMillis()
 
         val data = hashMapOf(
             "lineNumber" to lineNumber,
-
-            // נתונים דינמיים שהאפליקציה באמת יודעת
             "balanceMb" to AppPrefs.getBalanceMb(context),
             "currentBalanceMb" to AppPrefs.getBalanceMb(context),
             "validUntil" to AppPrefs.getValid(context),
             "lastUpdate" to now,
             "lastBalanceCheck" to now,
-
-            // מידע טכני
             "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim()
         )
 
-        val docRef = db.collection("customers").document(lineNumber)
+        db.collection("customers")
+            .whereEqualTo("lineNumber", lineNumber)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (!result.isEmpty) {
+                    val docRef = result.documents.first().reference
+                    updateExistingCustomer(docRef, data, lineNumber, now, context)
+                } else {
+                    // אם עדיין אין לקוח רשום, נשמור זמנית לפי lineNumber
+                    val docRef = db.collection("customers").document(lineNumber)
+                    updateExistingCustomer(docRef, data, lineNumber, now, context)
+                }
+            }
+    }
 
+    private fun updateExistingCustomer(
+        docRef: com.google.firebase.firestore.DocumentReference,
+        data: HashMap<String, Any?>,
+        lineNumber: String,
+        now: Long,
+        context: Context
+    ) {
         docRef.set(data, SetOptions.merge())
             .addOnSuccessListener {
                 val history = hashMapOf(
