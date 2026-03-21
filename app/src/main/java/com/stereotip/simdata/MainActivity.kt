@@ -1,211 +1,129 @@
 package com.stereotip.simdata
 
-import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.firebase.firestore.FirebaseFirestore
-import com.stereotip.simdata.receiver.SmsReceiver
+import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.Formatter
 import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.TelephonyUtils
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var tvLine: TextView
-    private lateinit var tvBalanceQuick: TextView
-    private lateinit var tvUpdated: TextView
-    private lateinit var tvStatus: TextView
-    private lateinit var logo: ImageView
 
-    private var logoTapCount = 0
-    private var lastTapTime = 0L
-    private var registrationCheckDone = false
-    private var isOpeningRegistration = false
+    private lateinit var tvWarranty: TextView
+    private lateinit var btnWarranty: Button
 
     private val db = FirebaseFirestore.getInstance()
-
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            updateSummary()
-            registrationCheckDone = false
-            checkRegistrationIfNeeded()
-        }
-
-    private val balanceReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            updateSummary()
-        }
-    }
+    private var lineNumber: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        AppPrefs.ensureInstallTimestamp(this)
 
-        tvLine = findViewById(R.id.tvLine)
-        tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
-        tvUpdated = findViewById(R.id.tvUpdated)
-        tvStatus = findViewById(R.id.tvStatus)
-        logo = findViewById(R.id.logo)
+        tvWarranty = findViewById(R.id.tvWarrantyStatus)
+        btnWarranty = findViewById(R.id.btnActivateWarranty)
 
-        findViewById<Button>(R.id.btnBalance).setOnClickListener {
-            startActivity(Intent(this, BalanceActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnNetwork).setOnClickListener {
-            startActivity(Intent(this, NetworkCheckActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnPackages).setOnClickListener {
-            startActivity(Intent(this, PackagesActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnSupport).setOnClickListener {
-            startActivity(Intent(this, SupportActivity::class.java))
-        }
+        lineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
 
-        logo.setOnClickListener { onLogoTapped() }
+        loadWarranty()
 
-        askForRequiredPermissionsIfNeeded()
-        updateSummary()
+        btnWarranty.setOnClickListener {
+            activateWarranty()
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
-        isOpeningRegistration = false
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
-        updateSummary()
-        checkRegistrationIfNeeded()
-    }
-
-    override fun onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
-        super.onPause()
-    }
-
-    private fun updateSummary() {
-        val savedLine = AppPrefs.getLineNumber(this)
-        val deviceLine = TelephonyUtils.getLineNumber(this)
-
-        val rawLine = when {
-            !savedLine.isNullOrBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> null
+    private fun loadWarranty() {
+        if (lineNumber.isBlank()) {
+            tvWarranty.text = "🛡️ אחריות: לא זוהה"
+            return
         }
-
-        val line = PhoneUtils.normalizeToLocal(rawLine)
-        tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
-
-        val mb = AppPrefs.getBalanceMb(this)
-        tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
-        tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
-        tvStatus.text = Formatter.balanceStatus(mb)
-    }
-
-    private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone || isOpeningRegistration) return
-        if (!hasPhonePermissions()) return
-
-        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
-        if (normalizedLine.isBlank()) return
-
-        registrationCheckDone = true
 
         db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
+            .whereEqualTo("lineNumber", lineNumber)
             .limit(1)
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    isOpeningRegistration = true
-                    startActivity(Intent(this, RegistrationActivity::class.java))
+                    tvWarranty.text = "🛡️ אחריות: לא הופעלה"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val warrantyEnd = doc.getString("warrantyEnd")
+
+                if (warrantyEnd.isNullOrBlank()) {
+                    tvWarranty.text = "🛡️ אחריות: לא הופעלה"
                 } else {
-                    val doc = result.documents.first()
-
-                    val customerName = doc.getString("customerName").orEmpty()
-                    val customerPhone = normalizePhone(doc.getString("customerPhone"))
-
-                    if (customerName.isNotBlank()) {
-                        AppPrefs.setCustomerName(this, customerName)
-                    }
-                    if (customerPhone.isNotBlank()) {
-                        AppPrefs.setCustomerPhone(this, customerPhone)
-                    }
-                    AppPrefs.setLineNumber(this, normalizedLine)
+                    tvWarranty.text = "🛡️ אחריות עד: $warrantyEnd"
                 }
             }
-            .addOnFailureListener {
-                registrationCheckDone = false
-            }
     }
 
-    private fun onLogoTapped() {
-        val now = System.currentTimeMillis()
-        if (now - lastTapTime > 4000) logoTapCount = 0
-        lastTapTime = now
-        logoTapCount++
-        if (logoTapCount >= 7) {
-            logoTapCount = 0
-            startActivity(Intent(this, TechnicianActivity::class.java))
-        }
-    }
+    private fun activateWarranty() {
+        if (lineNumber.isBlank()) return
 
-    private fun askForRequiredPermissionsIfNeeded() {
-        val permissions = mutableListOf(
-            Manifest.permission.READ_SMS,
-            Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_PHONE_NUMBERS,
-            Manifest.permission.CALL_PHONE
-        )
-
-        val missing = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missing.isNotEmpty()) {
-            AlertDialog.Builder(this)
-                .setTitle("נדרשות הרשאות להפעלת האפליקציה")
-                .setMessage("האפליקציה זקוקה להרשאות כדי לבדוק יתרה, לזהות מספר קו ולקבל הודעות מהמערכת. נא לאשר הכל.")
-                .setPositiveButton("הפעל את האפליקציה") { _, _ ->
-                    permissionLauncher.launch(missing.toTypedArray())
+        db.collection("customers")
+            .whereEqualTo("lineNumber", lineNumber)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Toast.makeText(this, "לקוח לא נמצא", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
                 }
-                .setCancelable(false)
-                .show()
-        }
-    }
 
-    private fun hasPhonePermissions(): Boolean {
-        val required = listOf(
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.READ_PHONE_NUMBERS
-        )
+                val doc = result.documents.first()
+                val docRef = doc.reference
 
-        return required.all {
-            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
-        }
+                val existing = doc.getString("warrantyStart")
+
+                if (!existing.isNullOrBlank()) {
+                    Toast.makeText(
+                        this,
+                        "האחריות כבר הופעלה במכשיר זה. לשינויים יש לפנות לסטריאו טיפ אביזרי רכב",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                val calendar = Calendar.getInstance()
+                val start = calendar.timeInMillis
+
+                calendar.add(Calendar.YEAR, 1)
+                val end = calendar.timeInMillis
+
+                val data: HashMap<String, Any?> = hashMapOf(
+                    "warrantyStart" to start,
+                    "warrantyEnd" to formatDate(end)
+                )
+
+                docRef.set(data, SetOptions.merge())
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "האחריות הופעלה", Toast.LENGTH_SHORT).show()
+                        loadWarranty()
+                    }
+            }
     }
 
     private fun normalizeLine(raw: String?): String {
         val normalized = PhoneUtils.normalizeToLocal(raw)
-        return when (normalized) {
-            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> normalized
-        }
+        return if (
+            normalized == "לא זוהה" ||
+            normalized == "לא זוהה מספר" ||
+            normalized == "לא אושרו הרשאות"
+        ) "" else normalized
     }
 
-    private fun normalizePhone(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return if (normalized == "לא זוהה") "" else normalized
+    private fun formatDate(timestamp: Long): String {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = timestamp
+        val day = cal.get(Calendar.DAY_OF_MONTH)
+        val month = cal.get(Calendar.MONTH) + 1
+        val year = cal.get(Calendar.YEAR)
+        return "$day/$month/$year"
     }
 }
