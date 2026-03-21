@@ -21,6 +21,7 @@ import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
+import com.stereotip.simdata.util.NetworkUtils
 import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.TelephonyUtils
 import java.text.SimpleDateFormat
@@ -140,6 +141,16 @@ class MainActivity : AppCompatActivity() {
         val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
         if (normalizedLine.isBlank()) return
 
+        // אם אין אינטרנט אבל כבר קיים לקוח שמור מקומית - נכנסים רגיל
+        if (!NetworkUtils.isOnline(this)) {
+            val savedPhone = AppPrefs.getCustomerPhone(this)
+            val savedName = AppPrefs.getCustomerName(this)
+            if (savedPhone.isNotBlank() || savedName.isNotBlank()) {
+                registrationCheckDone = true
+                return
+            }
+        }
+
         registrationCheckDone = true
 
         db.collection("customers")
@@ -165,7 +176,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                registrationCheckDone = false
+                // אם נפל בגלל אינטרנט אבל כבר יש לקוח מקומי - לא נכריח הרשמה
+                val savedPhone = AppPrefs.getCustomerPhone(this)
+                val savedName = AppPrefs.getCustomerName(this)
+                if (savedPhone.isBlank() && savedName.isBlank()) {
+                    registrationCheckDone = false
+                }
             }
     }
 
