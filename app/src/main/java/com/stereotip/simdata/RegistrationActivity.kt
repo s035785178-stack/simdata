@@ -20,6 +20,7 @@ import java.net.URLEncoder
 
 class RegistrationActivity : AppCompatActivity() {
 
+    private lateinit var tvLineNumber: TextView
     private lateinit var etName: EditText
     private lateinit var etPhone: EditText
     private lateinit var etCarModel: EditText
@@ -27,7 +28,6 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var spinnerPackage: Spinner
     private lateinit var btnRegister: Button
     private lateinit var btnHelp: Button
-    private lateinit var tvLineNumber: TextView
 
     private val db = FirebaseFirestore.getInstance()
     private var detectedLineNumber: String = ""
@@ -36,6 +36,7 @@ class RegistrationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
+        tvLineNumber = findViewById(R.id.tvRegistrationLineNumber)
         etName = findViewById(R.id.etRegistrationName)
         etPhone = findViewById(R.id.etRegistrationPhone)
         etCarModel = findViewById(R.id.etCarModel)
@@ -43,7 +44,6 @@ class RegistrationActivity : AppCompatActivity() {
         spinnerPackage = findViewById(R.id.spinnerPackage)
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
-        tvLineNumber = findViewById(R.id.tvRegistrationLineNumber)
 
         val packages = listOf(
             "לא ידוע / אין",
@@ -52,7 +52,11 @@ class RegistrationActivity : AppCompatActivity() {
             "4 ג׳יגה או חודשיים"
         )
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            packages
+        )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
         spinnerPackage.setSelection(1)
@@ -65,15 +69,15 @@ class RegistrationActivity : AppCompatActivity() {
         }
 
         btnRegister.setOnClickListener {
-            register()
+            registerCustomer()
         }
 
         btnHelp.setOnClickListener {
-            openHelp()
+            openHelpWhatsapp()
         }
     }
 
-    private fun register() {
+    private fun registerCustomer() {
         val name = etName.text.toString().trim()
         val phone = normalizePhone(etPhone.text.toString())
         val carModel = etCarModel.text.toString().trim()
@@ -120,6 +124,7 @@ class RegistrationActivity : AppCompatActivity() {
                 AppPrefs.setCarModel(this, carModel)
                 AppPrefs.setCarNumber(this, carNumber)
                 AppPrefs.setDataPackage(this, dataPackage)
+
                 if (detectedLineNumber.isNotBlank()) {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
                 }
@@ -137,25 +142,25 @@ class RegistrationActivity : AppCompatActivity() {
             }
     }
 
-    private fun openHelp() {
-        val msg = "צריך עזרה בהרשמה"
-        val url = "https://wa.me/972559911336?text=" + URLEncoder.encode(msg, "UTF-8")
+    private fun openHelpWhatsapp() {
+        val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
+        val url = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
     private fun normalizePhone(raw: String?): String {
-        val n = PhoneUtils.normalizeToLocal(raw)
-        return when (n) {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
             "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> n
+            else -> normalized
         }
     }
 
     private fun normalizeLine(raw: String?): String {
-        val n = PhoneUtils.normalizeToLocal(raw)
-        return when (n) {
+        val normalized = PhoneUtils.normalizeToLocal(raw)
+        return when (normalized) {
             "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> n
+            else -> normalized
         }
     }
 }
