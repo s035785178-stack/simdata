@@ -26,6 +26,8 @@ class ResultActivity : AppCompatActivity() {
         tvTimer = findViewById(R.id.tvTimer)
 
         val success = intent.getBooleanExtra("success", true)
+        val returnToRegistration = intent.getBooleanExtra("return_to_registration", false)
+        val seconds = intent.getIntExtra("seconds", if (success) 5 else 10)
 
         if (success) {
             tvIcon.text = "✔"
@@ -40,7 +42,7 @@ class ResultActivity : AppCompatActivity() {
         }
 
         playNiceAnimation()
-        startCountdown()
+        startCountdown(seconds, returnToRegistration)
     }
 
     private fun playNiceAnimation() {
@@ -60,15 +62,21 @@ class ResultActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCountdown() {
-        object : CountDownTimer(5000, 1000) {
+    private fun startCountdown(seconds: Int, returnToRegistration: Boolean) {
+        object : CountDownTimer((seconds * 1000L), 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                val seconds = (millisUntilFinished / 1000L).toInt()
-                tvTimer.text = "אתם מועברים אוטומטית בעוד $seconds"
+                val remaining = kotlin.math.ceil(millisUntilFinished / 1000.0).toInt()
+                tvTimer.text = "אתם מועברים אוטומטית בעוד $remaining"
             }
 
             override fun onFinish() {
-                val intent = Intent(this@ResultActivity, MainActivity::class.java)
+                val target = if (returnToRegistration) {
+                    RegistrationActivity::class.java
+                } else {
+                    MainActivity::class.java
+                }
+
+                val intent = Intent(this@ResultActivity, target)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 startActivity(intent)
                 finish()
