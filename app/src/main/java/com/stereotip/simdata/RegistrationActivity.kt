@@ -44,11 +44,19 @@ class RegistrationActivity : AppCompatActivity() {
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
 
-        val packages = listOf("100GB", "36GB", "4GB", "לא ידוע / אין")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, packages)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val packages = listOf(
+            "לא ידוע / אין",
+            "100 ג׳יגה או שנתיים",
+            "36 ג׳יגה או 60 חודשים",
+            "4 ג׳יגה או חודשיים"
+        )
+
+        val adapter = ArrayAdapter(this, R.layout.spinner_item_white, packages)
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_white)
         spinnerPackage.adapter = adapter
-        spinnerPackage.setSelection(0)
+
+        // ברירת מחדל: 100 ג׳יגה או שנתיים
+        spinnerPackage.setSelection(1)
 
         detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
         tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
