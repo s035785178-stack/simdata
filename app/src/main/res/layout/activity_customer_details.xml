@@ -13,7 +13,6 @@
         android:padding="18dp"
         android:layoutDirection="rtl">
 
-        <!-- 🔥 חדש: כרטיס מידע לקוח -->
         <TextView
             android:id="@+id/tvCustomerSummary"
             android:layout_width="match_parent"
@@ -25,7 +24,6 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- כותרת -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -38,19 +36,16 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <!-- שאר הקובץ שלך 그대로 -->
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvCustomerInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
-            android:orientation="vertical"
             android:padding="18dp"
-            android:layoutDirection="rtl">
-
-            <!-- כל מה שהיה אצלך נשאר -->
-            ...
-        </LinearLayout>
+            android:text="טוען פרטי לקוח..."
+            android:textColor="@color/text_primary"
+            android:textSize="18sp" />
 
     </LinearLayout>
 </ScrollView>
