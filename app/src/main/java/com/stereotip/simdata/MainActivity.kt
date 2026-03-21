@@ -136,53 +136,111 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkRegistrationIfNeeded() {
         if (registrationCheckDone) return
-        if (!hasPhonePermissions()) return
 
-        val normalizedLine = normalizeLine(TelephonyUtils.getLineNumber(this))
-        if (normalizedLine.isBlank()) return
+        val savedPhone = AppPrefs.getCustomerPhone(this)
+        val savedName = AppPrefs.getCustomerName(this)
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val deviceLine = normalizeLine(TelephonyUtils.getLineNumber(this))
 
-        // אם אין אינטרנט אבל כבר קיים לקוח שמור מקומית - נכנסים רגיל
+        val normalizedLine = when {
+            deviceLine.isNotBlank() -> deviceLine
+            savedLine.isNotBlank() -> savedLine
+            else -> ""
+        }
+
+        // אם אין הרשאות ואין בכלל מידע שמור - להרשמה
+        if (!hasPhonePermissions() && savedPhone.isBlank() && savedName.isBlank() && normalizedLine.isBlank()) {
+            goToRegistration()
+            return
+        }
+
+        // אם אין לנו שום דרך לזהות את הלקוח וגם אין מידע שמור - להרשמה
+        if (normalizedLine.isBlank() && savedPhone.isBlank() && savedName.isBlank()) {
+            goToRegistration()
+            return
+        }
+
+        // אם אין אינטרנט אבל כבר יש לקוח שמור מקומית - להישאר במסך הראשי
         if (!NetworkUtils.isOnline(this)) {
-            val savedPhone = AppPrefs.getCustomerPhone(this)
-            val savedName = AppPrefs.getCustomerName(this)
             if (savedPhone.isNotBlank() || savedName.isNotBlank()) {
                 registrationCheckDone = true
                 return
             }
+
+            goToRegistration()
+            return
         }
 
         registrationCheckDone = true
 
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    startActivity(Intent(this, RegistrationActivity::class.java))
-                } else {
-                    val doc = result.documents.first()
+        if (normalizedLine.isNotBlank()) {
+            db.collection("customers")
+                .whereEqualTo("lineNumber", normalizedLine)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { result ->
+                    if (result.isEmpty) {
+                        clearLocalCustomer()
+                        goToRegistration()
+                    } else {
+                        val doc = result.documents.first()
 
-                    val customerName = doc.getString("customerName").orEmpty()
-                    val customerPhone = normalizePhone(doc.getString("customerPhone"))
+                        val customerName = doc.getString("customerName").orEmpty()
+                        val customerPhone = normalizePhone(doc.getString("customerPhone"))
+                        val carModel = doc.getString("carModel").orEmpty()
+                        val carNumber = doc.getString("carNumber").orEmpty()
+                        val dataPackage = doc.getString("dataPackage").orEmpty()
 
-                    if (customerName.isNotBlank()) {
-                        AppPrefs.setCustomerName(this, customerName)
+                        if (customerName.isNotBlank()) {
+                            AppPrefs.setCustomerName(this, customerName)
+                        }
+                        if (customerPhone.isNotBlank()) {
+                            AppPrefs.setCustomerPhone(this, customerPhone)
+                        }
+                        if (carModel.isNotBlank()) {
+                            AppPrefs.setCarModel(this, carModel)
+                        }
+                        if (carNumber.isNotBlank()) {
+                            AppPrefs.setCarNumber(this, carNumber)
+                        }
+                        if (dataPackage.isNotBlank()) {
+                            AppPrefs.setDataPackage(this, dataPackage)
+                        }
+
+                        AppPrefs.setLineNumber(this, normalizedLine)
                     }
-                    if (customerPhone.isNotBlank()) {
-                        AppPrefs.setCustomerPhone(this, customerPhone)
+                }
+                .addOnFailureListener {
+                    if (savedPhone.isBlank() && savedName.isBlank()) {
+                        registrationCheckDone = false
+                        goToRegistration()
                     }
-                    AppPrefs.setLineNumber(this, normalizedLine)
                 }
-            }
-            .addOnFailureListener {
-                // אם נפל בגלל אינטרנט אבל כבר יש לקוח מקומי - לא נכריח הרשמה
-                val savedPhone = AppPrefs.getCustomerPhone(this)
-                val savedName = AppPrefs.getCustomerName(this)
-                if (savedPhone.isBlank() && savedName.isBlank()) {
-                    registrationCheckDone = false
+
+            return
+        }
+
+        // אם אין lineNumber אבל יש טלפון שמור - נבדוק לפי מס' לקוח
+        if (savedPhone.isNotBlank()) {
+            db.collection("customers")
+                .document(savedPhone)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if (!doc.exists()) {
+                        clearLocalCustomer()
+                        goToRegistration()
+                    }
                 }
-            }
+                .addOnFailureListener {
+                    if (savedName.isBlank()) {
+                        registrationCheckDone = false
+                        goToRegistration()
+                    }
+                }
+            return
+        }
+
+        goToRegistration()
     }
 
     private fun loadPackageStatus() {
@@ -349,6 +407,20 @@ class MainActivity : AppCompatActivity() {
         return required.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    private fun clearLocalCustomer() {
+        AppPrefs.setCustomerName(this, "")
+        AppPrefs.setCustomerPhone(this, "")
+        AppPrefs.setCarModel(this, "")
+        AppPrefs.setCarNumber(this, "")
+        AppPrefs.setDataPackage(this, "לא ידוע / אין")
+        AppPrefs.setLineNumber(this, "")
+    }
+
+    private fun goToRegistration() {
+        startActivity(Intent(this, RegistrationActivity::class.java))
+        finish()
     }
 
     private fun normalizeLine(raw: String?): String {
