@@ -47,6 +47,8 @@ class BalanceActivity : AppCompatActivity() {
     private var timer: CountDownTimer? = null
     private val handler = Handler(Looper.getMainLooper())
     private var pollingRunnable: Runnable? = null
+    private var autoStartHandled = false
+    private var fromRegistration = false
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -55,6 +57,17 @@ class BalanceActivity : AppCompatActivity() {
             tvProgress.text = "✔ הבדיקה הושלמה בהצלחה"
             bindLatest()
             clearCheckState()
+
+            if (fromRegistration) {
+                handler.postDelayed({
+                    val nextIntent = Intent(this@BalanceActivity, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(nextIntent)
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                    finish()
+                }, 1200L)
+            }
         }
     }
 
@@ -72,8 +85,12 @@ class BalanceActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnCheckBalance).setOnClickListener { startBalanceCheck() }
         findViewById<Button>(R.id.btnRenewFromBalance).setOnClickListener {
             startActivity(Intent(this, PackagesActivity::class.java))
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
         findViewById<Button>(R.id.btnBackBalance).setOnClickListener { finish() }
+
+        fromRegistration = intent.getBooleanExtra("from_registration", false)
+        autoStartHandled = savedInstanceState?.getBoolean("auto_start_handled", false) ?: false
 
         bindLatest()
     }
@@ -86,9 +103,18 @@ class BalanceActivity : AppCompatActivity() {
 
         bindLatest()
 
-        // אם יש בדיקה פעילה, נמשיך לבדוק הודעות חדשות בלבד
         if (isCheckActive()) {
             startPollingForNewSms()
+        }
+
+        val shouldAutoStart = intent.getBooleanExtra("auto_start_check", false)
+        if (shouldAutoStart && !autoStartHandled && !isCheckActive()) {
+            autoStartHandled = true
+            handler.postDelayed({
+                if (!isFinishing && !isDestroyed) {
+                    startBalanceCheck()
+                }
+            }, 600L)
         }
     }
 
@@ -102,6 +128,11 @@ class BalanceActivity : AppCompatActivity() {
         stopPolling()
         handler.removeCallbacksAndMessages(null)
         super.onDestroy()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("auto_start_handled", autoStartHandled)
+        super.onSaveInstanceState(outState)
     }
 
     private fun bindLatest() {
@@ -151,6 +182,17 @@ class BalanceActivity : AppCompatActivity() {
                 tvProgress.text = "לא התקבלה תשובה, נסו שוב"
                 stopPolling()
                 clearCheckState()
+
+                if (fromRegistration) {
+                    handler.postDelayed({
+                        val nextIntent = Intent(this@BalanceActivity, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(nextIntent)
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        finish()
+                    }, 1500L)
+                }
             }
         }.start()
 
@@ -159,13 +201,14 @@ class BalanceActivity : AppCompatActivity() {
         }
         startActivity(intent)
 
-        // החזרה האוטומטית שעבדה אצלך
         handler.postDelayed({
             try {
                 val backIntent = Intent(this, BalanceActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("from_registration", fromRegistration)
                 }
                 startActivity(backIntent)
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             } catch (_: Exception) {
             }
         }, AUTO_RETURN_DELAY_MS)
@@ -184,6 +227,17 @@ class BalanceActivity : AppCompatActivity() {
                     bindLatest()
                     clearCheckState()
                     stopPolling()
+
+                    if (fromRegistration) {
+                        handler.postDelayed({
+                            val nextIntent = Intent(this@BalanceActivity, MainActivity::class.java).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(nextIntent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                            finish()
+                        }, 1200L)
+                    }
                     return
                 }
 
@@ -269,39 +323,45 @@ class BalanceActivity : AppCompatActivity() {
     }
 
     private fun looksLike019Message(address: String, body: String): Boolean {
-        val a = address.lowercase()
-        val b = body.lowercase()
+        val normalizedAddress = address.trim()
+        val text = body.lowercase()
 
-        return a.contains("019") ||
-            b.contains("your balance") ||
-            b.contains("data internet") ||
-            b.contains("your number is") ||
-            b.contains("valid:")
+        return normalizedAddress.contains("019") ||
+            text.contains("019") ||
+            text.contains("יתרה") ||
+            text.contains("גלישה") ||
+            text.contains("mb") ||
+            text.contains("gb")
+    }
+
+    private fun isCheckActive(): Boolean {
+        val prefs = getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
+        return prefs.getBoolean(KEY_CHECK_ACTIVE, false)
+    }
+
+    private fun getCheckStartedAt(): Long {
+        val prefs = getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
+        return prefs.getLong(KEY_CHECK_STARTED_AT, 0L)
     }
 
     private fun saveCheckState(active: Boolean, startedAt: Long) {
-        getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
-            .edit()
+        val prefs = getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
+        prefs.edit()
             .putBoolean(KEY_CHECK_ACTIVE, active)
             .putLong(KEY_CHECK_STARTED_AT, startedAt)
             .apply()
     }
 
     private fun clearCheckState() {
-        getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
-            .edit()
+        val prefs = getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
+        prefs.edit()
             .putBoolean(KEY_CHECK_ACTIVE, false)
             .putLong(KEY_CHECK_STARTED_AT, 0L)
             .apply()
     }
 
-    private fun isCheckActive(): Boolean {
-        return getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
-            .getBoolean(KEY_CHECK_ACTIVE, false)
-    }
-
-    private fun getCheckStartedAt(): Long {
-        return getSharedPreferences(CHECK_PREFS, MODE_PRIVATE)
-            .getLong(KEY_CHECK_STARTED_AT, 0L)
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 }
