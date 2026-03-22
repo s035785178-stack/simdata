@@ -485,12 +485,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun hasRequiredPermissions(): Boolean {
-        return requiredPermissions().all {
-            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
     private fun clearLocalCustomer() {
         AppPrefs.setCustomerName(this, "")
         AppPrefs.setCustomerPhone(this, "")
