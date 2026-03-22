@@ -106,32 +106,59 @@
             </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvStatus"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:padding="14dp"
-            android:text="לא בוצעה בדיקה"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:weightSum="3">
 
-        <Button
-            android:id="@+id/btnWarrantyStatus"
-            android:layout_width="match_parent"
-            android:layout_height="66dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_button_gray"
-            android:text="הפעל תקופת אחריות✔️"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:padding="6dp" />
+            <Button
+                android:id="@+id/btnPackageStatus"
+                android:layout_width="0dp"
+                android:layout_height="78dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_button_gray"
+                android:gravity="center"
+                android:padding="6dp"
+                android:text="📦 סוג חבילה&#10;לא ידוע"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="0dp"
+                android:layout_height="78dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:padding="6dp"
+                android:text="לא בוצעה בדיקה"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnWarrantyStatus"
+                android:layout_width="0dp"
+                android:layout_height="78dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_button_gray"
+                android:gravity="center"
+                android:padding="6dp"
+                android:text="הפעל תקופת אחריות✔️"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <GridLayout
             android:layout_width="match_parent"
