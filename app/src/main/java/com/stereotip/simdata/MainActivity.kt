@@ -76,7 +76,6 @@ class MainActivity : AppCompatActivity() {
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
             continuePermissionFlowIfNeeded()
-
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
@@ -181,35 +180,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun continuePermissionFlowIfNeeded() {
-        val missingPhone = missingPermissions(phonePermissionGroup())
+        val missingPhone = getMissingPermissions(phonePermissionGroup())
         if (missingPhone.isNotEmpty()) {
             permissionLauncher.launch(missingPhone.toTypedArray())
             return
         }
 
-        val missingSms = missingPermissions(smsPermissionGroup())
+        val missingSms = getMissingPermissions(smsPermissionGroup())
         if (missingSms.isNotEmpty()) {
             permissionLauncher.launch(missingSms.toTypedArray())
             return
         }
 
-        val missingNotifications = missingPermissions(notificationPermissionGroup())
+        val missingNotifications = getMissingPermissions(notificationPermissionGroup())
         if (missingNotifications.isNotEmpty()) {
             permissionLauncher.launch(missingNotifications.toTypedArray())
-            return
         }
     }
 
-    private fun missingPermissions(group: Array<String>): List<String> {
-        return group.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+    private fun getMissingPermissions(group: Array<String>): List<String> {
+        return group.filter { permission ->
+            ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun hasAnyMissingStartupPermission(): Boolean {
-        return missingPermissions(phonePermissionGroup()).isNotEmpty() ||
-            missingPermissions(smsPermissionGroup()).isNotEmpty() ||
-            missingPermissions(notificationPermissionGroup()).isNotEmpty()
+        return getMissingPermissions(phonePermissionGroup()).isNotEmpty() ||
+            getMissingPermissions(smsPermissionGroup()).isNotEmpty() ||
+            getMissingPermissions(notificationPermissionGroup()).isNotEmpty()
     }
 
     private fun safeDeviceLine(): String {
@@ -505,12 +503,6 @@ class MainActivity : AppCompatActivity() {
         if (logoTapCount >= 7) {
             logoTapCount = 0
             startActivity(Intent(this, TechnicianActivity::class.java))
-        }
-    }
-
-    private fun hasAllStartupPermissions(): Boolean {
-        return allStartupPermissions().all {
-            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
