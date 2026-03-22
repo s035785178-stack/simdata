@@ -172,13 +172,17 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
     }
 
-    private fun updateSummary() {
-        val savedLine = AppPrefs.getLineNumber(this)
-        val deviceLine = if (canTryReadDeviceLine()) {
+    private fun safeDeviceLine(): String {
+        return try {
             TelephonyUtils.getLineNumber(this)
-        } else {
+        } catch (_: Exception) {
             ""
         }
+    }
+
+    private fun updateSummary() {
+        val savedLine = AppPrefs.getLineNumber(this)
+        val deviceLine = safeDeviceLine()
 
         val rawLine = when {
             !savedLine.isNullOrBlank() -> savedLine
@@ -201,11 +205,7 @@ class MainActivity : AppCompatActivity() {
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = if (canTryReadDeviceLine()) {
-            normalizeLine(TelephonyUtils.getLineNumber(this))
-        } else {
-            ""
-        }
+        val deviceLine = normalizeLine(safeDeviceLine())
 
         val normalizedLine = when {
             savedLine.isNotBlank() -> savedLine
@@ -308,11 +308,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadPackageStatus() {
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = if (canTryReadDeviceLine()) {
-            normalizeLine(TelephonyUtils.getLineNumber(this))
-        } else {
-            ""
-        }
+        val deviceLine = normalizeLine(safeDeviceLine())
 
         val normalizedLine = when {
             savedLine.isNotBlank() -> savedLine
@@ -355,11 +351,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadWarrantyStatus() {
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = if (canTryReadDeviceLine()) {
-            normalizeLine(TelephonyUtils.getLineNumber(this))
-        } else {
-            ""
-        }
+        val deviceLine = normalizeLine(safeDeviceLine())
 
         val normalizedLine = when {
             savedLine.isNotBlank() -> savedLine
@@ -403,11 +395,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun activateWarranty() {
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = if (canTryReadDeviceLine()) {
-            normalizeLine(TelephonyUtils.getLineNumber(this))
-        } else {
-            ""
-        }
+        val deviceLine = normalizeLine(safeDeviceLine())
 
         val normalizedLine = when {
             savedLine.isNotBlank() -> savedLine
@@ -517,15 +505,6 @@ class MainActivity : AppCompatActivity() {
         return requiredPermissions().all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
-    }
-
-    private fun canTryReadDeviceLine(): Boolean {
-        val hasState = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) ==
-            PackageManager.PERMISSION_GRANTED
-        val hasNumbers = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) ==
-            PackageManager.PERMISSION_GRANTED
-
-        return hasState && hasNumbers
     }
 
     private fun clearLocalCustomer() {
