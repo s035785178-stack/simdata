@@ -45,21 +45,16 @@ class MainActivity : AppCompatActivity() {
     private var registrationCheckDone = false
     private var movedToRegistration = false
     private var balanceReceiverRegistered = false
-    private var optionalPermissionsRequestedOnce = false
+    private var allPermissionsRequestedOnce = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
 
-    private fun requiredPermissions(): Array<String> {
-        return arrayOf(
+    private fun allStartupPermissions(): Array<String> {
+        val list = mutableListOf(
             Manifest.permission.CALL_PHONE,
             Manifest.permission.READ_SMS,
-            Manifest.permission.RECEIVE_SMS
-        )
-    }
-
-    private fun optionalPermissions(): Array<String> {
-        val list = mutableListOf(
+            Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_PHONE_NUMBERS
         )
@@ -78,17 +73,14 @@ class MainActivity : AppCompatActivity() {
             loadWarrantyStatus()
             loadPackageStatus()
 
-            if (!hasRequiredPermissions()) {
+            if (!hasAllStartupPermissions()) {
                 Toast.makeText(
                     this,
-                    "יש לאשר הרשאות שיחה ו-SMS כדי שהאפליקציה תעבוד",
+                    "האפליקציה צריכה את כל ההרשאות כדי לעבוד בצורה מלאה",
                     Toast.LENGTH_LONG
                 ).show()
-                showRequiredPermissionsDialogIfNeeded()
-                return@registerForActivityResult
+                showAllPermissionsDialogIfNeeded(forceShow = true)
             }
-
-            requestOptionalPermissionsIfNeeded()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -138,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             onLogoTapped()
         }
 
-        showRequiredPermissionsDialogIfNeeded()
+        showAllPermissionsDialogIfNeeded(forceShow = false)
         updateSummary()
         loadWarrantyStatus()
         loadPackageStatus()
@@ -468,37 +460,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRequiredPermissionsDialogIfNeeded() {
-        val missingRequired = requiredPermissions().filter {
+    private fun showAllPermissionsDialogIfNeeded(forceShow: Boolean) {
+        val missing = allStartupPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
 
-        if (missingRequired.isEmpty()) {
-            requestOptionalPermissionsIfNeeded()
-            return
-        }
+        if (missing.isEmpty()) return
+        if (allPermissionsRequestedOnce && !forceShow) return
 
         AlertDialog.Builder(this)
             .setTitle("נדרשות הרשאות להפעלת האפליקציה")
-            .setMessage("האפליקציה זקוקה להרשאות שיחה ו-SMS כדי לבצע בדיקת יתרה ולקבל תשובות מהמערכת. נא לאשר הכל.")
+            .setMessage("האפליקציה תבקש עכשיו את כל ההרשאות הדרושות: שיחה, הודעות SMS, זיהוי מספר קו, ובמכשירים מתאימים גם התראות. נא לאשר הכל.")
             .setPositiveButton("אשר הרשאות") { _, _ ->
-                permissionLauncher.launch(missingRequired.toTypedArray())
+                allPermissionsRequestedOnce = true
+                permissionLauncher.launch(missing.toTypedArray())
             }
             .setCancelable(false)
             .show()
     }
 
-    private fun requestOptionalPermissionsIfNeeded() {
-        if (optionalPermissionsRequestedOnce) return
-
-        val missingOptional = optionalPermissions().filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+    private fun hasAllStartupPermissions(): Boolean {
+        return allStartupPermissions().all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
-
-        if (missingOptional.isEmpty()) return
-
-        optionalPermissionsRequestedOnce = true
-        permissionLauncher.launch(missingOptional.toTypedArray())
     }
 
     private fun hasRequiredPermissions(): Boolean {
