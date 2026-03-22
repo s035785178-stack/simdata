@@ -9,12 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -39,7 +34,30 @@ class RegistrationActivity : AppCompatActivity() {
 
     private val db = FirebaseFirestore.getInstance()
     private var detectedLineNumber: String = ""
-    private val uiHandler = Handler(Looper.getMainLooper())
+    private val handler = Handler(Looper.getMainLooper())
+
+    // 🔥 בדיקה אמיתית (עוקפת אנדרואיד)
+    private fun hasRealSmsAccess(): Boolean {
+        return try {
+            val cursor = contentResolver.query(
+                Telephony.Sms.CONTENT_URI,
+                null, null, null, null
+            )
+            cursor?.close()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun hasRealPhoneAccess(): Boolean {
+        return try {
+            val line = TelephonyUtils.getLineNumber(this)
+            line.isNotBlank()
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     private fun allPermissions(): Array<String> {
         val list = mutableListOf(
@@ -58,10 +76,8 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
-            triggerSmsPermission()
-            refreshDetectedLine()
-            scheduleLineRefreshes()
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            refreshLineNumber()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +93,26 @@ class RegistrationActivity : AppCompatActivity() {
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
 
+        setupSpinner()
+
+        // 🔥 לא מבקשים הרשאות אם כבר יש בפועל
+        if (!hasRealSmsAccess() || !hasRealPhoneAccess()) {
+            requestPermissionsIfNeeded()
+        }
+
+        refreshLineNumber()
+        scheduleRefresh()
+
+        btnRegister.setOnClickListener {
+            registerCustomer()
+        }
+
+        btnHelp.setOnClickListener {
+            openHelp()
+        }
+    }
+
+    private fun setupSpinner() {
         val packages = listOf(
             "לא ידוע / אין",
             "100 ג׳יגה או שנתיים",
@@ -92,34 +128,13 @@ class RegistrationActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
         spinnerPackage.setSelection(1)
-
-        requestPermissionsIfNeeded()
-        triggerSmsPermission()
-        refreshDetectedLine()
-        scheduleLineRefreshes()
-
-        btnRegister.setOnClickListener {
-            registerCustomer()
-        }
-
-        btnHelp.setOnClickListener {
-            openHelpWhatsapp()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        triggerSmsPermission()
-        refreshDetectedLine()
-        scheduleLineRefreshes()
-    }
-
-    override fun onDestroy() {
-        uiHandler.removeCallbacksAndMessages(null)
-        super.onDestroy()
     }
 
     private fun requestPermissionsIfNeeded() {
+
+        // 🔥 אם כבר יש גישה אמיתית — לא מבקשים שוב
+        if (hasRealSmsAccess() && hasRealPhoneAccess()) return
+
         val missing = allPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -129,42 +144,27 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private fun triggerSmsPermission() {
-        try {
-            val cursor = contentResolver.query(
-                Telephony.Sms.CONTENT_URI,
-                null,
-                null,
-                null,
-                null
-            )
-            cursor?.close()
-        } catch (_: Exception) {
-        }
+    private fun scheduleRefresh() {
+        handler.postDelayed({ refreshLineNumber() }, 300)
+        handler.postDelayed({ refreshLineNumber() }, 800)
+        handler.postDelayed({ refreshLineNumber() }, 1500)
     }
 
-    private fun scheduleLineRefreshes() {
-        uiHandler.removeCallbacksAndMessages(null)
+    private fun refreshLineNumber() {
 
-        uiHandler.postDelayed({ refreshDetectedLine() }, 250)
-        uiHandler.postDelayed({ refreshDetectedLine() }, 700)
-        uiHandler.postDelayed({ refreshDetectedLine() }, 1400)
-    }
+        val saved = normalize(AppPrefs.getLineNumber(this))
 
-    private fun refreshDetectedLine() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-
-        val deviceLine = normalizeLine(
+        val device = normalize(
             try {
                 TelephonyUtils.getLineNumber(this)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 ""
             }
         )
 
         detectedLineNumber = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
+            saved.isNotBlank() -> saved
+            device.isNotBlank() -> device
             else -> ""
         }
 
@@ -176,21 +176,20 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun registerCustomer() {
+
         val name = etName.text.toString().trim()
-        val phone = normalizePhone(etPhone.text.toString())
+        val phone = normalize(etPhone.text.toString())
         val carModel = etCarModel.text.toString().trim()
         val carNumber = etCarNumber.text.toString().trim()
-        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
+        val dataPackage = spinnerPackage.selectedItem.toString()
 
         if (name.isBlank()) {
             etName.error = "נא למלא שם"
-            etName.requestFocus()
             return
         }
 
-        if (phone.length != 10 || !phone.startsWith("05")) {
-            etPhone.error = "נא למלא טלפון תקין"
-            etPhone.requestFocus()
+        if (phone.length != 10) {
+            etPhone.error = "טלפון לא תקין"
             return
         }
 
@@ -200,10 +199,10 @@ class RegistrationActivity : AppCompatActivity() {
         }
 
         btnRegister.isEnabled = false
-        btnHelp.isEnabled = false
         btnRegister.text = "נרשם..."
 
         val now = System.currentTimeMillis()
+
         val data = hashMapOf(
             "customerName" to name,
             "customerPhone" to phone,
@@ -211,14 +210,14 @@ class RegistrationActivity : AppCompatActivity() {
             "carModel" to carModel,
             "carNumber" to carNumber,
             "dataPackage" to dataPackage,
-            "createdAt" to now,
-            "lastUpdate" to now
+            "createdAt" to now
         )
 
         db.collection("customers")
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
+
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
                 AppPrefs.setCarModel(this, carModel)
@@ -229,50 +228,28 @@ class RegistrationActivity : AppCompatActivity() {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
                 }
 
-                btnRegister.text = "✔️ נרשמת בהצלחה"
-                btnRegister.setBackgroundColor(0xFF2E7D32.toInt())
+                btnRegister.text = "✔️ נרשמת"
 
-                uiHandler.postDelayed({
-                    val intent = Intent(this, WarrantyPromptActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                handler.postDelayed({
+                    startActivity(Intent(this, MainActivity::class.java))
                     finish()
-                }, 900)
+                }, 800)
             }
             .addOnFailureListener {
                 btnRegister.isEnabled = true
-                btnHelp.isEnabled = true
                 btnRegister.text = "הרשמה"
-                Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "שגיאה", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun openHelpWhatsapp() {
-        val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
-        val url = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
+    private fun openHelp() {
+        val msg = "צריך עזרה בהרשמה"
+        val url = "https://wa.me/972559911336?text=${URLEncoder.encode(msg, "UTF-8")}"
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
-    override fun finish() {
-        super.finish()
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-    }
-
-    private fun normalizePhone(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return when (normalized) {
-            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> normalized
-        }
-    }
-
-    private fun normalizeLine(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return when (normalized) {
-            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> normalized
-        }
+    private fun normalize(input: String?): String {
+        val n = PhoneUtils.normalizeToLocal(input)
+        return if (n.contains("לא")) "" else n
     }
 }
