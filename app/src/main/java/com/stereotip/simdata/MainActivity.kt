@@ -46,9 +46,9 @@ class MainActivity : AppCompatActivity() {
     private var movedToRegistration = false
     private var balanceReceiverRegistered = false
     private var startupDialogShown = false
-
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
+    private var permissionsFlowStarted = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
@@ -74,10 +74,13 @@ class MainActivity : AppCompatActivity() {
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
             continuePermissionFlowIfNeeded()
-            updateSummary()
-            checkRegistrationIfNeeded()
-            loadWarrantyStatus()
-            loadPackageStatus()
+
+            if (!hasAnyMissingStartupPermission()) {
+                updateSummary()
+                checkRegistrationIfNeeded()
+                loadWarrantyStatus()
+                loadPackageStatus()
+            }
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -120,11 +123,7 @@ class MainActivity : AppCompatActivity() {
 
         btnWarrantyStatus.setOnClickListener {
             if (warrantyActivated) {
-                Toast.makeText(
-                    this,
-                    "תוקף האחריות: $currentWarrantyEnd",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "תוקף האחריות: $currentWarrantyEnd", Toast.LENGTH_SHORT).show()
             } else {
                 activateWarranty()
             }
@@ -136,16 +135,17 @@ class MainActivity : AppCompatActivity() {
 
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
-        updateSummary()
-        checkRegistrationIfNeeded()
-        loadWarrantyStatus()
-        loadPackageStatus()
+
+        if (!hasAnyMissingStartupPermission()) {
+            updateSummary()
+            checkRegistrationIfNeeded()
+            loadWarrantyStatus()
+            loadPackageStatus()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-
-        continuePermissionFlowIfNeeded()
 
         if (!balanceReceiverRegistered) {
             LocalBroadcastManager.getInstance(this)
@@ -153,12 +153,14 @@ class MainActivity : AppCompatActivity() {
             balanceReceiverRegistered = true
         }
 
-        if (movedToRegistration) return
+        if (!hasAnyMissingStartupPermission()) {
+            if (movedToRegistration) return
 
-        updateSummary()
-        checkRegistrationIfNeeded()
-        loadWarrantyStatus()
-        loadPackageStatus()
+            updateSummary()
+            checkRegistrationIfNeeded()
+            loadWarrantyStatus()
+            loadPackageStatus()
+        }
     }
 
     override fun onPause() {
@@ -182,6 +184,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("נדרשות הרשאות להפעלת האפליקציה")
             .setMessage("האפליקציה תבקש עכשיו את כל ההרשאות הדרושות: טלפון, הודעות SMS, זיהוי מספר קו, ובמכשירים מתאימים גם התראות. נא לאשר הכל.")
             .setPositiveButton("אשר הרשאות") { _, _ ->
+                permissionsFlowStarted = true
                 continuePermissionFlowIfNeeded()
             }
             .setCancelable(false)
@@ -262,6 +265,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkRegistrationIfNeeded() {
         if (registrationCheckDone || movedToRegistration) return
+        if (hasAnyMissingStartupPermission()) return
 
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
