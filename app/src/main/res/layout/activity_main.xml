@@ -87,7 +87,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- שורת 3 -->
+        <!-- שורת 3 כרטיסים -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="70dp"
@@ -125,7 +125,7 @@
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:background="@drawable/bg_button_gray"
-                android:text="אחריות"
+                android:text="הפעל תקופת אחריות✔️"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
         </LinearLayout>
@@ -145,7 +145,8 @@
                 android:layout_margin="4dp"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_button_green"
-                android:text="📶 בדיקה"/>
+                android:text="📶 בדיקת יתרה"
+                android:textSize="16sp"/>
 
             <Button
                 android:id="@+id/btnNetwork"
@@ -154,7 +155,8 @@
                 android:layout_margin="4dp"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_button_blue"
-                android:text="📡 רשת"/>
+                android:text="📡 רשת"
+                android:textSize="16sp"/>
         </LinearLayout>
 
         <LinearLayout
@@ -170,7 +172,8 @@
                 android:layout_margin="4dp"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_button_orange"
-                android:text="💳 חבילה"/>
+                android:text="💳 חבילות"
+                android:textSize="16sp"/>
 
             <Button
                 android:id="@+id/btnSupport"
@@ -179,7 +182,8 @@
                 android:layout_margin="4dp"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_button_gray"
-                android:text="🛠 תמיכה"/>
+                android:text="🛠 תמיכה"
+                android:textSize="16sp"/>
         </LinearLayout>
 
     </LinearLayout>
