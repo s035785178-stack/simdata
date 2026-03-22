@@ -37,11 +37,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var logo: ImageView
 
     private var startupDialogShown = false
+    private var balanceReceiverRegistered = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
 
-    // ================== הרשאות ==================
+    // ================= הרשאות =================
 
     private fun phonePermissions() = arrayOf(
         Manifest.permission.CALL_PHONE,
@@ -80,7 +81,6 @@ class MainActivity : AppCompatActivity() {
         val missingNotifications = getMissing(notificationPermissions())
         if (missingNotifications.isNotEmpty()) {
             permissionLauncher.launch(missingNotifications.toTypedArray())
-            return
         }
     }
 
@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                 getMissing(notificationPermissions()).isNotEmpty()
     }
 
-    // 🔥 זה הטריגר שמכריח SMS לבקש הרשאה מיד
+    // 🔥 טריגר SMS
     private fun triggerSmsPermission() {
         try {
             val cursor = contentResolver.query(
@@ -107,11 +107,10 @@ class MainActivity : AppCompatActivity() {
                 null
             )
             cursor?.close()
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
     }
 
-    // ================== לייף סייקל ==================
+    // ================= לייף סייקל =================
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,12 +125,61 @@ class MainActivity : AppCompatActivity() {
         btnActivateWarranty = findViewById(R.id.btnActivateWarranty)
         logo = findViewById(R.id.logo)
 
+        // כפתורים
+        findViewById<Button>(R.id.btnBalance).setOnClickListener {
+            startActivity(Intent(this, BalanceActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnNetwork).setOnClickListener {
+            startActivity(Intent(this, NetworkCheckActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnPackages).setOnClickListener {
+            startActivity(Intent(this, PackagesActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnSupport).setOnClickListener {
+            startActivity(Intent(this, SupportActivity::class.java))
+        }
+
+        btnActivateWarranty.setOnClickListener {
+            activateWarranty()
+        }
+
+        logo.setOnClickListener {
+            startActivity(Intent(this, TechnicianActivity::class.java))
+        }
+
         showPermissionsDialog()
 
-        // 🔥 חשוב — אחרי פתיחה נוגעים ב-SMS
+        // 🔥 חשוב
         triggerSmsPermission()
 
         updateSummary()
+        checkRegistrationIfNeeded()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        continuePermissionFlow()
+
+        if (!balanceReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this)
+                .registerReceiver(balanceReceiver, IntentFilter(SmsReceiver.ACTION_BALANCE_UPDATED))
+            balanceReceiverRegistered = true
+        }
+
+        updateSummary()
+        checkRegistrationIfNeeded()
+    }
+
+    override fun onPause() {
+        if (balanceReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(balanceReceiver)
+            balanceReceiverRegistered = false
+        }
+        super.onPause()
     }
 
     private fun showPermissionsDialog() {
@@ -141,7 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle("נדרשות הרשאות")
-            .setMessage("יש לאשר את כל ההרשאות כדי שהאפליקציה תעבוד בצורה תקינה")
+            .setMessage("יש לאשר את כל ההרשאות כדי שהאפליקציה תעבוד")
             .setPositiveButton("אישור") { _, _ ->
                 continuePermissionFlow()
             }
@@ -149,7 +197,13 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    // ================== לוגיקה ==================
+    // ================= לוגיקה =================
+
+    private val balanceReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            updateSummary()
+        }
+    }
 
     private fun safeDeviceLine(): String {
         return try {
@@ -162,6 +216,22 @@ class MainActivity : AppCompatActivity() {
     private fun updateSummary() {
         val line = PhoneUtils.normalizeToLocal(safeDeviceLine())
         tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
+
+        val mb = AppPrefs.getBalanceMb(this)
+        tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
+        tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
+        tvStatus.text = Formatter.balanceStatus(mb)
+    }
+
+    // 🔥 הרשמה חזרה
+    private fun checkRegistrationIfNeeded() {
+        val savedName = AppPrefs.getCustomerName(this)
+        val savedPhone = AppPrefs.getCustomerPhone(this)
+
+        if (savedName.isNullOrBlank() || savedPhone.isNullOrBlank()) {
+            startActivity(Intent(this, RegistrationActivity::class.java))
+            finish()
+        }
     }
 
     private fun activateWarranty() {
