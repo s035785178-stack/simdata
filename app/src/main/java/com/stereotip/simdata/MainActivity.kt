@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.TelephonyManager
@@ -24,7 +23,6 @@ import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
-import com.stereotip.simdata.util.NetworkUtils
 import com.stereotip.simdata.util.PhoneUtils
 import com.stereotip.simdata.util.TelephonyUtils
 import java.text.SimpleDateFormat
@@ -49,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var startupDialogShown = false
     private var permissionRequestInProgress = false
     private var restoreLookupInProgress = false
+    private var waitingForRestoreAnswer = false
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -318,7 +317,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun restoreCustomerFromFirebaseByLine(lineNumber: String) {
         if (restoreLookupInProgress) return
+
         restoreLookupInProgress = true
+        waitingForRestoreAnswer = true
 
         db.collection("customers")
             .whereEqualTo("lineNumber", lineNumber)
@@ -326,6 +327,8 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 restoreLookupInProgress = false
+                waitingForRestoreAnswer = false
+
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
 
                 if (result.isEmpty) {
@@ -354,13 +357,17 @@ class MainActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 restoreLookupInProgress = false
+                waitingForRestoreAnswer = false
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
-                moveToRegistration(clearLocal = false)
+
+                Toast.makeText(this, "ממתין לחיבור כדי לשחזר לקוח קיים", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress) return
+        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) {
+            return
+        }
 
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
@@ -374,18 +381,7 @@ class MainActivity : AppCompatActivity() {
 
         if (normalizedLine.isNotBlank()) {
             AppPrefs.setLineNumber(this, normalizedLine)
-
-            if (!NetworkUtils.isOnline(this)) {
-                moveToRegistration(clearLocal = false)
-                return
-            }
-
             restoreCustomerFromFirebaseByLine(normalizedLine)
-            return
-        }
-
-        if (savedPhone.isNotBlank()) {
-            registrationCheckDone = true
             return
         }
 
