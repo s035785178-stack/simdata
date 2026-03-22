@@ -66,16 +66,10 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.RECEIVE_SMS
     )
 
-    private fun notificationPermissions() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            emptyArray()
-        }
-
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
             permissionRequestInProgress = false
+            startupDialogShown = false
             continuePermissionFlowIfNeeded()
             updateSummary()
             checkRegistrationIfNeeded()
@@ -183,7 +177,7 @@ class MainActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle("נדרשות הרשאות להפעלת האפליקציה")
-            .setMessage("האפליקציה תבקש עכשיו את כל ההרשאות הדרושות: טלפון, הודעות SMS, זיהוי מספר קו, ובמכשירים מתאימים גם התראות. נא לאשר הכל.")
+            .setMessage("האפליקציה צריכה הרשאות טלפון והודעות SMS כדי לזהות מספר קו ולעבוד תקין.")
             .setPositiveButton("אשר הרשאות") { _, _ ->
                 continuePermissionFlowIfNeeded()
             }
@@ -205,13 +199,6 @@ class MainActivity : AppCompatActivity() {
         if (missingSms.isNotEmpty()) {
             permissionRequestInProgress = true
             permissionLauncher.launch(missingSms.toTypedArray())
-            return
-        }
-
-        val missingNotifications = getMissingPermissions(notificationPermissions())
-        if (missingNotifications.isNotEmpty()) {
-            permissionRequestInProgress = true
-            permissionLauncher.launch(missingNotifications.toTypedArray())
         }
     }
 
@@ -283,8 +270,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasAnyMissingStartupPermission(): Boolean {
         return getEffectiveMissingPhonePermissions().isNotEmpty() ||
-            getEffectiveMissingSmsPermissions().isNotEmpty() ||
-            getMissingPermissions(notificationPermissions()).isNotEmpty()
+            getEffectiveMissingSmsPermissions().isNotEmpty()
     }
 
     private fun triggerSmsPermission() {
