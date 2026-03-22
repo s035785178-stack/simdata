@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var movedToRegistration = false
     private var balanceReceiverRegistered = false
     private var startupDialogShown = false
+    private var permissionRequestInProgress = false
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -74,6 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+            permissionRequestInProgress = false
             continuePermissionFlowIfNeeded()
             updateSummary()
             checkRegistrationIfNeeded()
@@ -127,9 +129,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        logo.setOnClickListener {
-            onLogoTapped()
-        }
+        logo.setOnClickListener { onLogoTapped() }
 
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
@@ -169,9 +169,15 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
     }
 
+    private fun hasSavedRegisteredUser(): Boolean {
+        return AppPrefs.getCustomerName(this).isNotBlank() &&
+            AppPrefs.getCustomerPhone(this).isNotBlank()
+    }
+
     private fun showStartupPermissionsDialogIfNeeded() {
         if (!hasAnyMissingStartupPermission()) return
         if (startupDialogShown) return
+        if (permissionRequestInProgress) return
 
         startupDialogShown = true
 
@@ -186,20 +192,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun continuePermissionFlowIfNeeded() {
+        if (permissionRequestInProgress) return
+
         val missingPhone = getEffectiveMissingPhonePermissions()
         if (missingPhone.isNotEmpty()) {
+            permissionRequestInProgress = true
             permissionLauncher.launch(missingPhone.toTypedArray())
             return
         }
 
         val missingSms = getEffectiveMissingSmsPermissions()
         if (missingSms.isNotEmpty()) {
+            permissionRequestInProgress = true
             permissionLauncher.launch(missingSms.toTypedArray())
             return
         }
 
         val missingNotifications = getMissingPermissions(notificationPermissions())
         if (missingNotifications.isNotEmpty()) {
+            permissionRequestInProgress = true
             permissionLauncher.launch(missingNotifications.toTypedArray())
         }
     }
@@ -254,12 +265,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun getEffectiveMissingPhonePermissions(): List<String> {
         val missing = getMissingPermissions(phonePermissions())
-        return if (missing.isNotEmpty() && hasRealPhoneAccess()) emptyList() else missing
+        return if (missing.isNotEmpty() && (hasRealPhoneAccess() || hasSavedRegisteredUser())) {
+            emptyList()
+        } else {
+            missing
+        }
     }
 
     private fun getEffectiveMissingSmsPermissions(): List<String> {
         val missing = getMissingPermissions(smsPermissions())
-        return if (missing.isNotEmpty() && hasRealSmsAccess()) emptyList() else missing
+        return if (missing.isNotEmpty() && (hasRealSmsAccess() || hasSavedRegisteredUser())) {
+            emptyList()
+        } else {
+            missing
+        }
     }
 
     private fun hasAnyMissingStartupPermission(): Boolean {
@@ -315,6 +334,12 @@ class MainActivity : AppCompatActivity() {
 
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
+
+        if (savedPhone.isNotBlank() && savedName.isNotBlank()) {
+            registrationCheckDone = true
+            return
+        }
+
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
         val deviceLine = normalizeLine(safeDeviceLine())
 
@@ -349,7 +374,9 @@ class MainActivity : AppCompatActivity() {
                     if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
 
                     if (result.isEmpty) {
-                        moveToRegistration(clearLocal = true)
+                        if (savedPhone.isBlank() && savedName.isBlank()) {
+                            moveToRegistration(clearLocal = true)
+                        }
                     } else {
                         val doc = result.documents.first()
 
@@ -370,32 +397,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener {
                     if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
-
-                    if (savedPhone.isBlank() && savedName.isBlank()) {
-                        registrationCheckDone = false
-                        moveToRegistration(clearLocal = false)
-                    }
                 }
             return
         }
 
         if (savedPhone.isNotBlank()) {
-            db.collection("customers")
-                .document(savedPhone)
-                .get()
-                .addOnSuccessListener { doc ->
-                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
-                    if (!doc.exists()) {
-                        moveToRegistration(clearLocal = true)
-                    }
-                }
-                .addOnFailureListener {
-                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
-                    if (savedName.isBlank()) {
-                        registrationCheckDone = false
-                        moveToRegistration(clearLocal = false)
-                    }
-                }
+            registrationCheckDone = true
             return
         }
 
