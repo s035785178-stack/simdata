@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             if (!hasRequiredPermissions()) {
                 Toast.makeText(
                     this,
-                    "יש לאשר הרשאות בסיס כדי שהאפליקציה תעבוד",
+                    "יש לאשר הרשאות שיחה ו-SMS כדי שהאפליקציה תעבוד",
                     Toast.LENGTH_LONG
                 ).show()
                 showRequiredPermissionsDialogIfNeeded()
