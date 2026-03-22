@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvBalanceQuick: TextView
     private lateinit var tvUpdated: TextView
     private lateinit var tvStatus: TextView
+    private lateinit var btnPackageStatus: Button
     private lateinit var btnWarrantyStatus: Button
     private lateinit var logo: ImageView
 
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
+            loadPackageStatus()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity() {
             if (isFinishing || isDestroyed) return
             updateSummary()
             loadWarrantyStatus()
+            loadPackageStatus()
         }
     }
 
@@ -95,6 +98,7 @@ class MainActivity : AppCompatActivity() {
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
         tvUpdated = findViewById(R.id.tvUpdated)
         tvStatus = findViewById(R.id.tvStatus)
+        btnPackageStatus = findViewById(R.id.btnPackageStatus)
         btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
         logo = findViewById(R.id.logo)
 
@@ -135,6 +139,7 @@ class MainActivity : AppCompatActivity() {
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
+        loadPackageStatus()
     }
 
     override fun onResume() {
@@ -153,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
+        loadPackageStatus()
     }
 
     override fun onPause() {
@@ -359,6 +365,50 @@ class MainActivity : AppCompatActivity() {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
         finish()
+    }
+
+    private fun loadPackageStatus() {
+        val savedPackage = AppPrefs.getDataPackage(this)
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val deviceLine = normalizeLine(safeDeviceLine())
+
+        val normalizedLine = when {
+            savedLine.isNotBlank() -> savedLine
+            deviceLine.isNotBlank() -> deviceLine
+            else -> ""
+        }
+
+        if (normalizedLine.isBlank()) {
+            btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", normalizedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
+                if (result.isEmpty) {
+                    btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val pkg = doc.getString("dataPackage").orEmpty()
+
+                if (pkg.isNotBlank()) {
+                    AppPrefs.setDataPackage(this, pkg)
+                }
+
+                btnPackageStatus.text = "📦 סוג חבילה\n${pkg.ifBlank { savedPackage.ifBlank { "לא ידוע" } }}"
+            }
+            .addOnFailureListener {
+                if (!isFinishing && !isDestroyed) {
+                    btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "שגיאה" }}"
+                }
+            }
     }
 
     private fun loadWarrantyStatus() {
