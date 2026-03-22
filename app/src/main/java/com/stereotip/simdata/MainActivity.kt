@@ -36,9 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvBalanceQuick: TextView
     private lateinit var tvUpdated: TextView
     private lateinit var tvStatus: TextView
-    private lateinit var btnPackageStatus: Button
     private lateinit var btnWarrantyStatus: Button
-    private lateinit var btnActivateWarranty: Button
     private lateinit var logo: ImageView
 
     private var logoTapCount = 0
@@ -47,6 +45,9 @@ class MainActivity : AppCompatActivity() {
     private var movedToRegistration = false
     private var balanceReceiverRegistered = false
     private var startupDialogShown = false
+
+    private var warrantyActivated = false
+    private var currentWarrantyEnd = ""
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
@@ -75,7 +76,6 @@ class MainActivity : AppCompatActivity() {
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
-            loadPackageStatus()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -83,7 +83,6 @@ class MainActivity : AppCompatActivity() {
             if (isFinishing || isDestroyed) return
             updateSummary()
             loadWarrantyStatus()
-            loadPackageStatus()
         }
     }
 
@@ -96,9 +95,7 @@ class MainActivity : AppCompatActivity() {
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
         tvUpdated = findViewById(R.id.tvUpdated)
         tvStatus = findViewById(R.id.tvStatus)
-        btnPackageStatus = findViewById(R.id.btnPackageStatus)
         btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
-        btnActivateWarranty = findViewById(R.id.btnActivateWarranty)
         logo = findViewById(R.id.logo)
 
         findViewById<Button>(R.id.btnBalance).setOnClickListener {
@@ -117,8 +114,16 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SupportActivity::class.java))
         }
 
-        btnActivateWarranty.setOnClickListener {
-            activateWarranty()
+        btnWarrantyStatus.setOnClickListener {
+            if (warrantyActivated) {
+                Toast.makeText(
+                    this,
+                    "תוקף האחריות: $currentWarrantyEnd",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                activateWarranty()
+            }
         }
 
         logo.setOnClickListener {
@@ -130,7 +135,6 @@ class MainActivity : AppCompatActivity() {
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
-        loadPackageStatus()
     }
 
     override fun onResume() {
@@ -149,7 +153,6 @@ class MainActivity : AppCompatActivity() {
         updateSummary()
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
-        loadPackageStatus()
     }
 
     override fun onPause() {
@@ -358,50 +361,6 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun loadPackageStatus() {
-        val savedPackage = AppPrefs.getDataPackage(this)
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
-
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
-
-        if (normalizedLine.isBlank()) {
-            btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
-            return
-        }
-
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                if (isFinishing || isDestroyed) return@addOnSuccessListener
-
-                if (result.isEmpty) {
-                    btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
-                    return@addOnSuccessListener
-                }
-
-                val doc = result.documents.first()
-                val pkg = doc.getString("dataPackage").orEmpty()
-
-                if (pkg.isNotBlank()) {
-                    AppPrefs.setDataPackage(this, pkg)
-                }
-
-                btnPackageStatus.text = "📦 סוג חבילה\n${pkg.ifBlank { savedPackage.ifBlank { "לא ידוע" } }}"
-            }
-            .addOnFailureListener {
-                if (!isFinishing && !isDestroyed) {
-                    btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "שגיאה" }}"
-                }
-            }
-    }
-
     private fun loadWarrantyStatus() {
         val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
         val deviceLine = normalizeLine(safeDeviceLine())
@@ -413,7 +372,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (normalizedLine.isBlank()) {
-            btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא זוהה"
+            warrantyActivated = false
+            currentWarrantyEnd = ""
+            btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
             return
         }
 
@@ -425,7 +386,9 @@ class MainActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed) return@addOnSuccessListener
 
                 if (result.isEmpty) {
-                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
+                    warrantyActivated = false
+                    currentWarrantyEnd = ""
+                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
                     return@addOnSuccessListener
                 }
 
@@ -434,14 +397,20 @@ class MainActivity : AppCompatActivity() {
                 val warrantyStart = doc.getLong("warrantyStart")
 
                 if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
-                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nלא הופעלה"
+                    warrantyActivated = false
+                    currentWarrantyEnd = ""
+                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
                 } else {
-                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\n$warrantyEnd"
+                    warrantyActivated = true
+                    currentWarrantyEnd = warrantyEnd
+                    btnWarrantyStatus.text = "תוקף אחריות $warrantyEnd🛡️"
                 }
             }
             .addOnFailureListener {
                 if (!isFinishing && !isDestroyed) {
-                    btnWarrantyStatus.text = "🛡️ תוקף אחריות\nשגיאה"
+                    warrantyActivated = false
+                    currentWarrantyEnd = ""
+                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
                 }
             }
     }
@@ -481,6 +450,7 @@ class MainActivity : AppCompatActivity() {
                         "האחריות כבר הופעלה במכשיר זה. לשינויים יש לפנות לסטריאו טיפ אביזרי רכב",
                         Toast.LENGTH_LONG
                     ).show()
+                    loadWarrantyStatus()
                     return@addOnSuccessListener
                 }
 
