@@ -15,6 +15,7 @@ import android.provider.Telephony
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -50,6 +51,15 @@ class BalanceActivity : AppCompatActivity() {
     private var autoStartHandled = false
     private var fromRegistration = false
 
+    private val callPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                startBalanceCheck()
+            } else {
+                Toast.makeText(this, "אין הרשאת שיחה", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             timer?.cancel()
@@ -82,12 +92,18 @@ class BalanceActivity : AppCompatActivity() {
         tvValid = findViewById(R.id.tvValid)
         tvUpdated = findViewById(R.id.tvUpdatedBalance)
 
-        findViewById<Button>(R.id.btnCheckBalance).setOnClickListener { startBalanceCheck() }
+        findViewById<Button>(R.id.btnCheckBalance).setOnClickListener {
+            checkAndCall()
+        }
+
         findViewById<Button>(R.id.btnRenewFromBalance).setOnClickListener {
             startActivity(Intent(this, PackagesActivity::class.java))
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
-        findViewById<Button>(R.id.btnBackBalance).setOnClickListener { finish() }
+
+        findViewById<Button>(R.id.btnBackBalance).setOnClickListener {
+            finish()
+        }
 
         fromRegistration = intent.getBooleanExtra("from_registration", false)
         autoStartHandled = savedInstanceState?.getBoolean("auto_start_handled", false) ?: false
@@ -112,7 +128,7 @@ class BalanceActivity : AppCompatActivity() {
             autoStartHandled = true
             handler.postDelayed({
                 if (!isFinishing && !isDestroyed) {
-                    startBalanceCheck()
+                    checkAndCall()
                 }
             }, 600L)
         }
@@ -135,9 +151,17 @@ class BalanceActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    private fun safeDeviceLine(): String {
+        return try {
+            TelephonyUtils.getLineNumber(this)
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
     private fun bindLatest() {
         val savedLine = AppPrefs.getLineNumber(this)
-        val deviceLine = TelephonyUtils.getLineNumber(this)
+        val deviceLine = safeDeviceLine()
 
         val rawLine = when {
             !savedLine.isNullOrBlank() -> savedLine
@@ -156,6 +180,20 @@ class BalanceActivity : AppCompatActivity() {
         tvValid.text = "📅 תוקף חבילה: $valid"
         tvUpdated.text = "🕒 עודכן: ${Formatter.formatDateTime(updated)}"
         tvStatus.text = Formatter.balanceStatus(mb)
+    }
+
+    private fun checkAndCall() {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CALL_PHONE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+            return
+        }
+
+        startBalanceCheck()
     }
 
     private fun startBalanceCheck() {
@@ -196,10 +234,17 @@ class BalanceActivity : AppCompatActivity() {
             }
         }.start()
 
-        val intent = Intent(Intent.ACTION_CALL).apply {
-            data = Uri.parse("tel:${Uri.encode("*019")}")
+        try {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:${Uri.encode("*019")}")
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, "שגיאה בהוצאת שיחה", Toast.LENGTH_SHORT).show()
+            clearCheckState()
+            timer?.cancel()
+            return
         }
-        startActivity(intent)
 
         handler.postDelayed({
             try {
@@ -297,7 +342,7 @@ class BalanceActivity : AppCompatActivity() {
                     val finalLineRaw = when {
                         !parsed.lineNumber.isNullOrBlank() -> parsed.lineNumber
                         else -> {
-                            val deviceLine = TelephonyUtils.getLineNumber(this)
+                            val deviceLine = safeDeviceLine()
                             if (deviceLine.startsWith("לא")) null else deviceLine
                         }
                     }
