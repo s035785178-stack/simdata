@@ -45,42 +45,42 @@ class MainActivity : AppCompatActivity() {
     private var registrationCheckDone = false
     private var movedToRegistration = false
     private var balanceReceiverRegistered = false
-    private var allPermissionsRequestedOnce = false
+    private var startupDialogShown = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
 
-    private fun allStartupPermissions(): Array<String> {
-        val list = mutableListOf(
+    private fun phonePermissionGroup(): Array<String> {
+        return arrayOf(
             Manifest.permission.CALL_PHONE,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_PHONE_NUMBERS
         )
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            list.add(Manifest.permission.POST_NOTIFICATIONS)
+    private fun smsPermissionGroup(): Array<String> {
+        return arrayOf(
+            Manifest.permission.READ_SMS,
+            Manifest.permission.RECEIVE_SMS
+        )
+    }
+
+    private fun notificationPermissionGroup(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            emptyArray()
         }
-
-        return list.toTypedArray()
     }
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+            continuePermissionFlowIfNeeded()
+
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
             loadPackageStatus()
-
-            if (!hasAllStartupPermissions()) {
-                Toast.makeText(
-                    this,
-                    "האפליקציה צריכה את כל ההרשאות כדי לעבוד בצורה מלאה",
-                    Toast.LENGTH_LONG
-                ).show()
-                showAllPermissionsDialogIfNeeded(forceShow = true)
-            }
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             onLogoTapped()
         }
 
-        showAllPermissionsDialogIfNeeded(forceShow = false)
+        showStartupPermissionsDialogIfNeeded()
         updateSummary()
         loadWarrantyStatus()
         loadPackageStatus()
@@ -162,6 +162,54 @@ class MainActivity : AppCompatActivity() {
             balanceReceiverRegistered = false
         }
         super.onPause()
+    }
+
+    private fun showStartupPermissionsDialogIfNeeded() {
+        if (!hasAnyMissingStartupPermission()) return
+        if (startupDialogShown) return
+
+        startupDialogShown = true
+
+        AlertDialog.Builder(this)
+            .setTitle("נדרשות הרשאות להפעלת האפליקציה")
+            .setMessage("האפליקציה תבקש עכשיו את כל ההרשאות הדרושות: טלפון, הודעות SMS, זיהוי מספר קו, ובמכשירים מתאימים גם התראות. נא לאשר הכל.")
+            .setPositiveButton("אשר הרשאות") { _, _ ->
+                continuePermissionFlowIfNeeded()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun continuePermissionFlowIfNeeded() {
+        val missingPhone = missingPermissions(phonePermissionGroup())
+        if (missingPhone.isNotEmpty()) {
+            permissionLauncher.launch(missingPhone.toTypedArray())
+            return
+        }
+
+        val missingSms = missingPermissions(smsPermissionGroup())
+        if (missingSms.isNotEmpty()) {
+            permissionLauncher.launch(missingSms.toTypedArray())
+            return
+        }
+
+        val missingNotifications = missingPermissions(notificationPermissionGroup())
+        if (missingNotifications.isNotEmpty()) {
+            permissionLauncher.launch(missingNotifications.toTypedArray())
+            return
+        }
+    }
+
+    private fun missingPermissions(group: Array<String>): List<String> {
+        return group.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun hasAnyMissingStartupPermission(): Boolean {
+        return missingPermissions(phonePermissionGroup()).isNotEmpty() ||
+            missingPermissions(smsPermissionGroup()).isNotEmpty() ||
+            missingPermissions(notificationPermissionGroup()).isNotEmpty()
     }
 
     private fun safeDeviceLine(): String {
@@ -458,25 +506,6 @@ class MainActivity : AppCompatActivity() {
             logoTapCount = 0
             startActivity(Intent(this, TechnicianActivity::class.java))
         }
-    }
-
-    private fun showAllPermissionsDialogIfNeeded(forceShow: Boolean) {
-        val missing = allStartupPermissions().filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missing.isEmpty()) return
-        if (allPermissionsRequestedOnce && !forceShow) return
-
-        AlertDialog.Builder(this)
-            .setTitle("נדרשות הרשאות להפעלת האפליקציה")
-            .setMessage("האפליקציה תבקש עכשיו את כל ההרשאות הדרושות: שיחה, הודעות SMS, זיהוי מספר קו, ובמכשירים מתאימים גם התראות. נא לאשר הכל.")
-            .setPositiveButton("אשר הרשאות") { _, _ ->
-                allPermissionsRequestedOnce = true
-                permissionLauncher.launch(missing.toTypedArray())
-            }
-            .setCancelable(false)
-            .show()
     }
 
     private fun hasAllStartupPermissions(): Boolean {
