@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layoutDirection="rtl"
-    android:background="@drawable/bg_registration_screen"
+    android:background="@drawable/bg_screen"
     android:fillViewport="true">
 
     <LinearLayout
@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="14dp"
-            android:background="@drawable/bg_registration_accent"
+            android:background="@drawable/bg_card"
             android:gravity="center"
             android:padding="12dp"
             android:text="מספר קו"
@@ -33,60 +33,58 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:background="@drawable/bg_registration_input"
             android:hint="שם"
             android:padding="14dp"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
+            android:textColorHint="@color/text_secondary"
+            android:background="@android:drawable/edit_text" />
 
         <EditText
             android:id="@+id/etRegistrationPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_registration_input"
             android:hint="טלפון"
             android:inputType="phone"
             android:padding="14dp"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
+            android:textColorHint="@color/text_secondary"
+            android:background="@android:drawable/edit_text" />
 
         <EditText
             android:id="@+id/etCarModel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_registration_input"
             android:hint="דגם רכב"
             android:padding="14dp"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
+            android:textColorHint="@color/text_secondary"
+            android:background="@android:drawable/edit_text" />
 
         <EditText
             android:id="@+id/etCarNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_registration_input"
             android:hint="מספר רכב"
             android:padding="14dp"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
+            android:textColorHint="@color/text_secondary"
+            android:background="@android:drawable/edit_text" />
 
         <Spinner
             android:id="@+id/spinnerPackage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_registration_input"
-            android:padding="8dp" />
+            android:layout_marginTop="12dp" />
 
         <Button
             android:id="@+id/btnRegisterCustomer"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/bg_registration_primary"
+            android:background="@drawable/bg_button_brand"
             android:text="הרשמה"
             android:textAllCaps="false"
             android:textColor="@color/text_primary"
@@ -98,7 +96,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_registration_secondary"
+            android:background="@drawable/bg_button_gray"
             android:text="עזרה"
             android:textAllCaps="false"
             android:textColor="@color/text_primary"
