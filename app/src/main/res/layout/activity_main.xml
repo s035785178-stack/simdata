@@ -119,59 +119,19 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <LinearLayout
+        <Button
+            android:id="@+id/btnWarrantyStatus"
             android:layout_width="match_parent"
             android:layout_height="66dp"
             android:layout_marginTop="12dp"
-            android:orientation="horizontal"
-            android:layoutDirection="rtl"
-            android:weightSum="3">
-
-            <Button
-                android:id="@+id/btnPackageStatus"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_button_blue"
-                android:text="📦 מצב חבילה&#10;לא ידוע"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:padding="6dp" />
-
-            <Button
-                android:id="@+id/btnWarrantyStatus"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="4dp"
-                android:background="@drawable/bg_button_gray"
-                android:text="🛡️ תוקף אחריות&#10;לא הופעלה"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:padding="6dp" />
-
-            <Button
-                android:id="@+id/btnActivateWarranty"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:background="@drawable/bg_button_orange"
-                android:text="▶️ הפעל תקופת אחריות"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:padding="6dp" />
-        </LinearLayout>
+            android:background="@drawable/bg_button_gray"
+            android:text="הפעל תקופת אחריות✔️"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="6dp" />
 
         <GridLayout
             android:layout_width="match_parent"
