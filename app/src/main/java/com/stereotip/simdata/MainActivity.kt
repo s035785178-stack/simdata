@@ -42,8 +42,6 @@ class MainActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
 
-    // ================= הרשאות =================
-
     private fun phonePermissions() = arrayOf(
         Manifest.permission.CALL_PHONE,
         Manifest.permission.READ_PHONE_STATE,
@@ -96,7 +94,6 @@ class MainActivity : AppCompatActivity() {
                 getMissing(notificationPermissions()).isNotEmpty()
     }
 
-    // 🔥 טריגר SMS
     private fun triggerSmsPermission() {
         try {
             val cursor = contentResolver.query(
@@ -109,8 +106,6 @@ class MainActivity : AppCompatActivity() {
             cursor?.close()
         } catch (_: Exception) {}
     }
-
-    // ================= לייף סייקל =================
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,7 +120,6 @@ class MainActivity : AppCompatActivity() {
         btnActivateWarranty = findViewById(R.id.btnActivateWarranty)
         logo = findViewById(R.id.logo)
 
-        // כפתורים
         findViewById<Button>(R.id.btnBalance).setOnClickListener {
             startActivity(Intent(this, BalanceActivity::class.java))
         }
@@ -151,8 +145,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         showPermissionsDialog()
-
-        // 🔥 חשוב
         triggerSmsPermission()
 
         updateSummary()
@@ -197,8 +189,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    // ================= לוגיקה =================
-
     private val balanceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             updateSummary()
@@ -217,18 +207,16 @@ class MainActivity : AppCompatActivity() {
         val line = PhoneUtils.normalizeToLocal(safeDeviceLine())
         tvLine.text = if (line == "לא זוהה") "לא זוהה מספר" else line
 
-        val mb = AppPrefs.getBalanceMb(this)
-        tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
-        tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
-        tvStatus.text = Formatter.balanceStatus(mb)
+        tvBalanceQuick.text = "—"
+        tvUpdated.text = "-"
+        tvStatus.text = "-"
     }
 
-    // 🔥 הרשמה חזרה
     private fun checkRegistrationIfNeeded() {
-        val savedName = AppPrefs.getCustomerName(this)
-        val savedPhone = AppPrefs.getCustomerPhone(this)
+        val name = AppPrefs.getCustomerName(this)
+        val phone = AppPrefs.getCustomerPhone(this)
 
-        if (savedName.isNullOrBlank() || savedPhone.isNullOrBlank()) {
+        if (name.isNullOrBlank() || phone.isNullOrBlank()) {
             startActivity(Intent(this, RegistrationActivity::class.java))
             finish()
         }
