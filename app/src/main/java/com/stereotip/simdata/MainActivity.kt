@@ -3,44 +3,30 @@ package com.stereotip.simdata
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Telephony
-import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
+import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.stereotip.simdata.util.AppPrefs
-import com.stereotip.simdata.util.NetworkUtils
-import com.stereotip.simdata.util.PhoneUtils
-import com.stereotip.simdata.util.TelephonyUtils
-import java.net.URLEncoder
+import com.stereotip.simdata.util.*
 
-class RegistrationActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
-    private lateinit var tvLineNumber: TextView
-    private lateinit var etName: EditText
-    private lateinit var etPhone: EditText
-    private lateinit var etCarModel: EditText
-    private lateinit var etCarNumber: EditText
-    private lateinit var spinnerPackage: Spinner
-    private lateinit var btnRegister: Button
-    private lateinit var btnHelp: Button
+    private lateinit var tvLine: TextView
+    private lateinit var btnBalance: Button
+    private lateinit var btnPackages: Button
+    private lateinit var btnSupport: Button
+    private lateinit var btnNetwork: Button
+    private lateinit var logo: ImageView
 
-    private val db = FirebaseFirestore.getInstance()
-    private var detectedLineNumber: String = ""
+    private var dialogShown = false
 
-    private fun phonePermissions(): Array<String> {
+    private fun allPermissions(): Array<String> {
         val list = mutableListOf(
             Manifest.permission.CALL_PHONE,
             Manifest.permission.READ_PHONE_STATE,
@@ -49,7 +35,7 @@ class RegistrationActivity : AppCompatActivity() {
             Manifest.permission.RECEIVE_SMS
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= 33) {
             list.add(Manifest.permission.POST_NOTIFICATIONS)
         }
 
@@ -57,66 +43,70 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
-            triggerSmsPermission()
-            refreshDetectedLine()
-        }
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_registration)
+        setContentView(R.layout.activity_main)
 
-        tvLineNumber = findViewById(R.id.tvRegistrationLineNumber)
-        etName = findViewById(R.id.etRegistrationName)
-        etPhone = findViewById(R.id.etRegistrationPhone)
-        etCarModel = findViewById(R.id.etCarModel)
-        etCarNumber = findViewById(R.id.etCarNumber)
-        spinnerPackage = findViewById(R.id.spinnerPackage)
-        btnRegister = findViewById(R.id.btnRegisterCustomer)
-        btnHelp = findViewById(R.id.btnHelp)
+        tvLine = findViewById(R.id.tvLine)
+        btnBalance = findViewById(R.id.btnBalance)
+        btnPackages = findViewById(R.id.btnPackages)
+        btnSupport = findViewById(R.id.btnSupport)
+        btnNetwork = findViewById(R.id.btnNetwork)
+        logo = findViewById(R.id.logo)
 
-        val packages = listOf(
-            "לא ידוע / אין",
-            "100 ג׳יגה או שנתיים",
-            "36 ג׳יגה או 60 חודשים",
-            "4 ג׳יגה או חודשיים"
-        )
-
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            packages
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerPackage.adapter = adapter
-        spinnerPackage.setSelection(1)
-
-        requestPermissionsIfNeeded()
+        requestPermissions()
         triggerSmsPermission()
-        refreshDetectedLine()
 
-        btnRegister.setOnClickListener {
-            registerCustomer()
+        btnBalance.setOnClickListener {
+            startActivity(Intent(this, BalanceActivity::class.java))
         }
 
-        btnHelp.setOnClickListener {
-            openHelpWhatsapp()
+        btnPackages.setOnClickListener {
+            startActivity(Intent(this, PackagesActivity::class.java))
         }
+
+        btnSupport.setOnClickListener {
+            startActivity(Intent(this, SupportActivity::class.java))
+        }
+
+        btnNetwork.setOnClickListener {
+            startActivity(Intent(this, NetworkCheckActivity::class.java))
+        }
+
+        logo.setOnClickListener {
+            startActivity(Intent(this, TechnicianActivity::class.java))
+        }
+
+        updateLine()
+        checkRegistration()
     }
 
     override fun onResume() {
         super.onResume()
+        requestPermissions()
         triggerSmsPermission()
-        refreshDetectedLine()
+        updateLine()
+        checkRegistration()
     }
 
-    private fun requestPermissionsIfNeeded() {
-        val missing = phonePermissions().filter {
+    private fun requestPermissions() {
+        val missing = allPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
 
-        if (missing.isNotEmpty()) {
-            permissionLauncher.launch(missing.toTypedArray())
+        if (missing.isNotEmpty() && !dialogShown) {
+            dialogShown = true
+
+            AlertDialog.Builder(this)
+                .setTitle("נדרשות הרשאות")
+                .setMessage("יש לאשר את כל ההרשאות")
+                .setPositiveButton("אישור") { _, _ ->
+                    permissionLauncher.launch(missing.toTypedArray())
+                }
+                .setCancelable(false)
+                .show()
         }
     }
 
@@ -130,131 +120,26 @@ class RegistrationActivity : AppCompatActivity() {
                 null
             )
             cursor?.close()
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
     }
 
-    private fun refreshDetectedLine() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(
-            try {
-                TelephonyUtils.getLineNumber(this)
-            } catch (_: Exception) {
-                ""
-            }
+    private fun updateLine() {
+        val line = PhoneUtils.normalizeToLocal(
+            try { TelephonyUtils.getLineNumber(this) } catch (_: Exception) { "" }
         )
 
-        detectedLineNumber = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
-
-        tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
-            "מספר קו במכשיר: $detectedLineNumber"
-        } else {
-            "מספר קו במכשיר: לא זוהה"
-        }
+        tvLine.text = if (line.isBlank() || line == "לא זוהה") {
+            "לא זוהה מספר"
+        } else line
     }
 
-    private fun registerCustomer() {
-        val name = etName.text.toString().trim()
-        val phone = normalizePhone(etPhone.text.toString())
-        val carModel = etCarModel.text.toString().trim()
-        val carNumber = etCarNumber.text.toString().trim()
-        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
+    private fun checkRegistration() {
+        val name = AppPrefs.getCustomerName(this)
+        val phone = AppPrefs.getCustomerPhone(this)
 
-        if (name.isBlank()) {
-            etName.error = "נא למלא שם"
-            etName.requestFocus()
-            return
-        }
-
-        if (phone.length != 10 || !phone.startsWith("05")) {
-            etPhone.error = "נא למלא טלפון תקין"
-            etPhone.requestFocus()
-            return
-        }
-
-        if (!NetworkUtils.isOnline(this)) {
-            Toast.makeText(this, "אין אינטרנט", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        btnRegister.isEnabled = false
-        btnHelp.isEnabled = false
-        btnRegister.text = "נרשם..."
-
-        val now = System.currentTimeMillis()
-        val data = hashMapOf(
-            "customerName" to name,
-            "customerPhone" to phone,
-            "lineNumber" to detectedLineNumber,
-            "carModel" to carModel,
-            "carNumber" to carNumber,
-            "dataPackage" to dataPackage,
-            "createdAt" to now,
-            "lastUpdate" to now
-        )
-
-        db.collection("customers")
-            .document(phone)
-            .set(data, SetOptions.merge())
-            .addOnSuccessListener {
-                AppPrefs.setCustomerName(this, name)
-                AppPrefs.setCustomerPhone(this, phone)
-                AppPrefs.setCarModel(this, carModel)
-                AppPrefs.setCarNumber(this, carNumber)
-                AppPrefs.setDataPackage(this, dataPackage)
-
-                if (detectedLineNumber.isNotBlank()) {
-                    AppPrefs.setLineNumber(this, detectedLineNumber)
-                }
-
-                btnRegister.text = "✔️ נרשמת בהצלחה"
-                btnRegister.setBackgroundColor(0xFF2E7D32.toInt())
-
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val intent = Intent(this, WarrantyPromptActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                    finish()
-                }, 900)
-            }
-            .addOnFailureListener {
-                btnRegister.isEnabled = true
-                btnHelp.isEnabled = true
-                btnRegister.text = "הרשמה"
-                Toast.makeText(this, "שגיאה בהרשמה", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun openHelpWhatsapp() {
-        val message = "היי אני צריך עזרה בהרשמה למערכת יתרת חבילת גלישה"
-        val url = "https://wa.me/972559911336?text=${URLEncoder.encode(message, "UTF-8")}"
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
-
-    override fun finish() {
-        super.finish()
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-    }
-
-    private fun normalizePhone(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return when (normalized) {
-            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> normalized
-        }
-    }
-
-    private fun normalizeLine(raw: String?): String {
-        val normalized = PhoneUtils.normalizeToLocal(raw)
-        return when (normalized) {
-            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
-            else -> normalized
+        if (name.isNullOrBlank() || phone.isNullOrBlank()) {
+            startActivity(Intent(this, RegistrationActivity::class.java))
+            finish()
         }
     }
 }
