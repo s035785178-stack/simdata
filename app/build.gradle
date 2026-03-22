@@ -4,8 +4,9 @@ apply plugin: 'com.google.gms.google-services'
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("app/keystore.properties")
+def hasReleaseKeystore = keystorePropertiesFile.exists()
 
-if (keystorePropertiesFile.exists()) {
+if (hasReleaseKeystore) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
@@ -22,8 +23,8 @@ android {
     }
 
     signingConfigs {
-        release {
-            if (keystorePropertiesFile.exists()) {
+        if (hasReleaseKeystore) {
+            release {
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
                 keyAlias keystoreProperties['keyAlias']
@@ -34,16 +35,16 @@ android {
 
     buildTypes {
         debug {
-            if (keystorePropertiesFile.exists()) {
+            if (hasReleaseKeystore) {
                 signingConfig signingConfigs.release
             }
         }
 
         release {
-            if (keystorePropertiesFile.exists()) {
+            minifyEnabled false
+            if (hasReleaseKeystore) {
                 signingConfig signingConfigs.release
             }
-            minifyEnabled false
         }
     }
 
