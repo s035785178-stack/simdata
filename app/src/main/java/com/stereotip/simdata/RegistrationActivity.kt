@@ -1,7 +1,10 @@
 package com.stereotip.simdata
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,7 +14,9 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.util.AppPrefs
@@ -33,6 +38,24 @@ class RegistrationActivity : AppCompatActivity() {
 
     private val db = FirebaseFirestore.getInstance()
     private var detectedLineNumber: String = ""
+
+    private fun phonePermissions(): Array<String> {
+        val list = mutableListOf(
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_PHONE_NUMBERS
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            list.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        return list.toTypedArray()
+    }
+
+    private val phonePermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+            refreshDetectedLine()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +86,8 @@ class RegistrationActivity : AppCompatActivity() {
         spinnerPackage.adapter = adapter
         spinnerPackage.setSelection(1)
 
-        detectedLineNumber = normalizeLine(TelephonyUtils.getLineNumber(this))
-        tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
-            "מספר קו במכשיר: $detectedLineNumber"
-        } else {
-            "מספר קו במכשיר: לא זוהה"
-        }
+        requestPhonePermissionsIfNeeded()
+        refreshDetectedLine()
 
         btnRegister.setOnClickListener {
             registerCustomer()
@@ -76,6 +95,44 @@ class RegistrationActivity : AppCompatActivity() {
 
         btnHelp.setOnClickListener {
             openHelpWhatsapp()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshDetectedLine()
+    }
+
+    private fun requestPhonePermissionsIfNeeded() {
+        val missing = phonePermissions().filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missing.isNotEmpty()) {
+            phonePermissionLauncher.launch(missing.toTypedArray())
+        }
+    }
+
+    private fun refreshDetectedLine() {
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val deviceLine = normalizeLine(
+            try {
+                TelephonyUtils.getLineNumber(this)
+            } catch (_: Exception) {
+                ""
+            }
+        )
+
+        detectedLineNumber = when {
+            savedLine.isNotBlank() -> savedLine
+            deviceLine.isNotBlank() -> deviceLine
+            else -> ""
+        }
+
+        tvLineNumber.text = if (detectedLineNumber.isNotBlank()) {
+            "מספר קו במכשיר: $detectedLineNumber"
+        } else {
+            "מספר קו במכשיר: לא זוהה"
         }
     }
 
