@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private var balanceReceiverRegistered = false
     private var startupDialogShown = false
     private var permissionRequestInProgress = false
+    private var restoreLookupInProgress = false
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -315,8 +316,51 @@ class MainActivity : AppCompatActivity() {
         tvStatus.text = Formatter.balanceStatus(mb)
     }
 
+    private fun restoreCustomerFromFirebaseByLine(lineNumber: String) {
+        if (restoreLookupInProgress) return
+        restoreLookupInProgress = true
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", lineNumber)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                restoreLookupInProgress = false
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                if (result.isEmpty) {
+                    moveToRegistration(clearLocal = false)
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                val customerName = doc.getString("customerName").orEmpty()
+                val customerPhone = normalizePhone(doc.getString("customerPhone"))
+                val carModel = doc.getString("carModel").orEmpty()
+                val carNumber = doc.getString("carNumber").orEmpty()
+                val dataPackage = doc.getString("dataPackage").orEmpty()
+
+                if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
+                if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
+                if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
+                if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
+                if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
+                AppPrefs.setLineNumber(this, lineNumber)
+
+                registrationCheckDone = true
+                updateSummary()
+                loadWarrantyStatus()
+                loadPackageStatus()
+            }
+            .addOnFailureListener {
+                restoreLookupInProgress = false
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+                moveToRegistration(clearLocal = false)
+            }
+    }
+
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone || movedToRegistration) return
+        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress) return
 
         val savedPhone = AppPrefs.getCustomerPhone(this)
         val savedName = AppPrefs.getCustomerName(this)
@@ -326,64 +370,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
-
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
-
-        if (normalizedLine.isBlank() && savedPhone.isBlank() && savedName.isBlank()) {
-            moveToRegistration(clearLocal = false)
-            return
-        }
-
-        if (!NetworkUtils.isOnline(this)) {
-            if (savedPhone.isNotBlank() || savedName.isNotBlank()) {
-                registrationCheckDone = true
-                return
-            }
-            moveToRegistration(clearLocal = false)
-            return
-        }
-
-        registrationCheckDone = true
+        val normalizedLine = normalizeLine(safeDeviceLine())
 
         if (normalizedLine.isNotBlank()) {
-            db.collection("customers")
-                .whereEqualTo("lineNumber", normalizedLine)
-                .limit(1)
-                .get()
-                .addOnSuccessListener { result ->
-                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+            AppPrefs.setLineNumber(this, normalizedLine)
 
-                    if (result.isEmpty) {
-                        if (savedPhone.isBlank() && savedName.isBlank()) {
-                            moveToRegistration(clearLocal = true)
-                        }
-                    } else {
-                        val doc = result.documents.first()
+            if (!NetworkUtils.isOnline(this)) {
+                moveToRegistration(clearLocal = false)
+                return
+            }
 
-                        val customerName = doc.getString("customerName").orEmpty()
-                        val customerPhone = normalizePhone(doc.getString("customerPhone"))
-                        val carModel = doc.getString("carModel").orEmpty()
-                        val carNumber = doc.getString("carNumber").orEmpty()
-                        val dataPackage = doc.getString("dataPackage").orEmpty()
-
-                        if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
-                        if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
-                        if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
-                        if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
-                        if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
-
-                        AppPrefs.setLineNumber(this, normalizedLine)
-                    }
-                }
-                .addOnFailureListener {
-                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
-                }
+            restoreCustomerFromFirebaseByLine(normalizedLine)
             return
         }
 
