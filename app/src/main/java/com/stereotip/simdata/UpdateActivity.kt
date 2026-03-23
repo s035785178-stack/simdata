@@ -22,6 +22,8 @@ class UpdateActivity : AppCompatActivity() {
     private lateinit var btnBackUpdate: Button
 
     private var latestApkUrl: String = ""
+    private val currentVersionCode = 2
+    private val currentVersionName = "1.06"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +37,7 @@ class UpdateActivity : AppCompatActivity() {
         btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
         btnBackUpdate = findViewById(R.id.btnBackUpdate)
 
-        tvCurrentVersion.text = "גרסה מותקנת: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        tvCurrentVersion.text = "גרסה מותקנת: $currentVersionName ($currentVersionCode)"
         tvLatestVersion.text = "גרסה זמינה: --"
         tvUpdateStatus.text = "לחץ על בדוק עדכון"
 
@@ -49,8 +51,7 @@ class UpdateActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(latestApkUrl))
-            startActivity(intent)
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(latestApkUrl)))
         }
 
         btnBackUpdate.setOnClickListener {
@@ -76,7 +77,7 @@ class UpdateActivity : AppCompatActivity() {
                         "גרסה זמינה: ${info.versionName} (${info.versionCode})"
                     latestApkUrl = info.apkUrl
 
-                    if (info.versionCode > BuildConfig.VERSION_CODE) {
+                    if (info.versionCode > currentVersionCode) {
                         tvUpdateStatus.text = "יש עדכון חדש"
                         btnDownloadUpdate.isEnabled = true
                     } else {
