@@ -41,7 +41,7 @@ android {
 
     buildTypes {
         debug {
-            // עד שאין keystore אמיתי - debug נבנה רגיל
+            // לא חותם אם אין keystore
             if (hasReleaseKeystore) {
                 signingConfig signingConfigs.release
             }
