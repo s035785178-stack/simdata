@@ -1,14 +1,20 @@
+import java.util.Properties
+
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'com.google.gms.google-services'
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("app/keystore.properties")
-def hasReleaseKeystore = keystorePropertiesFile.exists()
 
-if (hasReleaseKeystore) {
+def hasKeystoreProperties = keystorePropertiesFile.exists()
+if (hasKeystoreProperties) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+
+def releaseStoreFilePath = hasKeystoreProperties ? keystoreProperties['storeFile'] : null
+def releaseStoreFile = releaseStoreFilePath ? rootProject.file("app/${releaseStoreFilePath}") : null
+def hasReleaseKeystore = hasKeystoreProperties && releaseStoreFile != null && releaseStoreFile.exists()
 
 android {
     namespace 'com.stereotip.simdata'
@@ -25,7 +31,7 @@ android {
     signingConfigs {
         if (hasReleaseKeystore) {
             release {
-                storeFile file(keystoreProperties['storeFile'])
+                storeFile releaseStoreFile
                 storePassword keystoreProperties['storePassword']
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
@@ -35,6 +41,7 @@ android {
 
     buildTypes {
         debug {
+            // עד שאין keystore אמיתי - debug נבנה רגיל
             if (hasReleaseKeystore) {
                 signingConfig signingConfigs.release
             }
