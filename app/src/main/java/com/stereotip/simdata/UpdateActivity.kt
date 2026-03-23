@@ -15,8 +15,8 @@ class UpdateActivity : AppCompatActivity() {
 
     private lateinit var tvCurrentVersion: TextView
     private lateinit var tvLatestVersion: TextView
-    private lateinit var tvUpdateMessage: TextView
-    private lateinit var progressBar: ProgressBar
+    private lateinit var tvUpdateStatus: TextView
+    private lateinit var progressUpdate: ProgressBar
     private lateinit var btnCheckUpdate: Button
     private lateinit var btnDownloadUpdate: Button
     private lateinit var btnBackUpdate: Button
@@ -29,17 +29,15 @@ class UpdateActivity : AppCompatActivity() {
 
         tvCurrentVersion = findViewById(R.id.tvCurrentVersion)
         tvLatestVersion = findViewById(R.id.tvLatestVersion)
-        tvUpdateMessage = findViewById(R.id.tvUpdateMessage)
-        progressBar = findViewById(R.id.progressUpdate)
+        tvUpdateStatus = findViewById(R.id.tvUpdateStatus)
+        progressUpdate = findViewById(R.id.progressUpdate)
         btnCheckUpdate = findViewById(R.id.btnCheckUpdate)
         btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
         btnBackUpdate = findViewById(R.id.btnBackUpdate)
 
-        tvCurrentVersion.text = "הגרסה הנוכחית: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-        tvLatestVersion.text = "הגרסה החדשה: עדיין לא נבדק"
-        tvUpdateMessage.text = "לחץ על בדוק עדכון"
-
-        btnDownloadUpdate.isEnabled = false
+        tvCurrentVersion.text = "גרסה מותקנת: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        tvLatestVersion.text = "גרסה זמינה: --"
+        tvUpdateStatus.text = "לחץ על בדוק עדכון"
 
         btnCheckUpdate.setOnClickListener {
             checkUpdate()
@@ -47,16 +45,12 @@ class UpdateActivity : AppCompatActivity() {
 
         btnDownloadUpdate.setOnClickListener {
             if (latestApkUrl.isBlank()) {
-                Toast.makeText(this, "לא נמצא קישור לעדכון", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "אין קישור להורדה", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(latestApkUrl))
-                startActivity(intent)
-            } catch (_: Exception) {
-                Toast.makeText(this, "שגיאה בפתיחת קישור העדכון", Toast.LENGTH_SHORT).show()
-            }
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(latestApkUrl))
+            startActivity(intent)
         }
 
         btnBackUpdate.setOnClickListener {
@@ -65,34 +59,32 @@ class UpdateActivity : AppCompatActivity() {
     }
 
     private fun checkUpdate() {
-        progressBar.visibility = View.VISIBLE
+        progressUpdate.visibility = View.VISIBLE
+        tvUpdateStatus.text = "בודק עדכון..."
         btnCheckUpdate.isEnabled = false
         btnDownloadUpdate.isEnabled = false
-        tvUpdateMessage.text = "בודק עדכון..."
 
         thread {
-            val result = UpdateManager.checkForUpdate()
+            val result = UpdateManager.fetchUpdateInfo()
 
             runOnUiThread {
-                progressBar.visibility = View.GONE
+                progressUpdate.visibility = View.GONE
                 btnCheckUpdate.isEnabled = true
 
                 result.onSuccess { info ->
                     tvLatestVersion.text =
-                        "הגרסה החדשה: ${info.latestVersionName} (${info.latestVersionCode})"
-                    tvUpdateMessage.text = info.message
+                        "גרסה זמינה: ${info.versionName} (${info.versionCode})"
                     latestApkUrl = info.apkUrl
 
-                    if (info.latestVersionCode > BuildConfig.VERSION_CODE && info.apkUrl.isNotBlank()) {
+                    if (info.versionCode > BuildConfig.VERSION_CODE) {
+                        tvUpdateStatus.text = "יש עדכון חדש"
                         btnDownloadUpdate.isEnabled = true
-                        btnDownloadUpdate.text = "הורד והתקן עדכון"
                     } else {
+                        tvUpdateStatus.text = "האפליקציה מעודכנת"
                         btnDownloadUpdate.isEnabled = false
-                        btnDownloadUpdate.text = "אין עדכון זמין"
                     }
                 }.onFailure {
-                    tvUpdateMessage.text = "לא ניתן לבדוק עדכון כרגע"
-                    Toast.makeText(this, "שגיאה בבדיקת עדכון", Toast.LENGTH_SHORT).show()
+                    tvUpdateStatus.text = "שגיאה בבדיקת עדכון"
                 }
             }
         }
