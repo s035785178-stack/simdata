@@ -4,8 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
     private lateinit var tvSubtitle: TextView
     private lateinit var btnActivateWarranty: Button
     private lateinit var btnSkipWarranty: Button
+    private lateinit var btnNoWarrantyExternal: Button
 
     private lateinit var successContainer: View
     private lateinit var tvSuccessIcon: TextView
@@ -49,12 +52,77 @@ class WarrantyPromptActivity : AppCompatActivity() {
         tvSuccessTitle = findViewById(R.id.tvSuccessTitle)
         tvSuccessCountdown = findViewById(R.id.tvSuccessCountdown)
 
+        setupNoWarrantyButton()
+
         btnActivateWarranty.setOnClickListener {
             activateWarrantyAndContinue()
         }
 
         btnSkipWarranty.setOnClickListener {
             continueToBalance()
+        }
+
+        btnNoWarrantyExternal.setOnClickListener {
+            markNoWarrantyAndContinue()
+        }
+    }
+
+    private fun setupNoWarrantyButton() {
+        val parent = btnSkipWarranty.parent as? ViewGroup
+        if (parent == null) {
+            throw IllegalStateException("Parent for warranty buttons not found")
+        }
+
+        btnNoWarrantyExternal = Button(this).apply {
+            id = View.generateViewId()
+            text = "אין אחריות (נרכש במקום אחר)"
+            isAllCaps = false
+            setTextColor(btnSkipWarranty.currentTextColor)
+            textSize = 17f
+            typeface = btnSkipWarranty.typeface
+            background = btnSkipWarranty.background.constantState?.newDrawable()?.mutate()
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+
+        val sourceParams = btnSkipWarranty.layoutParams
+        val newParams = when (sourceParams) {
+            is LinearLayout.LayoutParams -> {
+                LinearLayout.LayoutParams(sourceParams).apply {
+                    topMargin = sourceParams.topMargin
+                    bottomMargin = sourceParams.bottomMargin
+                    marginStart = sourceParams.marginStart
+                    marginEnd = sourceParams.marginEnd
+                }
+            }
+            is ViewGroup.MarginLayoutParams -> {
+                ViewGroup.MarginLayoutParams(sourceParams).apply {
+                    topMargin = sourceParams.topMargin
+                    bottomMargin = sourceParams.bottomMargin
+                    marginStart = sourceParams.marginStart
+                    marginEnd = sourceParams.marginEnd
+                }
+            }
+            else -> {
+                ViewGroup.LayoutParams(sourceParams)
+            }
+        }
+
+        btnNoWarrantyExternal.layoutParams = newParams
+
+        val insertIndex = parent.indexOfChild(btnSkipWarranty) + 1
+        parent.addView(btnNoWarrantyExternal, insertIndex)
+    }
+
+    private fun getCustomerQuery() = run {
+        val savedPhone = AppPrefs.getCustomerPhone(this).orEmpty().trim()
+        val savedLine = AppPrefs.getLineNumber(this).orEmpty().trim()
+
+        when {
+            savedPhone.isNotBlank() -> db.collection("customers")
+                .document(savedPhone)
+
+            savedLine.isNotBlank() -> null
+            else -> null
         }
     }
 
@@ -72,6 +140,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
         btnActivateWarranty.isEnabled = false
         btnSkipWarranty.isEnabled = false
+        btnNoWarrantyExternal.isEnabled = false
         btnActivateWarranty.text = "מפעיל אחריות..."
 
         if (savedPhone.isNotBlank()) {
@@ -82,6 +151,14 @@ class WarrantyPromptActivity : AppCompatActivity() {
                     if (!doc.exists()) {
                         restoreButtons()
                         Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
+                        continueToBalance()
+                        return@addOnSuccessListener
+                    }
+
+                    val noWarrantyExternal = doc.getBoolean("noWarrantyExternal") == true
+                    if (noWarrantyExternal) {
+                        restoreButtons()
+                        Toast.makeText(this, "לקוח זה מסומן ללא אחריות", Toast.LENGTH_SHORT).show()
                         continueToBalance()
                         return@addOnSuccessListener
                     }
@@ -103,7 +180,8 @@ class WarrantyPromptActivity : AppCompatActivity() {
                     val data: HashMap<String, Any?> = hashMapOf(
                         "warrantyStart" to startMillis,
                         "warrantyEnd" to endDate,
-                        "lastUpdate" to System.currentTimeMillis()
+                        "lastUpdate" to System.currentTimeMillis(),
+                        "noWarrantyExternal" to false
                     )
 
                     doc.reference.set(data, SetOptions.merge())
@@ -136,6 +214,14 @@ class WarrantyPromptActivity : AppCompatActivity() {
                 }
 
                 val doc = result.documents.first()
+                val noWarrantyExternal = doc.getBoolean("noWarrantyExternal") == true
+                if (noWarrantyExternal) {
+                    restoreButtons()
+                    Toast.makeText(this, "לקוח זה מסומן ללא אחריות", Toast.LENGTH_SHORT).show()
+                    continueToBalance()
+                    return@addOnSuccessListener
+                }
+
                 val existingWarrantyStart = doc.getLong("warrantyStart")
                 val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
@@ -153,7 +239,8 @@ class WarrantyPromptActivity : AppCompatActivity() {
                 val data: HashMap<String, Any?> = hashMapOf(
                     "warrantyStart" to startMillis,
                     "warrantyEnd" to endDate,
-                    "lastUpdate" to System.currentTimeMillis()
+                    "lastUpdate" to System.currentTimeMillis(),
+                    "noWarrantyExternal" to false
                 )
 
                 doc.reference.set(data, SetOptions.merge())
@@ -171,11 +258,84 @@ class WarrantyPromptActivity : AppCompatActivity() {
             }
     }
 
+    private fun markNoWarrantyAndContinue() {
+        if (isContinuing) return
+
+        val savedPhone = AppPrefs.getCustomerPhone(this).orEmpty().trim()
+        val savedLine = AppPrefs.getLineNumber(this).orEmpty().trim()
+
+        if (savedPhone.isBlank() && savedLine.isBlank()) {
+            Toast.makeText(this, "לא נמצא לקוח לעדכון", Toast.LENGTH_SHORT).show()
+            continueToBalance()
+            return
+        }
+
+        btnActivateWarranty.isEnabled = false
+        btnSkipWarranty.isEnabled = false
+        btnNoWarrantyExternal.isEnabled = false
+        btnNoWarrantyExternal.text = "שומר נתון..."
+
+        if (savedPhone.isNotBlank()) {
+            db.collection("customers")
+                .document(savedPhone)
+                .set(
+                    hashMapOf(
+                        "noWarrantyExternal" to true,
+                        "lastUpdate" to System.currentTimeMillis()
+                    ),
+                    SetOptions.merge()
+                )
+                .addOnSuccessListener {
+                    showSuccessState("הלקוח סומן ללא אחריות")
+                }
+                .addOnFailureListener {
+                    restoreButtons()
+                    Toast.makeText(this, "שגיאה בשמירת סטטוס אחריות", Toast.LENGTH_SHORT).show()
+                }
+
+            return
+        }
+
+        db.collection("customers")
+            .whereEqualTo("lineNumber", savedLine)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    restoreButtons()
+                    Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
+                    continueToBalance()
+                    return@addOnSuccessListener
+                }
+
+                val doc = result.documents.first()
+                doc.reference.set(
+                    hashMapOf(
+                        "noWarrantyExternal" to true,
+                        "lastUpdate" to System.currentTimeMillis()
+                    ),
+                    SetOptions.merge()
+                )
+                    .addOnSuccessListener {
+                        showSuccessState("הלקוח סומן ללא אחריות")
+                    }
+                    .addOnFailureListener {
+                        restoreButtons()
+                        Toast.makeText(this, "שגיאה בשמירת סטטוס אחריות", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener {
+                restoreButtons()
+                Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun showSuccessState(message: String) {
         if (isContinuing) return
 
         btnActivateWarranty.visibility = View.GONE
         btnSkipWarranty.visibility = View.GONE
+        btnNoWarrantyExternal.visibility = View.GONE
 
         successContainer.visibility = View.VISIBLE
         tvSuccessIcon.text = "✅"
@@ -198,7 +358,10 @@ class WarrantyPromptActivity : AppCompatActivity() {
     private fun restoreButtons() {
         btnActivateWarranty.isEnabled = true
         btnSkipWarranty.isEnabled = true
+        btnNoWarrantyExternal.isEnabled = true
+
         btnActivateWarranty.text = "הפעלת אחריות על מכשיר זה🛡️"
+        btnNoWarrantyExternal.text = "אין אחריות (נרכש במקום אחר)"
     }
 
     private fun continueToBalance() {
