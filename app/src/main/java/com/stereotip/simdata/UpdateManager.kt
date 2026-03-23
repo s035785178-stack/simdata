@@ -5,40 +5,41 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 data class UpdateInfo(
-    val latestVersionCode: Int,
-    val latestVersionName: String,
+    val versionCode: Int,
+    val versionName: String,
     val apkUrl: String,
-    val forceUpdate: Boolean,
-    val message: String
+    val forceUpdate: Boolean
 )
 
 object UpdateManager {
 
-    // מחר תחליף ללינק האמיתי שלך
-    private const val UPDATE_JSON_URL = "https://example.com/update.json"
+    // החלף לכתובת האמיתית שלך כשתהיה מוכנה
+    private const val UPDATE_JSON_URL = "https://your-server.com/update.json"
 
-    fun checkForUpdate(): Result<UpdateInfo> {
+    fun fetchUpdateInfo(): Result<UpdateInfo> {
         return try {
             val url = URL(UPDATE_JSON_URL)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.connectTimeout = 7000
-            connection.readTimeout = 7000
-            connection.requestMethod = "GET"
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 8000
+                readTimeout = 8000
+                requestMethod = "GET"
+                doInput = true
+            }
+
             connection.connect()
 
-            if (connection.responseCode != 200) {
-                return Result.failure(Exception("HTTP ${connection.responseCode}"))
+            if (connection.responseCode !in 200..299) {
+                return Result.failure(IllegalStateException("HTTP ${connection.responseCode}"))
             }
 
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(body)
 
             val info = UpdateInfo(
-                latestVersionCode = json.optInt("versionCode", 1),
-                latestVersionName = json.optString("versionName", "לא ידוע"),
-                apkUrl = json.optString("apkUrl", ""),
-                forceUpdate = json.optBoolean("forceUpdate", false),
-                message = json.optString("message", "קיימת גרסה חדשה לאפליקציה")
+                versionCode = json.getInt("versionCode"),
+                versionName = json.getString("versionName"),
+                apkUrl = json.getString("apkUrl"),
+                forceUpdate = json.optBoolean("forceUpdate", false)
             )
 
             Result.success(info)
