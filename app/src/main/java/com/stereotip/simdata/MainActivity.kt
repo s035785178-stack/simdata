@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
+    private var noWarrantyExternal = false
 
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
@@ -118,10 +119,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnWarrantyStatus.setOnClickListener {
-            if (warrantyActivated) {
-                Toast.makeText(this, "תוקף האחריות: $currentWarrantyEnd", Toast.LENGTH_SHORT).show()
-            } else {
-                activateWarranty()
+            when {
+                noWarrantyExternal -> {
+                    Toast.makeText(this, "אין אחריות - נרכש במקום אחר", Toast.LENGTH_SHORT).show()
+                }
+                warrantyActivated -> {
+                    Toast.makeText(this, "תוקף האחריות: $currentWarrantyEnd", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    activateWarranty()
+                }
             }
         }
 
@@ -307,6 +314,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getCustomerIdentifier(): String {
+        val line = normalizeLine(safeDeviceLine())
+        if (line.isNotBlank()) return line
+
+        val phone = normalizePhone(AppPrefs.getCustomerPhone(this))
+        if (phone.isNotBlank()) return phone
+
+        return ""
+    }
+
     private fun updateSummary() {
         val line = safeDeviceLine()
         tvLine.text = if (line.isBlank()) "לא זוהה מספר" else line
@@ -454,39 +471,56 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWarrantyStatus() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
+        val identifier = getCustomerIdentifier()
 
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
-
-        if (normalizedLine.isBlank()) {
+        if (identifier.isBlank()) {
             warrantyActivated = false
             currentWarrantyEnd = ""
+            noWarrantyExternal = false
             btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+            btnWarrantyStatus.isEnabled = true
             return
         }
 
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
+        val query = if (identifier.startsWith("05")) {
+            db.collection("customers")
+                .whereEqualTo("customerPhone", identifier)
+                .limit(1)
+        } else {
+            db.collection("customers")
+                .whereEqualTo("lineNumber", identifier)
+                .limit(1)
+        }
+
+        query.get()
             .addOnSuccessListener { result ->
                 if (isFinishing || isDestroyed) return@addOnSuccessListener
 
                 if (result.isEmpty) {
                     warrantyActivated = false
                     currentWarrantyEnd = ""
+                    noWarrantyExternal = false
                     btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+                    btnWarrantyStatus.isEnabled = true
                     return@addOnSuccessListener
                 }
 
                 val doc = result.documents.first()
                 val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
                 val warrantyStart = doc.getLong("warrantyStart")
+                val noWarrantyFlag = doc.getBoolean("noWarrantyExternal") == true
+
+                noWarrantyExternal = noWarrantyFlag
+
+                if (noWarrantyExternal) {
+                    warrantyActivated = false
+                    currentWarrantyEnd = ""
+                    btnWarrantyStatus.text = "אין אחריות (נרכש במקום אחר)"
+                    btnWarrantyStatus.isEnabled = false
+                    return@addOnSuccessListener
+                }
+
+                btnWarrantyStatus.isEnabled = true
 
                 if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
                     warrantyActivated = false
@@ -502,30 +536,32 @@ class MainActivity : AppCompatActivity() {
                 if (!isFinishing && !isDestroyed) {
                     warrantyActivated = false
                     currentWarrantyEnd = ""
+                    noWarrantyExternal = false
                     btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+                    btnWarrantyStatus.isEnabled = true
                 }
             }
     }
 
     private fun activateWarranty() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
+        val identifier = getCustomerIdentifier()
 
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
-
-        if (normalizedLine.isBlank()) {
-            Toast.makeText(this, "לא זוהה מספר קו", Toast.LENGTH_SHORT).show()
+        if (identifier.isBlank()) {
+            Toast.makeText(this, "אין פרטי משתמש", Toast.LENGTH_SHORT).show()
             return
         }
 
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
+        val query = if (identifier.startsWith("05")) {
+            db.collection("customers")
+                .whereEqualTo("customerPhone", identifier)
+                .limit(1)
+        } else {
+            db.collection("customers")
+                .whereEqualTo("lineNumber", identifier)
+                .limit(1)
+        }
+
+        query.get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
                     Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
@@ -533,6 +569,16 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val doc = result.documents.first()
+                val noWarrantyFlag = doc.getBoolean("noWarrantyExternal") == true
+
+                if (noWarrantyFlag) {
+                    noWarrantyExternal = true
+                    btnWarrantyStatus.text = "אין אחריות (נרכש במקום אחר)"
+                    btnWarrantyStatus.isEnabled = false
+                    Toast.makeText(this, "הלקוח מסומן ללא אחריות", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
                 val existingWarrantyStart = doc.getLong("warrantyStart")
                 val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
@@ -555,7 +601,8 @@ class MainActivity : AppCompatActivity() {
                 val data: HashMap<String, Any?> = hashMapOf(
                     "warrantyStart" to startMillis,
                     "warrantyEnd" to endDate,
-                    "lastUpdate" to System.currentTimeMillis()
+                    "lastUpdate" to System.currentTimeMillis(),
+                    "noWarrantyExternal" to false
                 )
 
                 doc.reference.set(data, SetOptions.merge())
@@ -601,6 +648,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun normalizePhone(raw: String?): String {
         val normalized = PhoneUtils.normalizeToLocal(raw)
-        return if (normalized == "לא זוהה") "" else normalized
+        return when (normalized) {
+            "לא זוהה", "לא זוהה מספר", "לא אושרו הרשאות" -> ""
+            else -> normalized
+        }
     }
 }
