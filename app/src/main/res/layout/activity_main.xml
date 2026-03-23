@@ -10,7 +10,6 @@
     android:paddingEnd="14dp"
     android:paddingBottom="12dp">
 
-    <!-- 🔥 שורת עליונה עם כפתור עדכון -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -30,15 +29,15 @@
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:layout_alignParentEnd="true"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="4dp"
             android:background="@drawable/bg_button_gray"
             android:clickable="true"
+            android:contentDescription="update"
             android:focusable="true"
             android:padding="9dp"
             android:src="@drawable/ic_update" />
     </RelativeLayout>
-
-    <!-- כל שאר הקובץ שלך נשאר אותו דבר -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -49,35 +48,3 @@
         android:orientation="horizontal"
         android:padding="12dp"
         android:weightSum="3">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📱 מספר הקו"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvLine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layoutDirection="ltr"
-                android:text="---"
-                android:textColor="@color/text_primary"
-                android:textDirection="ltr"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- המשך הקובץ שלך 그대로 -->
-    </LinearLayout>
-
-</LinearLayout>
