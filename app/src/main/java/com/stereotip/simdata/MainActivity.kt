@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnPackageStatus: Button
     private lateinit var btnWarrantyStatus: Button
     private lateinit var logo: ImageView
+    private lateinit var btnUpdateTop: ImageView
 
     private var logoTapCount = 0
     private var lastTapTime = 0L
@@ -98,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         btnPackageStatus = findViewById(R.id.btnPackageStatus)
         btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
         logo = findViewById(R.id.logo)
+        btnUpdateTop = findViewById(R.id.btnUpdateTop)
 
         findViewById<Button>(R.id.btnBalance).setOnClickListener {
             startActivity(Intent(this, BalanceActivity::class.java))
@@ -124,6 +126,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         logo.setOnClickListener { onLogoTapped() }
+
+        btnUpdateTop.setOnClickListener {
+            startActivity(Intent(this, UpdateActivity::class.java))
+        }
 
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
@@ -530,7 +536,7 @@ class MainActivity : AppCompatActivity() {
                 val existingWarrantyStart = doc.getLong("warrantyStart")
                 val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
-                if (existingWarrantyStart != null && existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
+                if (existingWarrantyStart != null && existingWarrantyEnd.isNotBlank()) {
                     Toast.makeText(
                         this,
                         "האחריות כבר הופעלה במכשיר זה. לשינויים יש לפנות לסטריאו טיפ אביזרי רכב",
