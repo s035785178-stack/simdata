@@ -1,7 +1,9 @@
 package com.stereotip.simdata
 
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -22,8 +24,10 @@ class UpdateActivity : AppCompatActivity() {
     private lateinit var btnBackUpdate: Button
 
     private var latestApkUrl: String = ""
-    private val currentVersionCode = 2
-    private val currentVersionName = "1.06"
+    private var forceMode: Boolean = false
+
+    private val currentVersionCode: Int by lazy { resolveCurrentVersionCode() }
+    private val currentVersionName: String by lazy { resolveCurrentVersionName() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +41,18 @@ class UpdateActivity : AppCompatActivity() {
         btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
         btnBackUpdate = findViewById(R.id.btnBackUpdate)
 
+        forceMode = intent.getBooleanExtra(EXTRA_FORCE_MODE, false)
+
         tvCurrentVersion.text = "גרסה מותקנת: $currentVersionName ($currentVersionCode)"
         tvLatestVersion.text = "גרסה זמינה: --"
-        tvUpdateStatus.text = "לחץ על בדוק עדכון"
+        tvUpdateStatus.text = if (forceMode) {
+            "נדרש לעדכן כדי להמשיך להשתמש באפליקציה"
+        } else {
+            "בודק עדכון..."
+        }
 
         btnCheckUpdate.setOnClickListener {
-            checkUpdate()
+            checkUpdate(showAlreadyUpdatedToast = true)
         }
 
         btnDownloadUpdate.setOnClickListener {
@@ -55,11 +65,30 @@ class UpdateActivity : AppCompatActivity() {
         }
 
         btnBackUpdate.setOnClickListener {
-            finish()
+            if (forceMode) {
+                finishAffinity()
+            } else {
+                finish()
+            }
+        }
+
+        applyForceModeUi()
+        checkUpdate(showAlreadyUpdatedToast = false)
+    }
+
+    override fun onBackPressed() {
+        if (forceMode) {
+            finishAffinity()
+        } else {
+            super.onBackPressed()
         }
     }
 
-    private fun checkUpdate() {
+    private fun applyForceModeUi() {
+        btnBackUpdate.text = if (forceMode) "סגור" else "⬅ חזרה"
+    }
+
+    private fun checkUpdate(showAlreadyUpdatedToast: Boolean) {
         progressUpdate.visibility = View.VISIBLE
         tvUpdateStatus.text = "בודק עדכון..."
         btnCheckUpdate.isEnabled = false
@@ -73,21 +102,56 @@ class UpdateActivity : AppCompatActivity() {
                 btnCheckUpdate.isEnabled = true
 
                 result.onSuccess { info ->
-                    tvLatestVersion.text =
-                        "גרסה זמינה: ${info.versionName} (${info.versionCode})"
+                    tvLatestVersion.text = "גרסה זמינה: ${info.versionName} (${info.versionCode})"
                     latestApkUrl = info.apkUrl
 
                     if (info.versionCode > currentVersionCode) {
-                        tvUpdateStatus.text = "יש עדכון חדש"
+                        forceMode = info.forceUpdate
+                        applyForceModeUi()
+                        tvUpdateStatus.text = if (info.forceUpdate) {
+                            "זהו עדכון חובה — יש להתקין כדי להמשיך"
+                        } else {
+                            "יש עדכון חדש זמין"
+                        }
                         btnDownloadUpdate.isEnabled = true
                     } else {
+                        forceMode = false
+                        applyForceModeUi()
                         tvUpdateStatus.text = "האפליקציה מעודכנת"
                         btnDownloadUpdate.isEnabled = false
+                        if (showAlreadyUpdatedToast) {
+                            Toast.makeText(this, "האפליקציה כבר מעודכנת", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }.onFailure {
                     tvUpdateStatus.text = "שגיאה בבדיקת עדכון"
+                    if (forceMode) {
+                        Toast.makeText(this, "לא הצלחנו לבדוק עדכון חובה כרגע", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
+    }
+
+    private fun resolveCurrentVersionCode(): Int {
+        val packageInfo = packageInfoCompat()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode
+        }
+    }
+
+    private fun resolveCurrentVersionName(): String {
+        return packageInfoCompat().versionName ?: "לא ידוע"
+    }
+
+    private fun packageInfoCompat(): PackageInfo {
+        return packageManager.getPackageInfo(packageName, 0)
+    }
+
+    companion object {
+        const val EXTRA_FORCE_MODE = "force_mode"
     }
 }

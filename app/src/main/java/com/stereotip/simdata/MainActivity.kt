@@ -28,6 +28,7 @@ import com.stereotip.simdata.util.TelephonyUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,6 +40,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnWarrantyStatus: Button
     private lateinit var logo: ImageView
     private lateinit var btnUpdateTop: ImageView
+
+    private var updateCheckInProgress = false
+    private var updateDialogShowing = false
 
     private var logoTapCount = 0
     private var lastTapTime = 0L
@@ -128,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         logo.setOnClickListener { onLogoTapped() }
 
         btnUpdateTop.setOnClickListener {
-            startActivity(Intent(this, UpdateActivity::class.java))
+            openUpdateScreen(forceMode = false)
         }
 
         showStartupPermissionsDialogIfNeeded()
@@ -137,6 +141,7 @@ class MainActivity : AppCompatActivity() {
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
+        checkForAppUpdates(showAlreadyUpdatedToast = false)
     }
 
     override fun onResume() {
@@ -156,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
+        checkForAppUpdates(showAlreadyUpdatedToast = false)
     }
 
     override fun onPause() {
@@ -570,6 +576,113 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
             }
+    }
+
+
+    private fun checkForAppUpdates(showAlreadyUpdatedToast: Boolean) {
+        if (updateCheckInProgress) return
+
+        updateCheckInProgress = true
+        thread {
+            val result = UpdateManager.fetchUpdateInfo()
+
+            runOnUiThread {
+                updateCheckInProgress = false
+                if (isFinishing || isDestroyed) return@runOnUiThread
+
+                result.onSuccess { info ->
+                    handleUpdateInfo(info, showAlreadyUpdatedToast)
+                }.onFailure {
+                    if (showAlreadyUpdatedToast) {
+                        Toast.makeText(this, "לא הצלחנו לבדוק עדכונים כרגע", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleUpdateInfo(info: UpdateInfo, showAlreadyUpdatedToast: Boolean) {
+        val currentVersionCode = packageVersionCode()
+
+        if (info.versionCode <= currentVersionCode) {
+            AppPrefs.clearDismissedRecommendedUpdateVersion(this)
+            if (showAlreadyUpdatedToast) {
+                Toast.makeText(this, "האפליקציה כבר מעודכנת", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        if (info.forceUpdate) {
+            showForceUpdateDialog(info)
+            return
+        }
+
+        val dismissedVersion = AppPrefs.getDismissedRecommendedUpdateVersion(this)
+        if (dismissedVersion == info.versionCode) {
+            return
+        }
+
+        showRecommendedUpdateDialog(info)
+    }
+
+    private fun showForceUpdateDialog(info: UpdateInfo) {
+        if (updateDialogShowing) return
+        updateDialogShowing = true
+
+        AlertDialog.Builder(this)
+            .setTitle(info.title)
+            .setMessage(info.message)
+            .setCancelable(false)
+            .setPositiveButton("עדכן עכשיו") { _, _ ->
+                updateDialogShowing = false
+                openUpdateScreen(forceMode = true)
+            }
+            .setNegativeButton("סגור אפליקציה") { _, _ ->
+                updateDialogShowing = false
+                finishAffinity()
+            }
+            .setOnDismissListener {
+                updateDialogShowing = false
+            }
+            .show()
+    }
+
+    private fun showRecommendedUpdateDialog(info: UpdateInfo) {
+        if (updateDialogShowing) return
+        updateDialogShowing = true
+
+        AlertDialog.Builder(this)
+            .setTitle(info.title)
+            .setMessage(info.message)
+            .setCancelable(true)
+            .setPositiveButton("עדכן עכשיו") { _, _ ->
+                updateDialogShowing = false
+                openUpdateScreen(forceMode = false)
+            }
+            .setNegativeButton("אחר כך") { _, _ ->
+                updateDialogShowing = false
+                AppPrefs.setDismissedRecommendedUpdateVersion(this, info.versionCode)
+            }
+            .setOnDismissListener {
+                updateDialogShowing = false
+            }
+            .show()
+    }
+
+    private fun openUpdateScreen(forceMode: Boolean) {
+        val intent = Intent(this, UpdateActivity::class.java)
+        intent.putExtra(UpdateActivity.EXTRA_FORCE_MODE, forceMode)
+        startActivity(intent)
+    }
+
+    private fun packageVersionCode(): Int {
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode
+        }
     }
 
     private fun onLogoTapped() {

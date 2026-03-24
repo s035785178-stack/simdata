@@ -14,6 +14,7 @@ object AppPrefs {
     private const val KEY_UPDATED = "updated"
     private const val KEY_INSTALL = "install"
     private const val KEY_HISTORY = "history"
+    private const val KEY_DISMISSED_RECOMMENDED_UPDATE_VERSION = "dismissed_recommended_update_version"
 
     private const val KEY_CUSTOMER_NAME = "customer_name"
     private const val KEY_CUSTOMER_PHONE = "customer_phone"
@@ -47,8 +48,8 @@ object AppPrefs {
         addHistory(
             context,
             buildString {
-                append("מספר: ").append(result.lineNumber ?: "לא זוהה").append('\n')
-                append("יתרה: ").append(result.dataMb?.toString() ?: "לא זוהה").append('\n')
+                append("מספר: ").append(result.lineNumber ?: "לא זוהה").append("\n")
+                append("יתרה: ").append(result.dataMb?.toString() ?: "לא זוהה").append("\n")
                 append("תוקף: ").append(result.validUntil ?: "לא זוהה")
             }
         )
@@ -139,5 +140,17 @@ object AppPrefs {
 
     fun getDataPackage(context: Context): String {
         return prefs(context).getString(KEY_DATA_PACKAGE, "לא ידוע / אין") ?: "לא ידוע / אין"
+    }
+
+    fun setDismissedRecommendedUpdateVersion(context: Context, versionCode: Int) {
+        prefs(context).edit().putInt(KEY_DISMISSED_RECOMMENDED_UPDATE_VERSION, versionCode).apply()
+    }
+
+    fun getDismissedRecommendedUpdateVersion(context: Context): Int {
+        return prefs(context).getInt(KEY_DISMISSED_RECOMMENDED_UPDATE_VERSION, 0)
+    }
+
+    fun clearDismissedRecommendedUpdateVersion(context: Context) {
+        prefs(context).edit().remove(KEY_DISMISSED_RECOMMENDED_UPDATE_VERSION).apply()
     }
 }
