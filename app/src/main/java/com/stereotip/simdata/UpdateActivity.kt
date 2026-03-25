@@ -1,8 +1,7 @@
 package com.stereotip.simdata
 
-import android.content.Intent
+import android.app.DownloadManager
 import android.content.pm.PackageInfo
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -25,6 +24,8 @@ class UpdateActivity : AppCompatActivity() {
 
     private var latestApkUrl: String = ""
     private var forceMode: Boolean = false
+    private var activeDownloadId: Long = -1L
+    private var monitorThreadStarted = false
 
     private val currentVersionCode: Int by lazy { resolveCurrentVersionCode() }
     private val currentVersionName: String by lazy { resolveCurrentVersionName() }
@@ -60,8 +61,7 @@ class UpdateActivity : AppCompatActivity() {
                 Toast.makeText(this, "אין קישור להורדה", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(latestApkUrl)))
+            startDownloadFlow()
         }
 
         btnBackUpdate.setOnClickListener {
@@ -90,6 +90,8 @@ class UpdateActivity : AppCompatActivity() {
 
     private fun checkUpdate(showAlreadyUpdatedToast: Boolean) {
         progressUpdate.visibility = View.VISIBLE
+        progressUpdate.isIndeterminate = true
+        progressUpdate.progress = 0
         tvUpdateStatus.text = "בודק עדכון..."
         btnCheckUpdate.isEnabled = false
         btnDownloadUpdate.isEnabled = false
@@ -99,6 +101,7 @@ class UpdateActivity : AppCompatActivity() {
 
             runOnUiThread {
                 progressUpdate.visibility = View.GONE
+                progressUpdate.isIndeterminate = false
                 btnCheckUpdate.isEnabled = true
 
                 result.onSuccess { info ->
@@ -125,10 +128,93 @@ class UpdateActivity : AppCompatActivity() {
                     }
                 }.onFailure {
                     tvUpdateStatus.text = "שגיאה בבדיקת עדכון"
-                    if (forceMode) {
-                        Toast.makeText(this, "לא הצלחנו לבדוק עדכון חובה כרגע", Toast.LENGTH_LONG).show()
+                    if (showAlreadyUpdatedToast || forceMode) {
+                        Toast.makeText(this, "לא הצלחנו לבדוק עדכונים כרגע", Toast.LENGTH_LONG).show()
                     }
                 }
+            }
+        }
+    }
+
+    private fun startDownloadFlow() {
+        try {
+            activeDownloadId = UpdateManager.startDownload(this, latestApkUrl)
+            progressUpdate.visibility = View.VISIBLE
+            progressUpdate.isIndeterminate = false
+            progressUpdate.progress = 0
+            tvUpdateStatus.text = "מוריד עדכון... 0%"
+            btnDownloadUpdate.isEnabled = false
+            btnCheckUpdate.isEnabled = false
+            startProgressMonitor()
+        } catch (e: Exception) {
+            Toast.makeText(this, "שגיאה בהתחלת ההורדה", Toast.LENGTH_SHORT).show()
+            tvUpdateStatus.text = "שגיאה בהתחלת ההורדה"
+        }
+    }
+
+    private fun startProgressMonitor() {
+        if (monitorThreadStarted) return
+        monitorThreadStarted = true
+
+        thread {
+            var running = true
+            while (running && !isFinishing && !isDestroyed) {
+                val progress = UpdateManager.queryProgress(this, activeDownloadId)
+
+                runOnUiThread {
+                    when (progress.status) {
+                        DownloadManager.STATUS_PENDING -> {
+                            progressUpdate.visibility = View.VISIBLE
+                            progressUpdate.isIndeterminate = true
+                            tvUpdateStatus.text = "ממתין להתחלת ההורדה..."
+                        }
+
+                        DownloadManager.STATUS_RUNNING -> {
+                            progressUpdate.visibility = View.VISIBLE
+                            progressUpdate.isIndeterminate = false
+                            progressUpdate.progress = progress.percent
+                            val downloadedMb = progress.bytesDownloaded / (1024f * 1024f)
+                            val totalMb = if (progress.bytesTotal > 0) progress.bytesTotal / (1024f * 1024f) else 0f
+                            tvUpdateStatus.text = "מוריד עדכון... ${progress.percent}% (${String.format("%.1f", downloadedMb)} / ${String.format("%.1f", totalMb)} MB)"
+                        }
+
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            progressUpdate.visibility = View.VISIBLE
+                            progressUpdate.isIndeterminate = false
+                            progressUpdate.progress = 100
+                            tvUpdateStatus.text = "ההורדה הושלמה, פותח התקנה..."
+                            btnCheckUpdate.isEnabled = true
+                            btnDownloadUpdate.isEnabled = true
+                            monitorThreadStarted = false
+                            running = false
+                            try {
+                                UpdateManager.installDownloadedApk(this, progress.localUri)
+                            } catch (e: Exception) {
+                                Toast.makeText(this, "לא הצלחנו לפתוח את מסך ההתקנה", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+                        DownloadManager.STATUS_FAILED -> {
+                            progressUpdate.visibility = View.GONE
+                            progressUpdate.isIndeterminate = false
+                            btnCheckUpdate.isEnabled = true
+                            btnDownloadUpdate.isEnabled = true
+                            tvUpdateStatus.text = "ההורדה נכשלה"
+                            monitorThreadStarted = false
+                            running = false
+                            Toast.makeText(this, "הורדת העדכון נכשלה", Toast.LENGTH_LONG).show()
+                        }
+
+                        DownloadManager.STATUS_PAUSED -> {
+                            progressUpdate.visibility = View.VISIBLE
+                            progressUpdate.isIndeterminate = false
+                            progressUpdate.progress = progress.percent
+                            tvUpdateStatus.text = "ההורדה הושהתה... ${progress.percent}%"
+                        }
+                    }
+                }
+
+                Thread.sleep(500)
             }
         }
     }
