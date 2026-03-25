@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.FileProvider
@@ -75,16 +76,22 @@ object UpdateManager {
         }
     }
 
-    fun startDownload(context: Context, apkUrl: String): Long {
+    fun startDownload(
+        context: Context,
+        apkUrl: String,
+        fileName: String = APK_FILE_NAME,
+        title: String = "מוריד עדכון",
+        description: String = "מוריד את הגרסה החדשה..."
+    ): Long {
         val file = File(
             context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-            APK_FILE_NAME
+            fileName
         )
         if (file.exists()) file.delete()
 
         val request = DownloadManager.Request(Uri.parse(apkUrl)).apply {
-            setTitle("מוריד עדכון")
-            setDescription("מוריד את הגרסה החדשה...")
+            setTitle(title)
+            setDescription(description)
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             setMimeType("application/vnd.android.package-archive")
             setDestinationUri(Uri.fromFile(file))
@@ -134,7 +141,11 @@ object UpdateManager {
         }
     }
 
-    fun installDownloadedApk(context: Context, localUri: String?) {
+    fun installDownloadedApk(
+        context: Context,
+        localUri: String?,
+        fallbackFileName: String = APK_FILE_NAME
+    ) {
         val apkUri = when {
             !localUri.isNullOrBlank() && localUri.startsWith("file://") -> {
                 val file = File(Uri.parse(localUri).path ?: "")
@@ -144,11 +155,13 @@ object UpdateManager {
                     file
                 )
             }
+
             !localUri.isNullOrBlank() -> Uri.parse(localUri)
+
             else -> {
                 val file = File(
                     context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    APK_FILE_NAME
+                    fallbackFileName
                 )
                 FileProvider.getUriForFile(
                     context,
@@ -168,6 +181,14 @@ object UpdateManager {
             context.startActivity(installIntent)
         } catch (_: ActivityNotFoundException) {
             openUnknownAppsSettings(context)
+        }
+    }
+
+    fun canRequestPackageInstalls(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.packageManager.canRequestPackageInstalls()
+        } else {
+            true
         }
     }
 

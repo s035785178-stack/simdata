@@ -95,8 +95,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         AppPrefs.ensureInstallTimestamp(this)
+
+        if (!intent.getBooleanExtra(EXTRA_SKIP_DIALER_CHECK, false) && !hasDialerApp()) {
+            startActivity(Intent(this, MissingDialerActivity::class.java))
+            finish()
+            return
+        }
+
+        setContentView(R.layout.activity_main)
 
         tvLine = findViewById(R.id.tvLine)
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
@@ -184,6 +191,11 @@ class MainActivity : AppCompatActivity() {
             balanceReceiverRegistered = false
         }
         super.onPause()
+    }
+
+    private fun hasDialerApp(): Boolean {
+        val intent = Intent(Intent.ACTION_DIAL)
+        return intent.resolveActivity(packageManager) != null
     }
 
     private fun hasSavedRegisteredUser(): Boolean {
@@ -862,5 +874,9 @@ class MainActivity : AppCompatActivity() {
     private fun normalizePhone(raw: String?): String {
         val normalized = PhoneUtils.normalizeToLocal(raw)
         return if (normalized == "לא זוהה") "" else normalized
+    }
+
+    companion object {
+        const val EXTRA_SKIP_DIALER_CHECK = "skip_dialer_check"
     }
 }
