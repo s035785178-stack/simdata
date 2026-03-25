@@ -202,6 +202,7 @@ class RegistrationActivity : AppCompatActivity() {
         btnRegister.text = "נרשם..."
 
         val now = System.currentTimeMillis()
+        val installationId = AppPrefs.getInstallationId(this)
 
         val data = hashMapOf(
             "customerName" to name,
@@ -210,7 +211,10 @@ class RegistrationActivity : AppCompatActivity() {
             "carModel" to carModel,
             "carNumber" to carNumber,
             "dataPackage" to dataPackage,
-            "createdAt" to now
+            "installationId" to installationId,
+            "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
+            "createdAt" to now,
+            "lastUpdate" to now
         )
 
         db.collection("customers")

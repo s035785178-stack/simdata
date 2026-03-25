@@ -2,7 +2,9 @@ package com.stereotip.simdata.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.provider.Settings
 import com.stereotip.simdata.data.BalanceResult
+import java.util.UUID
 
 object AppPrefs {
 
@@ -21,6 +23,10 @@ object AppPrefs {
     private const val KEY_CAR_MODEL = "car_model"
     private const val KEY_CAR_NUMBER = "car_number"
     private const val KEY_DATA_PACKAGE = "data_package"
+
+    private const val KEY_INSTALLATION_ID = "installation_id"
+    private const val KEY_WARRANTY_START = "warranty_start"
+    private const val KEY_WARRANTY_END = "warranty_end"
 
     private fun prefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -98,8 +104,10 @@ object AppPrefs {
     }
 
     fun clearAll(context: Context) {
+        val installationId = getInstallationId(context)
         prefs(context).edit().clear().apply()
         ensureInstallTimestamp(context)
+        prefs(context).edit().putString(KEY_INSTALLATION_ID, installationId).apply()
     }
 
     fun setCustomerName(context: Context, value: String) {
@@ -140,6 +148,50 @@ object AppPrefs {
 
     fun getDataPackage(context: Context): String {
         return prefs(context).getString(KEY_DATA_PACKAGE, "לא ידוע / אין") ?: "לא ידוע / אין"
+    }
+
+    fun getInstallationId(context: Context): String {
+        val p = prefs(context)
+        val existing = p.getString(KEY_INSTALLATION_ID, null)?.trim().orEmpty()
+        if (existing.isNotBlank()) return existing
+
+        val androidId = try {
+            Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+                ?.trim()
+                .orEmpty()
+        } catch (_: Exception) {
+            ""
+        }
+
+        val value = when {
+            androidId.isNotBlank() -> "android-$androidId"
+            else -> "generated-${UUID.randomUUID()}"
+        }
+
+        p.edit().putString(KEY_INSTALLATION_ID, value).apply()
+        return value
+    }
+
+    fun setWarrantyInfo(context: Context, startMillis: Long, endDate: String) {
+        prefs(context).edit()
+            .putLong(KEY_WARRANTY_START, startMillis)
+            .putString(KEY_WARRANTY_END, endDate)
+            .apply()
+    }
+
+    fun clearWarrantyInfo(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_WARRANTY_START)
+            .remove(KEY_WARRANTY_END)
+            .apply()
+    }
+
+    fun getWarrantyStart(context: Context): Long {
+        return prefs(context).getLong(KEY_WARRANTY_START, 0L)
+    }
+
+    fun getWarrantyEnd(context: Context): String {
+        return prefs(context).getString(KEY_WARRANTY_END, "") ?: ""
     }
 
     fun setDismissedRecommendedUpdateVersion(context: Context, versionCode: Int) {

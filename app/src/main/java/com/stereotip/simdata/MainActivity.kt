@@ -18,6 +18,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.stereotip.simdata.receiver.SmsReceiver
@@ -177,7 +178,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasSavedRegisteredUser(): Boolean {
         return AppPrefs.getCustomerName(this).isNotBlank() &&
-            AppPrefs.getCustomerPhone(this).isNotBlank()
+                AppPrefs.getCustomerPhone(this).isNotBlank()
     }
 
     private fun showStartupPermissionsDialogIfNeeded() {
@@ -282,7 +283,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasAnyMissingStartupPermission(): Boolean {
         return getEffectiveMissingPhonePermissions().isNotEmpty() ||
-            getEffectiveMissingSmsPermissions().isNotEmpty()
+                getEffectiveMissingSmsPermissions().isNotEmpty()
     }
 
     private fun triggerSmsPermission() {
@@ -460,96 +461,77 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWarrantyStatus() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
+        val localWarrantyStart = AppPrefs.getWarrantyStart(this)
+        val localWarrantyEnd = AppPrefs.getWarrantyEnd(this).trim()
 
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
+        resolveCustomerDocument(
+            onFound = { doc ->
+                if (isFinishing || isDestroyed) return@resolveCustomerDocument
 
-        if (normalizedLine.isBlank()) {
-            warrantyActivated = false
-            currentWarrantyEnd = ""
-            btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
-            return
-        }
+                val warrantyEnd = doc.getString("warrantyEnd").orEmpty().trim()
+                val warrantyStart = doc.getLong("warrantyStart") ?: 0L
 
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                if (isFinishing || isDestroyed) return@addOnSuccessListener
-
-                if (result.isEmpty) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
-                    return@addOnSuccessListener
-                }
-
-                val doc = result.documents.first()
-                val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
-                val warrantyStart = doc.getLong("warrantyStart")
-
-                if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+                if (warrantyEnd.isBlank() || warrantyStart <= 0L) {
+                    if (localWarrantyEnd.isNotBlank() && localWarrantyStart > 0L) {
+                        warrantyActivated = true
+                        currentWarrantyEnd = localWarrantyEnd
+                        btnWarrantyStatus.text = "תוקף אחריות $localWarrantyEnd🛡️"
+                    } else {
+                        warrantyActivated = false
+                        currentWarrantyEnd = ""
+                        btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+                        AppPrefs.clearWarrantyInfo(this)
+                    }
                 } else {
                     warrantyActivated = true
                     currentWarrantyEnd = warrantyEnd
                     btnWarrantyStatus.text = "תוקף אחריות $warrantyEnd🛡️"
+                    AppPrefs.setWarrantyInfo(this, warrantyStart, warrantyEnd)
                 }
-            }
-            .addOnFailureListener {
-                if (!isFinishing && !isDestroyed) {
+            },
+            onNotFound = {
+                if (localWarrantyEnd.isNotBlank() && localWarrantyStart > 0L) {
+                    warrantyActivated = true
+                    currentWarrantyEnd = localWarrantyEnd
+                    btnWarrantyStatus.text = "תוקף אחריות $localWarrantyEnd🛡️"
+                } else {
+                    warrantyActivated = false
+                    currentWarrantyEnd = ""
+                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
+                }
+            },
+            onError = {
+                if (localWarrantyEnd.isNotBlank() && localWarrantyStart > 0L) {
+                    warrantyActivated = true
+                    currentWarrantyEnd = localWarrantyEnd
+                    btnWarrantyStatus.text = "תוקף אחריות $localWarrantyEnd🛡️"
+                } else {
                     warrantyActivated = false
                     currentWarrantyEnd = ""
                     btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
                 }
             }
+        )
     }
 
     private fun activateWarranty() {
-        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
-        val deviceLine = normalizeLine(safeDeviceLine())
+        resolveCustomerDocument(
+            onFound = { doc ->
+                val existingWarrantyStart = doc.getLong("warrantyStart") ?: 0L
+                val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty().trim()
 
-        val normalizedLine = when {
-            savedLine.isNotBlank() -> savedLine
-            deviceLine.isNotBlank() -> deviceLine
-            else -> ""
-        }
+                if (existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
+                    warrantyActivated = true
+                    currentWarrantyEnd = existingWarrantyEnd
+                    btnWarrantyStatus.text = "תוקף אחריות $existingWarrantyEnd🛡️"
+                    AppPrefs.setWarrantyInfo(this, existingWarrantyStart, existingWarrantyEnd)
 
-        if (normalizedLine.isBlank()) {
-            Toast.makeText(this, "לא זוהה מספר קו", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        db.collection("customers")
-            .whereEqualTo("lineNumber", normalizedLine)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
-                }
-
-                val doc = result.documents.first()
-                val existingWarrantyStart = doc.getLong("warrantyStart")
-                val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
-
-                if (existingWarrantyStart != null && existingWarrantyEnd.isNotBlank()) {
                     Toast.makeText(
                         this,
                         "האחריות כבר הופעלה במכשיר זה. לשינויים יש לפנות לסטריאו טיפ אביזרי רכב",
                         Toast.LENGTH_LONG
                     ).show()
-                    loadWarrantyStatus()
-                    return@addOnSuccessListener
+                    return@resolveCustomerDocument
                 }
 
                 val startMillis = System.currentTimeMillis()
@@ -561,23 +543,106 @@ class MainActivity : AppCompatActivity() {
                 val data: HashMap<String, Any?> = hashMapOf(
                     "warrantyStart" to startMillis,
                     "warrantyEnd" to endDate,
+                    "installationId" to AppPrefs.getInstallationId(this),
+                    "customerPhone" to AppPrefs.getCustomerPhone(this).trim(),
+                    "lineNumber" to normalizeLine(AppPrefs.getLineNumber(this)).ifBlank { null },
                     "lastUpdate" to System.currentTimeMillis()
                 )
 
                 doc.reference.set(data, SetOptions.merge())
                     .addOnSuccessListener {
+                        warrantyActivated = true
+                        currentWarrantyEnd = endDate
+                        btnWarrantyStatus.text = "תוקף אחריות $endDate🛡️"
+                        AppPrefs.setWarrantyInfo(this, startMillis, endDate)
                         Toast.makeText(this, "האחריות הופעלה בהצלחה", Toast.LENGTH_SHORT).show()
-                        loadWarrantyStatus()
                     }
                     .addOnFailureListener {
                         Toast.makeText(this, "שגיאה בהפעלת אחריות", Toast.LENGTH_SHORT).show()
                     }
-            }
-            .addOnFailureListener {
+            },
+            onNotFound = {
+                Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
+            },
+            onError = {
                 Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
             }
+        )
     }
 
+    private fun resolveCustomerDocument(
+        onFound: (DocumentSnapshot) -> Unit,
+        onNotFound: () -> Unit,
+        onError: () -> Unit
+    ) {
+        val savedPhone = normalizePhone(AppPrefs.getCustomerPhone(this))
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val deviceLine = normalizeLine(safeDeviceLine())
+        val installationId = AppPrefs.getInstallationId(this).trim()
+
+        fun lookupByInstallationId() {
+            if (installationId.isBlank()) {
+                onNotFound()
+                return
+            }
+
+            db.collection("customers")
+                .whereEqualTo("installationId", installationId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { result ->
+                    if (result.isEmpty) {
+                        onNotFound()
+                    } else {
+                        onFound(result.documents.first())
+                    }
+                }
+                .addOnFailureListener {
+                    onError()
+                }
+        }
+
+        fun lookupByLine(line: String) {
+            if (line.isBlank()) {
+                lookupByInstallationId()
+                return
+            }
+
+            db.collection("customers")
+                .whereEqualTo("lineNumber", line)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { result ->
+                    if (result.isEmpty) {
+                        lookupByInstallationId()
+                    } else {
+                        onFound(result.documents.first())
+                    }
+                }
+                .addOnFailureListener {
+                    onError()
+                }
+        }
+
+        if (savedPhone.isNotBlank()) {
+            db.collection("customers")
+                .document(savedPhone)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if (doc.exists()) {
+                        onFound(doc)
+                    } else {
+                        lookupByLine(savedLine.ifBlank { deviceLine })
+                    }
+                }
+                .addOnFailureListener {
+                    onError()
+                }
+            return
+        }
+
+        lookupByLine(savedLine.ifBlank { deviceLine })
+    }
 
     private fun checkForAppUpdates(showAlreadyUpdatedToast: Boolean) {
         if (updateCheckInProgress) return
