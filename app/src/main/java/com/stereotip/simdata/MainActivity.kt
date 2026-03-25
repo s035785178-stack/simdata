@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var permissionRequestInProgress = false
     private var restoreLookupInProgress = false
     private var waitingForRestoreAnswer = false
+    private var localCustomerValidationInProgress = false
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -123,6 +124,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnWarrantyStatus.setOnClickListener {
+            if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+                Toast.makeText(
+                    this,
+                    "המכשיר לא נרכש מסטריאו טיפ לא ניתן להפעיל אחריות",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+
             if (warrantyActivated) {
                 Toast.makeText(this, "תוקף האחריות: $currentWarrantyEnd", Toast.LENGTH_SHORT).show()
             } else {
@@ -345,6 +355,7 @@ class MainActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
 
                 if (result.isEmpty) {
+                    clearLocalCustomer()
                     moveToRegistration(clearLocal = false)
                     return@addOnSuccessListener
                 }
@@ -373,24 +384,76 @@ class MainActivity : AppCompatActivity() {
                 waitingForRestoreAnswer = false
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
 
-                Toast.makeText(this, "ממתין לחיבור כדי לשחזר לקוח קיים", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "לא הצלחנו לשחזר לקוח, עוברים להרשמה", Toast.LENGTH_SHORT).show()
+                clearLocalCustomer()
+                moveToRegistration(clearLocal = false)
+            }
+    }
+
+    private fun verifySavedRegistrationInFirebase(savedPhone: String, savedLine: String) {
+        if (localCustomerValidationInProgress) return
+
+        localCustomerValidationInProgress = true
+        waitingForRestoreAnswer = true
+
+        db.collection("customers")
+            .document(savedPhone)
+            .get()
+            .addOnSuccessListener { doc ->
+                localCustomerValidationInProgress = false
+                waitingForRestoreAnswer = false
+
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                if (doc.exists()) {
+                    registrationCheckDone = true
+                    updateSummary()
+                    loadWarrantyStatus()
+                    loadPackageStatus()
+                    return@addOnSuccessListener
+                }
+
+                clearLocalCustomer()
+
+                if (savedLine.isNotBlank()) {
+                    restoreCustomerFromFirebaseByLine(savedLine)
+                } else {
+                    moveToRegistration(clearLocal = false)
+                }
+            }
+            .addOnFailureListener {
+                localCustomerValidationInProgress = false
+                waitingForRestoreAnswer = false
+
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+
+                clearLocalCustomer()
+
+                if (savedLine.isNotBlank()) {
+                    restoreCustomerFromFirebaseByLine(savedLine)
+                } else {
+                    moveToRegistration(clearLocal = false)
+                }
             }
     }
 
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) {
+        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer || localCustomerValidationInProgress) {
             return
         }
 
-        val savedPhone = AppPrefs.getCustomerPhone(this)
-        val savedName = AppPrefs.getCustomerName(this)
+        val savedPhone = normalizePhone(AppPrefs.getCustomerPhone(this))
+        val savedName = AppPrefs.getCustomerName(this).trim()
+        val savedLine = normalizeLine(AppPrefs.getLineNumber(this))
+        val normalizedLine = normalizeLine(safeDeviceLine())
 
         if (savedPhone.isNotBlank() && savedName.isNotBlank()) {
-            registrationCheckDone = true
+            verifySavedRegistrationInFirebase(
+                savedPhone = savedPhone,
+                savedLine = savedLine.ifBlank { normalizedLine }
+            )
             return
         }
-
-        val normalizedLine = normalizeLine(safeDeviceLine())
 
         if (normalizedLine.isNotBlank()) {
             AppPrefs.setLineNumber(this, normalizedLine)
@@ -398,6 +461,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        clearLocalCustomer()
         moveToRegistration(clearLocal = false)
     }
 
@@ -461,6 +525,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWarrantyStatus() {
+        if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+            warrantyActivated = false
+            currentWarrantyEnd = ""
+            btnWarrantyStatus.text = "ללא אחריות - לא נרכש אצלנו🚫"
+            AppPrefs.clearWarrantyInfo(this)
+            return
+        }
+
         val localWarrantyStart = AppPrefs.getWarrantyStart(this)
         val localWarrantyEnd = AppPrefs.getWarrantyEnd(this).trim()
 
@@ -515,6 +587,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun activateWarranty() {
+        if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+            Toast.makeText(
+                this,
+                "המכשיר לא נרכש מסטריאו טיפ לא ניתן להפעיל אחריות",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         resolveCustomerDocument(
             onFound = { doc ->
                 val existingWarrantyStart = doc.getLong("warrantyStart") ?: 0L
@@ -551,6 +632,7 @@ class MainActivity : AppCompatActivity() {
 
                 doc.reference.set(data, SetOptions.merge())
                     .addOnSuccessListener {
+                        AppPrefs.setWarrantyBlockedNotOurs(this, false)
                         warrantyActivated = true
                         currentWarrantyEnd = endDate
                         btnWarrantyStatus.text = "תוקף אחריות $endDate🛡️"

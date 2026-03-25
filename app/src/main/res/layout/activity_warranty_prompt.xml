@@ -78,6 +78,18 @@
                 android:textStyle="bold" />
 
             <Button
+                android:id="@+id/btnCancelWarrantyPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="14dp"
+                android:backgroundTint="#616161"
+                android:text="ביטול אחריות - המכשיר לא נרכש בסטריאו טיפ 🚫"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <Button
                 android:id="@+id/btnSkipWarrantyPrompt"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"

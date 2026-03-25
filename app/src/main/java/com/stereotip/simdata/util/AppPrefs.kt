@@ -27,6 +27,7 @@ object AppPrefs {
     private const val KEY_INSTALLATION_ID = "installation_id"
     private const val KEY_WARRANTY_START = "warranty_start"
     private const val KEY_WARRANTY_END = "warranty_end"
+    private const val KEY_WARRANTY_BLOCKED_NOT_OURS = "warranty_blocked_not_ours"
 
     private fun prefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -192,6 +193,14 @@ object AppPrefs {
 
     fun getWarrantyEnd(context: Context): String {
         return prefs(context).getString(KEY_WARRANTY_END, "") ?: ""
+    }
+
+    fun setWarrantyBlockedNotOurs(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_WARRANTY_BLOCKED_NOT_OURS, value).apply()
+    }
+
+    fun isWarrantyBlockedNotOurs(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_WARRANTY_BLOCKED_NOT_OURS, false)
     }
 
     fun setDismissedRecommendedUpdateVersion(context: Context, versionCode: Int) {

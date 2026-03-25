@@ -235,7 +235,7 @@ class RegistrationActivity : AppCompatActivity() {
                 btnRegister.text = "✔️ נרשמת"
 
                 handler.postDelayed({
-                    startActivity(Intent(this, MainActivity::class.java))
+                    startActivity(Intent(this, WarrantyPromptActivity::class.java))
                     finish()
                 }, 800)
             }

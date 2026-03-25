@@ -23,6 +23,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
     private lateinit var tvSubtitle: TextView
     private lateinit var btnActivateWarranty: Button
     private lateinit var btnSkipWarranty: Button
+    private lateinit var btnCancelWarranty: Button
 
     private lateinit var successContainer: View
     private lateinit var tvSuccessIcon: TextView
@@ -43,23 +44,68 @@ class WarrantyPromptActivity : AppCompatActivity() {
         tvSubtitle = findViewById(R.id.tvWarrantySubtitle)
         btnActivateWarranty = findViewById(R.id.btnActivateWarrantyPrompt)
         btnSkipWarranty = findViewById(R.id.btnSkipWarrantyPrompt)
+        btnCancelWarranty = findViewById(R.id.btnCancelWarrantyPrompt)
 
         successContainer = findViewById(R.id.successContainer)
         tvSuccessIcon = findViewById(R.id.tvSuccessIcon)
         tvSuccessTitle = findViewById(R.id.tvSuccessTitle)
         tvSuccessCountdown = findViewById(R.id.tvSuccessCountdown)
 
+        if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+            btnActivateWarranty.isEnabled = false
+            btnActivateWarranty.alpha = 0.55f
+            tvSubtitle.text = "האחריות בוטלה למכשיר זה כי סומן שלא נרכש בסטריאו טיפ"
+        }
+
         btnActivateWarranty.setOnClickListener {
+            if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+                Toast.makeText(
+                    this,
+                    "המכשיר לא נרכש מסטריאו טיפ לא ניתן להפעיל אחריות",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
             activateWarrantyAndContinue()
         }
 
         btnSkipWarranty.setOnClickListener {
             continueToBalance()
         }
+
+        btnCancelWarranty.setOnClickListener {
+            markDeviceAsNotOursAndContinue()
+        }
+    }
+
+    private fun markDeviceAsNotOursAndContinue() {
+        if (isContinuing) return
+
+        AppPrefs.setWarrantyBlockedNotOurs(this, true)
+        AppPrefs.clearWarrantyInfo(this)
+
+        btnActivateWarranty.isEnabled = false
+        btnActivateWarranty.alpha = 0.55f
+        btnSkipWarranty.isEnabled = false
+        btnCancelWarranty.isEnabled = false
+
+        showInfoState(
+            icon = "🚫",
+            message = "האחריות בוטלה - המכשיר לא נרכש בסטריאו טיפ"
+        )
     }
 
     private fun activateWarrantyAndContinue() {
         if (isContinuing) return
+
+        if (AppPrefs.isWarrantyBlockedNotOurs(this)) {
+            Toast.makeText(
+                this,
+                "המכשיר לא נרכש מסטריאו טיפ לא ניתן להפעיל אחריות",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
 
         val savedPhone = AppPrefs.getCustomerPhone(this).orEmpty().trim()
         val savedLine = AppPrefs.getLineNumber(this).orEmpty().trim()
@@ -72,6 +118,7 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
         btnActivateWarranty.isEnabled = false
         btnSkipWarranty.isEnabled = false
+        btnCancelWarranty.isEnabled = false
         btnActivateWarranty.text = "מפעיל אחריות..."
 
         if (savedPhone.isNotBlank()) {
@@ -90,7 +137,10 @@ class WarrantyPromptActivity : AppCompatActivity() {
                     val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
                     if (existingWarrantyStart != null && existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
-                        showSuccessState("האחריות כבר פעילה על מכשיר זה")
+                        showInfoState(
+                            icon = "✅",
+                            message = "האחריות כבר פעילה על מכשיר זה"
+                        )
                         return@addOnSuccessListener
                     }
 
@@ -108,7 +158,11 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
                     doc.reference.set(data, SetOptions.merge())
                         .addOnSuccessListener {
-                            showSuccessState("האחריות הופעלה בהצלחה")
+                            AppPrefs.setWarrantyBlockedNotOurs(this, false)
+                            showInfoState(
+                                icon = "✅",
+                                message = "האחריות הופעלה בהצלחה"
+                            )
                         }
                         .addOnFailureListener {
                             restoreButtons()
@@ -140,7 +194,10 @@ class WarrantyPromptActivity : AppCompatActivity() {
                 val existingWarrantyEnd = doc.getString("warrantyEnd").orEmpty()
 
                 if (existingWarrantyStart != null && existingWarrantyStart > 0L && existingWarrantyEnd.isNotBlank()) {
-                    showSuccessState("האחריות כבר פעילה על מכשיר זה")
+                    showInfoState(
+                        icon = "✅",
+                        message = "האחריות כבר פעילה על מכשיר זה"
+                    )
                     return@addOnSuccessListener
                 }
 
@@ -158,7 +215,11 @@ class WarrantyPromptActivity : AppCompatActivity() {
 
                 doc.reference.set(data, SetOptions.merge())
                     .addOnSuccessListener {
-                        showSuccessState("האחריות הופעלה בהצלחה")
+                        AppPrefs.setWarrantyBlockedNotOurs(this, false)
+                        showInfoState(
+                            icon = "✅",
+                            message = "האחריות הופעלה בהצלחה"
+                        )
                     }
                     .addOnFailureListener {
                         restoreButtons()
@@ -171,14 +232,15 @@ class WarrantyPromptActivity : AppCompatActivity() {
             }
     }
 
-    private fun showSuccessState(message: String) {
+    private fun showInfoState(icon: String, message: String) {
         if (isContinuing) return
 
         btnActivateWarranty.visibility = View.GONE
         btnSkipWarranty.visibility = View.GONE
+        btnCancelWarranty.visibility = View.GONE
 
         successContainer.visibility = View.VISIBLE
-        tvSuccessIcon.text = "✅"
+        tvSuccessIcon.text = icon
         tvSuccessTitle.text = message
 
         countdownTimer?.cancel()
@@ -196,8 +258,10 @@ class WarrantyPromptActivity : AppCompatActivity() {
     }
 
     private fun restoreButtons() {
-        btnActivateWarranty.isEnabled = true
+        btnActivateWarranty.isEnabled = !AppPrefs.isWarrantyBlockedNotOurs(this)
+        btnActivateWarranty.alpha = if (AppPrefs.isWarrantyBlockedNotOurs(this)) 0.55f else 1f
         btnSkipWarranty.isEnabled = true
+        btnCancelWarranty.isEnabled = true
         btnActivateWarranty.text = "הפעלת אחריות על מכשיר זה🛡️"
     }
 
