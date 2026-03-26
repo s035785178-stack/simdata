@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.TelephonyManager
@@ -62,11 +63,16 @@ class MainActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
 
-    private fun phonePermissions() = arrayOf(
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.READ_PHONE_NUMBERS
-    )
+    private fun phonePermissions(): Array<String> {
+        val permissions = mutableListOf(
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_PHONE_STATE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            permissions.add(Manifest.permission.READ_PHONE_NUMBERS)
+        }
+        return permissions.toTypedArray()
+    }
 
     private fun smsPermissions() = arrayOf(
         Manifest.permission.READ_SMS,
@@ -128,6 +134,10 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnSupport).setOnClickListener {
             startActivity(Intent(this, SupportActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnAccount).setOnClickListener {
+            startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
 
         btnWarrantyStatus.setOnClickListener {
@@ -262,6 +272,7 @@ class MainActivity : AppCompatActivity() {
     private fun readLineDirect(): String {
         return try {
             val tm = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            @Suppress("DEPRECATION")
             val raw = tm.line1Number.orEmpty()
             normalizeLine(PhoneUtils.normalizeToLocal(raw))
         } catch (_: SecurityException) {
@@ -368,7 +379,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (result.isEmpty) {
                     clearLocalCustomer()
-                    moveToRegistration(clearLocal = false)
+                    moveToRegistration()
                     return@addOnSuccessListener
                 }
 
@@ -398,7 +409,7 @@ class MainActivity : AppCompatActivity() {
 
                 Toast.makeText(this, "לא הצלחנו לשחזר לקוח, עוברים להרשמה", Toast.LENGTH_SHORT).show()
                 clearLocalCustomer()
-                moveToRegistration(clearLocal = false)
+                moveToRegistration()
             }
     }
 
@@ -430,7 +441,7 @@ class MainActivity : AppCompatActivity() {
                 if (savedLine.isNotBlank()) {
                     restoreCustomerFromFirebaseByLine(savedLine)
                 } else {
-                    moveToRegistration(clearLocal = false)
+                    moveToRegistration()
                 }
             }
             .addOnFailureListener {
@@ -444,7 +455,7 @@ class MainActivity : AppCompatActivity() {
                 if (savedLine.isNotBlank()) {
                     restoreCustomerFromFirebaseByLine(savedLine)
                 } else {
-                    moveToRegistration(clearLocal = false)
+                    moveToRegistration()
                 }
             }
     }
@@ -474,17 +485,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         clearLocalCustomer()
-        moveToRegistration(clearLocal = false)
+        moveToRegistration()
     }
 
-    private fun moveToRegistration(clearLocal: Boolean) {
+    private fun moveToRegistration() {
         if (movedToRegistration) return
 
         movedToRegistration = true
-
-        if (clearLocal) {
-            clearLocalCustomer()
-        }
 
         val intent = Intent(this, RegistrationActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -836,7 +843,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun packageVersionCode(): Int {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             packageInfo.longVersionCode.toInt()
         } else {
             @Suppress("DEPRECATION")
