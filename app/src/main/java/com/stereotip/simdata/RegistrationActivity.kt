@@ -9,7 +9,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -36,12 +41,14 @@ class RegistrationActivity : AppCompatActivity() {
     private var detectedLineNumber: String = ""
     private val handler = Handler(Looper.getMainLooper())
 
-    // 🔥 בדיקה אמיתית (עוקפת אנדרואיד)
     private fun hasRealSmsAccess(): Boolean {
         return try {
             val cursor = contentResolver.query(
                 Telephony.Sms.CONTENT_URI,
-                null, null, null, null
+                null,
+                null,
+                null,
+                null
             )
             cursor?.close()
             true
@@ -95,7 +102,6 @@ class RegistrationActivity : AppCompatActivity() {
 
         setupSpinner()
 
-        // 🔥 לא מבקשים הרשאות אם כבר יש בפועל
         if (!hasRealSmsAccess() || !hasRealPhoneAccess()) {
             requestPermissionsIfNeeded()
         }
@@ -115,9 +121,9 @@ class RegistrationActivity : AppCompatActivity() {
     private fun setupSpinner() {
         val packages = listOf(
             "לא ידוע / אין",
-            "100 ג׳יגה או שנתיים",
-            "36 ג׳יגה או 60 חודשים",
-            "4 ג׳יגה או חודשיים"
+            "100GB לשנתיים",
+            "36GB ל-60 חודשים",
+            "4GB לחודשיים"
         )
 
         val adapter = ArrayAdapter(
@@ -131,8 +137,6 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun requestPermissionsIfNeeded() {
-
-        // 🔥 אם כבר יש גישה אמיתית — לא מבקשים שוב
         if (hasRealSmsAccess() && hasRealPhoneAccess()) return
 
         val missing = allPermissions().filter {
@@ -151,7 +155,6 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun refreshLineNumber() {
-
         val saved = normalize(AppPrefs.getLineNumber(this))
 
         val device = normalize(
@@ -176,7 +179,6 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun registerCustomer() {
-
         val name = etName.text.toString().trim()
         val phone = normalize(etPhone.text.toString())
         val carModel = etCarModel.text.toString().trim()
@@ -203,6 +205,10 @@ class RegistrationActivity : AppCompatActivity() {
 
         val now = System.currentTimeMillis()
         val installationId = AppPrefs.getInstallationId(this)
+        val expiryFields = PackageExpiryManager.buildRegistrationExpiryMap(
+            packageName = dataPackage,
+            startMillis = now
+        )
 
         val data = hashMapOf(
             "customerName" to name,
@@ -215,18 +221,25 @@ class RegistrationActivity : AppCompatActivity() {
             "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
             "createdAt" to now,
             "lastUpdate" to now
-        )
+        ).apply {
+            putAll(expiryFields)
+        }
 
         db.collection("customers")
             .document(phone)
             .set(data, SetOptions.merge())
             .addOnSuccessListener {
-
                 AppPrefs.setCustomerName(this, name)
                 AppPrefs.setCustomerPhone(this, phone)
                 AppPrefs.setCarModel(this, carModel)
                 AppPrefs.setCarNumber(this, carNumber)
                 AppPrefs.setDataPackage(this, dataPackage)
+
+                PackageExpiryManager.saveEstimatedExpiryLocally(
+                    context = this,
+                    packageName = dataPackage,
+                    startMillis = now
+                )
 
                 if (detectedLineNumber.isNotBlank()) {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
