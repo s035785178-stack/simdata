@@ -24,6 +24,36 @@
             android:scaleType="fitCenter"
             android:src="@drawable/stereo_logo" />
 
+        <LinearLayout
+            android:id="@+id/btnAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👤"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="החשבון שלי"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
         <ImageView
             android:id="@+id/btnUpdateTop"
             android:layout_width="42dp"
@@ -278,17 +308,5 @@
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnAccount"
-        android:layout_width="match_parent"
-        android:layout_height="72dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_button_brand"
-        android:text="👤 החשבון שלי"
-        android:textAllCaps="false"
-        android:textColor="@color/text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
 
 </LinearLayout>

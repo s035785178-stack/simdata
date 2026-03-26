@@ -51,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layoutDirection="rtl"
+            android:baselineAligned="false"
             android:orientation="horizontal"
             android:weightSum="2">
 
@@ -68,12 +68,46 @@
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnRefreshAccount"
+            <TextView
+                android:id="@+id/tvSupportPhone"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="5dp"
+                android:background="@drawable/bg_button_gray"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingHorizontal="10dp"
+                android:text="📞 03-5785178"
+                android:textColor="@color/text_primary"
+                android:textDirection="ltr"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="רענון נתונים"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnRefreshAccount"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_button_brand"
                 android:text="🔄 רענון נתונים"
                 android:textAllCaps="false"
@@ -87,7 +121,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
-            android:layoutDirection="rtl"
             android:orientation="vertical"
             android:padding="14dp">
 
@@ -201,7 +234,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
-            android:layoutDirection="rtl"
             android:orientation="vertical"
             android:padding="14dp">
 
@@ -277,7 +309,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
-            android:layoutDirection="rtl"
             android:orientation="vertical"
             android:padding="14dp">
 
@@ -358,62 +389,21 @@
             <Spinner
                 android:id="@+id/spinnerPackage"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="6dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input_light"
                 android:backgroundTint="@null"
-                android:paddingHorizontal="10dp"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
                 android:spinnerMode="dropdown" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:layoutDirection="rtl"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="📞 צור קשר"
-                android:textColor="@color/text_primary"
-                android:textSize="21sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="לחץ לחיוג"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSupportPhone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_button_gray"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:padding="14dp"
-                android:text="03-5785178"
-                android:textColor="@color/text_primary"
-                android:textDirection="ltr"
-                android:textSize="24sp"
-                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="12dp"
-            android:layoutDirection="rtl"
+            android:baselineAligned="false"
             android:orientation="horizontal"
             android:weightSum="2">
 

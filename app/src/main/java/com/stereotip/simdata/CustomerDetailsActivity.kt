@@ -51,10 +51,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
         "לא ידוע / אין",
         "100GB לשנתיים",
         "36GB ל-60 חודשים",
-        "4GB לחודשיים",
-        "100 ג׳יגה או שנתיים",
-        "36 ג׳יגה או 60 חודשים",
-        "4 ג׳יגה או חודשיים"
+        "4GB לחודשיים"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,10 +110,10 @@ class CustomerDetailsActivity : AppCompatActivity() {
     private fun setupPackageSpinner() {
         val adapter = ArrayAdapter(
             this,
-            R.layout.spinner_item_white,
+            android.R.layout.simple_spinner_item,
             packages
         )
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_white)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
     }
 

@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.TelephonyManager
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -136,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SupportActivity::class.java))
         }
 
-        findViewById<Button>(R.id.btnAccount).setOnClickListener {
+        findViewById<View>(R.id.btnAccount).setOnClickListener {
             startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
 
