@@ -14,29 +14,82 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <LinearLayout
+            android:id="@+id/accountTopContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👤"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="החשבון שלי"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
         <ImageView
             android:id="@+id/logo"
-            android:layout_width="220dp"
-            android:layout_height="82dp"
+            android:layout_width="290dp"
+            android:layout_height="140dp"
             android:layout_centerInParent="true"
             android:adjustViewBounds="true"
             android:contentDescription="logo"
             android:scaleType="fitCenter"
             android:src="@drawable/stereo_logo" />
 
-        <ImageView
-            android:id="@+id/btnUpdateTop"
-            android:layout_width="42dp"
+        <LinearLayout
+            android:id="@+id/updateTopContainer"
+            android:layout_width="wrap_content"
             android:layout_height="42dp"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="4dp"
             android:background="@drawable/bg_button_gray"
-            android:clickable="true"
-            android:contentDescription="update"
-            android:focusable="true"
-            android:padding="9dp"
-            android:src="@drawable/ic_update" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="עדכון אפליקציה"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/btnUpdateTop"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="6dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:contentDescription="update"
+                android:focusable="true"
+                android:padding="2dp"
+                android:src="@drawable/ic_update" />
+        </LinearLayout>
     </RelativeLayout>
 
     <LinearLayout
@@ -47,7 +100,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:weightSum="3">
+        android:weightSum="4">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -123,6 +176,35 @@
                 android:text="--"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅 תוקף חבילה"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvValidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="לא ידוע"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>

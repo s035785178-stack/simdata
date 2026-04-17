@@ -20,6 +20,7 @@ object AppPrefs {
     private const val KEY_CAR_MODEL = "car_model"
     private const val KEY_CAR_NUMBER = "car_number"
     private const val KEY_DATA_PACKAGE = "data_package"
+    private const val KEY_VALIDITY_MODE = "validity_mode"
 
     private fun prefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -99,6 +100,31 @@ object AppPrefs {
     fun clearAll(context: Context) {
         prefs(context).edit().clear().apply()
         ensureInstallTimestamp(context)
+    }
+
+
+    fun setValid(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_VALID, value).apply()
+    }
+
+    fun setValidityMode(context: Context, value: String) {
+        prefs(context).edit().putString(KEY_VALIDITY_MODE, value).apply()
+    }
+
+    fun getValidityMode(context: Context): String {
+        return prefs(context).getString(KEY_VALIDITY_MODE, "auto") ?: "auto"
+    }
+
+    fun clearCustomerProfile(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_CUSTOMER_NAME)
+            .remove(KEY_CUSTOMER_PHONE)
+            .remove(KEY_CAR_MODEL)
+            .remove(KEY_CAR_NUMBER)
+            .remove(KEY_DATA_PACKAGE)
+            .remove(KEY_VALID)
+            .remove(KEY_VALIDITY_MODE)
+            .apply()
     }
 
     fun setCustomerName(context: Context, value: String) {

@@ -12,6 +12,7 @@ import android.telephony.TelephonyManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -34,11 +35,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLine: TextView
     private lateinit var tvBalanceQuick: TextView
     private lateinit var tvUpdated: TextView
+    private lateinit var tvValidity: TextView
     private lateinit var tvStatus: TextView
     private lateinit var btnPackageStatus: Button
     private lateinit var btnWarrantyStatus: Button
     private lateinit var logo: ImageView
     private lateinit var btnUpdateTop: ImageView
+    private lateinit var accountTopContainer: View
 
     private var logoTapCount = 0
     private var lastTapTime = 0L
@@ -96,11 +99,13 @@ class MainActivity : AppCompatActivity() {
         tvLine = findViewById(R.id.tvLine)
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
         tvUpdated = findViewById(R.id.tvUpdated)
+        tvValidity = findViewById(R.id.tvValidity)
         tvStatus = findViewById(R.id.tvStatus)
         btnPackageStatus = findViewById(R.id.btnPackageStatus)
         btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
         logo = findViewById(R.id.logo)
         btnUpdateTop = findViewById(R.id.btnUpdateTop)
+        accountTopContainer = findViewById(R.id.accountTopContainer)
 
         findViewById<Button>(R.id.btnBalance).setOnClickListener {
             startActivity(Intent(this, BalanceActivity::class.java))
@@ -138,10 +143,14 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, UpdateActivity::class.java))
         }
 
+        accountTopContainer.setOnClickListener {
+            startActivity(Intent(this, CustomerDetailsActivity::class.java))
+        }
+
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
         updateSummary()
-        checkRegistrationIfNeeded()
+        syncCustomerFromFirebaseOnOpen()
         loadWarrantyStatus()
         loadPackageStatus()
     }
@@ -160,7 +169,7 @@ class MainActivity : AppCompatActivity() {
         if (movedToRegistration) return
 
         updateSummary()
-        checkRegistrationIfNeeded()
+        syncCustomerFromFirebaseOnOpen()
         loadWarrantyStatus()
         loadPackageStatus()
     }
@@ -335,6 +344,7 @@ class MainActivity : AppCompatActivity() {
         val mb = AppPrefs.getBalanceMb(this)
         tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
         tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
+        tvValidity.text = AppPrefs.getValid(this)?.takeIf { it.isNotBlank() } ?: "לא ידוע"
         tvStatus.text = Formatter.balanceStatus(mb)
     }
 
@@ -355,28 +365,11 @@ class MainActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
 
                 if (result.isEmpty) {
-                    moveToRegistration(clearLocal = false)
+                    moveToRegistration(clearLocal = true)
                     return@addOnSuccessListener
                 }
 
-                val doc = result.documents.first()
-                val customerName = doc.getString("customerName").orEmpty()
-                val customerPhone = normalizePhone(doc.getString("customerPhone"))
-                val carModel = doc.getString("carModel").orEmpty()
-                val carNumber = doc.getString("carNumber").orEmpty()
-                val dataPackage = doc.getString("dataPackage").orEmpty()
-
-                if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
-                if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
-                if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
-                if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
-                if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
-                AppPrefs.setLineNumber(this, lineNumber)
-
-                registrationCheckDone = true
-                updateSummary()
-                loadWarrantyStatus()
-                loadPackageStatus()
+                applyCustomerDocument(result.documents.first())
             }
             .addOnFailureListener {
                 restoreLookupInProgress = false
@@ -388,27 +381,76 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkRegistrationIfNeeded() {
-        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) {
-            return
+        syncCustomerFromFirebaseOnOpen()
+    }
+
+    private fun syncCustomerFromFirebaseOnOpen() {
+        if (movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) return
+
+        val line = normalizeLine(safeDeviceLine()).ifBlank { normalizeLine(AppPrefs.getLineNumber(this)) }
+        val phone = normalizePhone(AppPrefs.getCustomerPhone(this))
+
+        when {
+            line.isNotBlank() -> restoreCustomerFromFirebaseByLine(line)
+            phone.isNotBlank() -> restoreCustomerFromFirebaseByPhone(phone)
+            else -> moveToRegistration(clearLocal = false)
+        }
+    }
+
+    private fun restoreCustomerFromFirebaseByPhone(phone: String) {
+        if (restoreLookupInProgress) return
+
+        restoreLookupInProgress = true
+        waitingForRestoreAnswer = true
+
+        db.collection("customers")
+            .whereEqualTo("customerPhone", phone)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                restoreLookupInProgress = false
+                waitingForRestoreAnswer = false
+
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                if (result.isEmpty) {
+                    moveToRegistration(clearLocal = true)
+                    return@addOnSuccessListener
+                }
+
+                applyCustomerDocument(result.documents.first())
+            }
+            .addOnFailureListener {
+                restoreLookupInProgress = false
+                waitingForRestoreAnswer = false
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+                Toast.makeText(this, "שגיאת חיבור לשרת", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun applyCustomerDocument(doc: com.google.firebase.firestore.DocumentSnapshot) {
+        val customerName = doc.getString("customerName").orEmpty()
+        val customerPhone = normalizePhone(doc.getString("customerPhone"))
+        val carModel = doc.getString("carModel").orEmpty()
+        val carNumber = doc.getString("carNumber").orEmpty()
+        val dataPackage = doc.getString("dataPackage").orEmpty()
+        val lineNumber = normalizeLine(doc.getString("lineNumber"))
+        val validUntil = doc.getString("validUntil").orEmpty()
+
+        AppPrefs.setCustomerName(this, customerName)
+        AppPrefs.setCustomerPhone(this, customerPhone)
+        AppPrefs.setCarModel(this, carModel)
+        AppPrefs.setCarNumber(this, carNumber)
+        AppPrefs.setDataPackage(this, dataPackage.ifBlank { "לא ידוע / אין" })
+        AppPrefs.setValid(this, validUntil)
+        if (lineNumber.isNotBlank()) {
+            AppPrefs.setLineNumber(this, lineNumber)
         }
 
-        val savedPhone = AppPrefs.getCustomerPhone(this)
-        val savedName = AppPrefs.getCustomerName(this)
-
-        if (savedPhone.isNotBlank() && savedName.isNotBlank()) {
-            registrationCheckDone = true
-            return
-        }
-
-        val normalizedLine = normalizeLine(safeDeviceLine())
-
-        if (normalizedLine.isNotBlank()) {
-            AppPrefs.setLineNumber(this, normalizedLine)
-            restoreCustomerFromFirebaseByLine(normalizedLine)
-            return
-        }
-
-        moveToRegistration(clearLocal = false)
+        registrationCheckDone = true
+        updateSummary()
+        loadWarrantyStatus()
+        loadPackageStatus()
     }
 
     private fun moveToRegistration(clearLocal: Boolean) {
@@ -631,11 +673,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearLocalCustomer() {
-        AppPrefs.setCustomerName(this, "")
-        AppPrefs.setCustomerPhone(this, "")
-        AppPrefs.setCarModel(this, "")
-        AppPrefs.setCarNumber(this, "")
-        AppPrefs.setDataPackage(this, "לא ידוע / אין")
+        AppPrefs.clearCustomerProfile(this)
     }
 
     private fun normalizeLine(raw: String?): String {
