@@ -648,32 +648,69 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun activateWarranty() {
-        val identifier = getCustomerIdentifier()
 
-        if (identifier.isBlank()) {
-            Toast.makeText(this, "אין פרטי משתמש", Toast.LENGTH_SHORT).show()
+    private fun findCustomerDocument(
+        onFound: (com.google.firebase.firestore.DocumentSnapshot) -> Unit,
+        onMissing: () -> Unit,
+        onError: () -> Unit
+    ) {
+        val lineIdentifier = normalizeLine(safeDeviceLine()).ifBlank { normalizeLine(AppPrefs.getLineNumber(this)) }
+        val phoneIdentifier = normalizePhone(AppPrefs.getCustomerPhone(this))
+
+        fun findByPhone() {
+            if (phoneIdentifier.isBlank()) {
+                onMissing()
+                return
+            }
+
+            db.collection("customers").document(phoneIdentifier).get()
+                .addOnSuccessListener { direct ->
+                    if (isFinishing || isDestroyed) return@addOnSuccessListener
+                    if (direct.exists()) {
+                        onFound(direct)
+                        return@addOnSuccessListener
+                    }
+
+                    db.collection("customers").whereEqualTo("phone", phoneIdentifier).limit(1).get()
+                        .addOnSuccessListener { res ->
+                            if (isFinishing || isDestroyed) return@addOnSuccessListener
+                            if (!res.isEmpty) {
+                                onFound(res.documents.first())
+                            } else {
+                                db.collection("customers").whereEqualTo("customerPhone", phoneIdentifier).limit(1).get()
+                                    .addOnSuccessListener { legacy ->
+                                        if (isFinishing || isDestroyed) return@addOnSuccessListener
+                                        if (!legacy.isEmpty) onFound(legacy.documents.first()) else onMissing()
+                                    }
+                                    .addOnFailureListener { if (!isFinishing && !isDestroyed) onError() }
+                            }
+                        }
+                        .addOnFailureListener { if (!isFinishing && !isDestroyed) onError() }
+                }
+                .addOnFailureListener { if (!isFinishing && !isDestroyed) onError() }
+        }
+
+        if (lineIdentifier.isBlank()) {
+            findByPhone()
             return
         }
 
-        val query = if (identifier.startsWith("05")) {
-            db.collection("customers")
-                .whereEqualTo("phone", identifier)
-                .limit(1)
-        } else {
-            db.collection("customers")
-                .whereEqualTo("lineNumber", identifier)
-                .limit(1)
-        }
-
-        query.get()
+        db.collection("customers").whereEqualTo("lineNumber", lineIdentifier).limit(1).get()
             .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Toast.makeText(this, "לא נמצא לקוח במערכת. בדוק שהלקוח נטען מחדש מהשרת.", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+                if (!result.isEmpty) {
+                    onFound(result.documents.first())
+                } else {
+                    findByPhone()
                 }
+            }
+            .addOnFailureListener { if (!isFinishing && !isDestroyed) findByPhone() }
+    }
 
-                val doc = result.documents.first()
+
+    private fun activateWarranty() {
+        findCustomerDocument(
+            onFound = { doc ->
                 val noWarrantyFlag = doc.getBoolean("noWarrantyExternal") == true
 
                 if (noWarrantyFlag) {
@@ -681,7 +718,7 @@ class MainActivity : AppCompatActivity() {
                     btnWarrantyStatus.text = "אין אחריות (נרכש במקום אחר)"
                     btnWarrantyStatus.isEnabled = false
                     Toast.makeText(this, "הלקוח מסומן ללא אחריות", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
+                    return@findCustomerDocument
                 }
 
                 val existingWarrantyStart = doc.getLong("warrantyStart")
@@ -694,7 +731,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     ).show()
                     loadWarrantyStatus()
-                    return@addOnSuccessListener
+                    return@findCustomerDocument
                 }
 
                 val startMillis = System.currentTimeMillis()
@@ -719,11 +756,16 @@ class MainActivity : AppCompatActivity() {
                     .addOnFailureListener {
                         Toast.makeText(this, "שגיאה בהפעלת אחריות", Toast.LENGTH_SHORT).show()
                     }
-            }
-            .addOnFailureListener {
+            },
+            onMissing = {
+                Toast.makeText(this, "לא נמצא לקוח במערכת. בדוק שהלקוח נטען מחדש מהשרת.", Toast.LENGTH_SHORT).show()
+            },
+            onError = {
                 Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
             }
+        )
     }
+
 
     private fun onLogoTapped() {
         val now = System.currentTimeMillis()
