@@ -12,9 +12,12 @@ object FirebaseCustomerSync {
         val db = FirebaseFirestore.getInstance()
 
         val lineNumber = normalizeLine(TelephonyUtils.getLineNumber(context))
+            .ifBlank { normalizeLine(AppPrefs.getLineNumber(context)) }
         if (lineNumber.isBlank()) return
 
         val now = System.currentTimeMillis()
+        val packageName = AppPrefs.getDataPackage(context)
+        val validMode = if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual"
 
         val data = linkedMapOf<String, Any?>(
             "name" to AppPrefs.getCustomerName(context),
@@ -22,24 +25,20 @@ object FirebaseCustomerSync {
             "phone" to AppPrefs.getCustomerPhone(context),
             "carNumber" to AppPrefs.getCarNumber(context),
             "carModel" to AppPrefs.getCarModel(context),
-            "package" to AppPrefs.getDataPackage(context),
+            "package" to packageName,
             "validUntil" to AppPrefs.getValid(context),
-            "validMode" to if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual",
+            "validMode" to validMode,
             "balanceMb" to AppPrefs.getBalanceMb(context),
             "lastBalanceCheck" to now,
             "status" to "",
             "lastUpdate" to now,
             "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
-            "warrantyEnd" to AppPrefs.getWarrantyEnd(context),
-            "warrantyActive" to AppPrefs.isWarrantyActive(context),
 
-            // aliases for existing data/manager compatibility
+            // תאימות לאחור
             "customerName" to AppPrefs.getCustomerName(context),
             "customerPhone" to AppPrefs.getCustomerPhone(context),
-            "carNumber" to AppPrefs.getCarNumber(context),
-            "carModel" to AppPrefs.getCarModel(context),
-            "dataPackage" to AppPrefs.getDataPackage(context),
-            "validityMode" to if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual",
+            "dataPackage" to packageName,
+            "validityMode" to validMode,
             "currentBalanceMb" to AppPrefs.getBalanceMb(context)
         )
 
@@ -52,7 +51,12 @@ object FirebaseCustomerSync {
                     val docRef = result.documents.first().reference
                     updateExistingCustomer(docRef, data, lineNumber, now, context)
                 } else {
-                    val docRef = db.collection("customers").document(lineNumber)
+                    val fallbackPhone = AppPrefs.getCustomerPhone(context).trim()
+                    val docRef = if (fallbackPhone.isNotBlank()) {
+                        db.collection("customers").document(fallbackPhone)
+                    } else {
+                        db.collection("customers").document(lineNumber)
+                    }
                     updateExistingCustomer(docRef, data, lineNumber, now, context)
                 }
             }
@@ -60,7 +64,7 @@ object FirebaseCustomerSync {
 
     private fun updateExistingCustomer(
         docRef: DocumentReference,
-        data: HashMap<String, Any?>,
+        data: LinkedHashMap<String, Any?>,
         lineNumber: String,
         now: Long,
         context: Context
