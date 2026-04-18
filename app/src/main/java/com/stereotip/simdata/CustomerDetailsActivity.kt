@@ -3,7 +3,6 @@ package com.stereotip.simdata
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -36,9 +35,6 @@ class CustomerDetailsActivity : AppCompatActivity() {
     private lateinit var btnBack: Button
 
     private val db = FirebaseFirestore.getInstance()
-    private var currentValidityMode = "auto"
-    private var currentValidUntil = ""
-    private var packageInitialized = false
 
     private val packages = listOf(
         "לא ידוע / אין",
@@ -46,6 +42,12 @@ class CustomerDetailsActivity : AppCompatActivity() {
         "36GB ל-60 חודשים",
         "4GB לחודשיים"
     )
+
+    private var isAutoValidity = true
+    private var currentValidUntil = ""
+    private var currentCustomerDocId: String? = null
+    private var currentLineNumber = ""
+    private var suppressSpinnerCallback = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +66,11 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
         setupPackageSpinner()
         loadExistingData()
-        refreshFromFirebase()
+        loadCustomerSummary()
+        refreshCustomerFromFirebase()
 
         btnValidityMode.setOnClickListener {
-            showValidityOptionsDialog()
+            showValidityOptions()
         }
 
         btnSave.setOnClickListener {
@@ -81,29 +84,36 @@ class CustomerDetailsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshFromFirebase()
+        refreshCustomerFromFirebase()
     }
 
     private fun setupPackageSpinner() {
-        val adapter = ArrayAdapter(this, R.layout.spinner_item_white, packages)
+        val adapter = ArrayAdapter(
+            this,
+            R.layout.spinner_item_white,
+            packages
+        )
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_white)
         spinnerPackage.adapter = adapter
-        spinnerPackage.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (!packageInitialized) {
-                    packageInitialized = true
-                    return
-                }
-                val selectedPackage = packages.getOrNull(position).orEmpty()
-                AppPrefs.setDataPackage(this@CustomerDetailsActivity, selectedPackage)
-                if (currentValidityMode == "auto") {
-                    currentValidUntil = calculateAutoValidity(selectedPackage)
+
+        spinnerPackage.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: android.widget.AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                if (suppressSpinnerCallback) return
+                if (isAutoValidity) {
+                    currentValidUntil = calculateValidityFromPackage(packages[position])
                     AppPrefs.setValid(this@CustomerDetailsActivity, currentValidUntil)
                     updateValidityButtonText()
                     loadCustomerSummary()
+                    persistValidityStateIfPossible()
                 }
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
     }
 
@@ -112,72 +122,116 @@ class CustomerDetailsActivity : AppCompatActivity() {
         etPhone.setText(normalizeDisplayPhone(AppPrefs.getCustomerPhone(this)))
         etCarModel.setText(AppPrefs.getCarModel(this))
         etCarNumber.setText(AppPrefs.getCarNumber(this))
-        currentValidityMode = AppPrefs.getValidityMode(this)
-        currentValidUntil = AppPrefs.getValid(this).orEmpty()
 
         val savedPackage = AppPrefs.getDataPackage(this)
         val index = packages.indexOf(savedPackage).takeIf { it >= 0 } ?: 0
+        suppressSpinnerCallback = true
         spinnerPackage.setSelection(index)
+        suppressSpinnerCallback = false
+
+        isAutoValidity = AppPrefs.isValidityModeAuto(this)
+        currentValidUntil = AppPrefs.getValid(this).orEmpty().ifBlank {
+            if (isAutoValidity) calculateValidityFromPackage(savedPackage) else ""
+        }
         updateValidityButtonText()
-        loadCustomerSummary()
     }
 
-    private fun refreshFromFirebase() {
-        val line = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty())
-        val phone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
+    private fun refreshCustomerFromFirebase() {
+        val localLine = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty())
+        val localPhone = normalizeDisplayPhone(AppPrefs.getCustomerPhone(this))
 
-        if (line.isBlank() && phone.isBlank()) {
-            showMissingCustomer(false)
-            loadCustomerSummary()
-            return
+        when {
+            localLine.isNotBlank() -> {
+                db.collection("customers").whereEqualTo("lineNumber", localLine).limit(1).get()
+                    .addOnSuccessListener { lineResult ->
+                        if (!lineResult.isEmpty) {
+                            val doc = lineResult.documents.first()
+                            currentCustomerDocId = doc.id
+                            applyCustomerDocument(doc)
+                            tvMissingCustomer.visibility = View.GONE
+                            loadCustomerSummary()
+                        } else if (localPhone.isNotBlank()) {
+                            refreshCustomerByPhone(localPhone)
+                        } else {
+                            onCustomerMissing()
+                        }
+                    }
+                    .addOnFailureListener {
+                        if (!isFinishing && !isDestroyed) {
+                            Toast.makeText(this, "שגיאה בטעינת נתוני לקוח", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            }
+            localPhone.isNotBlank() -> refreshCustomerByPhone(localPhone)
+            else -> onCustomerMissing()
         }
+    }
 
-        val query = when {
-            line.isNotBlank() -> db.collection("customers").whereEqualTo("lineNumber", line).limit(1)
-            else -> db.collection("customers").whereEqualTo("customerPhone", phone).limit(1)
-        }
-
-        query.get()
-            .addOnSuccessListener { result ->
-                if (isFinishing || isDestroyed) return@addOnSuccessListener
-                if (result.isEmpty) {
-                    AppPrefs.clearCustomerProfile(this)
-                    currentValidityMode = "auto"
-                    currentValidUntil = ""
-                    showMissingCustomer(true)
-                    clearEditableFields()
+    private fun refreshCustomerByPhone(localPhone: String) {
+        db.collection("customers").whereEqualTo("phone", localPhone).limit(1).get()
+            .addOnSuccessListener { phoneResult ->
+                if (!phoneResult.isEmpty) {
+                    val doc = phoneResult.documents.first()
+                    currentCustomerDocId = doc.id
+                    applyCustomerDocument(doc)
+                    tvMissingCustomer.visibility = View.GONE
                     loadCustomerSummary()
-                    return@addOnSuccessListener
+                } else {
+                    db.collection("customers").whereEqualTo("customerPhone", localPhone).limit(1).get()
+                        .addOnSuccessListener { legacyResult ->
+                            if (!legacyResult.isEmpty) {
+                                val doc = legacyResult.documents.first()
+                                currentCustomerDocId = doc.id
+                                applyCustomerDocument(doc)
+                                tvMissingCustomer.visibility = View.GONE
+                                loadCustomerSummary()
+                            } else {
+                                onCustomerMissing()
+                            }
+                        }
+                        .addOnFailureListener {
+                            if (!isFinishing && !isDestroyed) {
+                                Toast.makeText(this, "שגיאה בטעינת נתוני לקוח", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                 }
-
-                applyCustomerDocument(result.documents.first())
-                tvMissingCustomer.visibility = View.GONE
-                loadCustomerSummary(result.documents.first())
             }
             .addOnFailureListener {
                 if (!isFinishing && !isDestroyed) {
                     Toast.makeText(this, "שגיאה בטעינת נתוני לקוח", Toast.LENGTH_SHORT).show()
-                    loadCustomerSummary()
                 }
             }
     }
 
-    private fun applyCustomerDocument(doc: DocumentSnapshot) {
-        val name = doc.getString("customerName").orEmpty()
-        val phone = normalizeDisplayPhone(doc.getString("customerPhone").orEmpty())
-        val carModel = doc.getString("carModel").orEmpty()
-        val carNumber = doc.getString("carNumber").orEmpty()
-        val pkg = doc.getString("dataPackage").orEmpty().ifBlank { "לא ידוע / אין" }
-        val line = normalizeDisplayPhone(doc.getString("lineNumber").orEmpty())
-        val valid = doc.getString("validUntil").orEmpty()
+    private fun onCustomerMissing() {
+        currentCustomerDocId = null
+        tvMissingCustomer.visibility = View.VISIBLE
+        AppPrefs.clearCustomerProfile(this)
+        loadExistingData()
+        loadCustomerSummary()
+        if (!isFinishing && !isDestroyed) {
+            Toast.makeText(this, "הלקוח לא קיים במערכת", Toast.LENGTH_SHORT).show()
+        }
+    }
 
+    private fun applyCustomerDocument(doc: DocumentSnapshot) {
+        val line = normalizeDisplayPhone(doc.getString("lineNumber"))
+        val name = doc.getString("name").orEmpty().ifBlank { doc.getString("customerName").orEmpty() }
+        val phone = normalizeDisplayPhone(doc.getString("phone").orEmpty().ifBlank { doc.getString("customerPhone").orEmpty() })
+        val carModel = doc.getString("carModel").orEmpty().ifBlank { doc.getString("vehicleModel").orEmpty() }
+        val carNumber = doc.getString("carNumber").orEmpty().ifBlank { doc.getString("vehicleNumber").orEmpty() }
+        val pkg = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty().ifBlank { "לא ידוע / אין" } }
+        val valid = doc.getString("validUntil").orEmpty()
+        val mode = doc.getString("validMode").orEmpty().ifBlank { doc.getString("validityMode").orEmpty() }
+
+        currentLineNumber = line
+
+        if (line.isNotBlank()) AppPrefs.setLineNumber(this, line)
         AppPrefs.setCustomerName(this, name)
         AppPrefs.setCustomerPhone(this, phone)
         AppPrefs.setCarModel(this, carModel)
         AppPrefs.setCarNumber(this, carNumber)
         AppPrefs.setDataPackage(this, pkg)
-        AppPrefs.setLineNumber(this, line)
-        AppPrefs.setValid(this, valid)
 
         etName.setText(name)
         etPhone.setText(phone)
@@ -185,36 +239,54 @@ class CustomerDetailsActivity : AppCompatActivity() {
         etCarNumber.setText(carNumber)
 
         val index = packages.indexOf(pkg).takeIf { it >= 0 } ?: 0
-        spinnerPackage.setSelection(index, false)
+        suppressSpinnerCallback = true
+        spinnerPackage.setSelection(index)
+        suppressSpinnerCallback = false
 
-        if (currentValidityMode == "auto" || valid.isNotBlank()) {
-            currentValidUntil = if (currentValidityMode == "auto") calculateAutoValidity(pkg) else valid
+        isAutoValidity = mode != "manual"
+        AppPrefs.setValidityModeAuto(this, isAutoValidity)
+
+        val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
+        AppPrefs.setWarrantyEnd(this, warrantyEnd)
+        AppPrefs.setWarrantyActive(this, warrantyEnd.isNotBlank())
+
+        currentValidUntil = if (valid.isNotBlank()) {
+            valid
+        } else if (isAutoValidity) {
+            calculateValidityFromPackage(pkg)
+        } else {
+            ""
         }
-        if (currentValidityMode != "manual") {
-            currentValidityMode = "auto"
-        }
+        AppPrefs.setValid(this, currentValidUntil)
         updateValidityButtonText()
     }
 
-    private fun loadCustomerSummary(doc: DocumentSnapshot? = null) {
-        val localLine = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty()).ifBlank { "---" }
-        val localPackage = doc?.getString("dataPackage").orEmpty().ifBlank { AppPrefs.getDataPackage(this).ifBlank { "---" } }
-        val balance = doc?.getLong("currentBalanceMb") ?: doc?.getLong("balanceMb") ?: AppPrefs.getBalanceMb(this)?.toLong()
-        val localBalance = if (balance != null && balance >= 0) "${balance}MB" else "---"
-        val valid = doc?.getString("validUntil").orEmpty().ifBlank { AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" } }
-        val lastCheck = doc?.getLong("lastBalanceCheck") ?: doc?.getLong("lastUpdate") ?: AppPrefs.getUpdated(this)
-        val warranty = doc?.getString("warrantyEnd").orEmpty().ifBlank { "---" }
+    private fun loadCustomerSummary() {
+        val localLine = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty())
+        val localPackage = AppPrefs.getDataPackage(this).ifBlank { "---" }
+        val localBalance = AppPrefs.getBalanceMb(this)?.let { "${it}MB" } ?: "---"
+        val localValid = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
+        val localUpdated = formatTimestamp(AppPrefs.getUpdated(this))
+
+        val localWarranty = AppPrefs.getWarrantyEnd(this).ifBlank { "---" }
         tvCustomerSummary.text = buildSummary(
-            line = localLine,
+            line = if (localLine.isBlank()) "---" else localLine,
             pkg = localPackage,
             balance = localBalance,
-            lastCheck = formatTimestamp(lastCheck),
-            valid = valid,
-            warranty = warranty
+            lastCheck = localUpdated,
+            valid = localValid,
+            warranty = localWarranty
         )
     }
 
-    private fun buildSummary(line: String, pkg: String, balance: String, lastCheck: String, valid: String, warranty: String): String {
+    private fun buildSummary(
+        line: String,
+        pkg: String,
+        balance: String,
+        lastCheck: String,
+        valid: String,
+        warranty: String
+    ): String {
         return """
 📱 קו: $line
 
@@ -227,156 +299,183 @@ class CustomerDetailsActivity : AppCompatActivity() {
         """.trimIndent()
     }
 
-    private fun saveCustomerData() {
-        val name = etName.text.toString().trim()
-        val phone = normalizeDisplayPhone(etPhone.text.toString().trim())
-        val carModel = etCarModel.text.toString().trim()
-        val carNumber = etCarNumber.text.toString().trim()
-        val selectedPackage = spinnerPackage.selectedItem?.toString().orEmpty().ifBlank { "לא ידוע / אין" }
-        val line = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty())
-
-        if (currentValidityMode == "auto") {
-            currentValidUntil = calculateAutoValidity(selectedPackage)
-        }
-
-        AppPrefs.setCustomerName(this, name)
-        AppPrefs.setCustomerPhone(this, phone)
-        AppPrefs.setCarModel(this, carModel)
-        AppPrefs.setCarNumber(this, carNumber)
-        AppPrefs.setDataPackage(this, selectedPackage)
-        AppPrefs.setValid(this, currentValidUntil)
-        AppPrefs.setValidityMode(this, currentValidityMode)
-
-        val payload = hashMapOf<String, Any?>(
-            "customerName" to name,
-            "customerPhone" to phone,
-            "carModel" to carModel,
-            "carNumber" to carNumber,
-            "dataPackage" to selectedPackage,
-            "validUntil" to currentValidUntil,
-            "lastUpdate" to System.currentTimeMillis()
+    private fun showValidityOptions() {
+        val options = arrayOf(
+            "אוטומטי לפי חבילה",
+            "ידני - בחירת תאריך",
+            "נקה תוקף"
         )
-        if (line.isNotBlank()) payload["lineNumber"] = line
 
-        if (line.isBlank() && phone.isBlank()) {
-            Toast.makeText(this, "נשמר מקומית בלבד - אין מזהה לקוח", Toast.LENGTH_SHORT).show()
-            loadCustomerSummary()
-            return
-        }
-
-        val query = when {
-            line.isNotBlank() -> db.collection("customers").whereEqualTo("lineNumber", line).limit(1)
-            else -> db.collection("customers").whereEqualTo("customerPhone", phone).limit(1)
-        }
-
-        query.get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
-                    showMissingCustomer(true)
-                    loadCustomerSummary()
-                    return@addOnSuccessListener
-                }
-
-                result.documents.first().reference
-                    .set(payload, SetOptions.merge())
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
-                        tvMissingCustomer.visibility = View.GONE
-                        loadCustomerSummary(result.documents.first())
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "שגיאה בשמירת פרטי הלקוח", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "שגיאה באיתור לקוח", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun showValidityOptionsDialog() {
         AlertDialog.Builder(this)
-            .setTitle("תוקף חבילה")
-            .setItems(arrayOf("אוטומטי לפי חבילה", "ידני", "נקה תוקף")) { _, which ->
+            .setTitle("ניהול תוקף חבילה")
+            .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
-                        currentValidityMode = "auto"
-                        currentValidUntil = calculateAutoValidity(spinnerPackage.selectedItem?.toString().orEmpty())
-                        AppPrefs.setValidityMode(this, currentValidityMode)
+                        isAutoValidity = true
+                        AppPrefs.setValidityModeAuto(this, true)
+                        currentValidUntil = calculateValidityFromPackage(spinnerPackage.selectedItem?.toString().orEmpty())
                         AppPrefs.setValid(this, currentValidUntil)
                         updateValidityButtonText()
                         loadCustomerSummary()
+                        persistValidityStateIfPossible()
                     }
-                    1 -> showManualDatePicker()
+
+                    1 -> {
+                        isAutoValidity = false
+                        AppPrefs.setValidityModeAuto(this, false)
+                        showDatePicker()
+                    }
+
                     2 -> {
-                        currentValidityMode = "manual"
+                        isAutoValidity = false
+                        AppPrefs.setValidityModeAuto(this, false)
                         currentValidUntil = ""
-                        AppPrefs.setValidityMode(this, currentValidityMode)
                         AppPrefs.setValid(this, "")
                         updateValidityButtonText()
                         loadCustomerSummary()
+                        persistValidityStateIfPossible()
                     }
                 }
             }
             .show()
     }
 
-    private fun showManualDatePicker() {
+    private fun showDatePicker() {
         val calendar = Calendar.getInstance()
-        DatePickerDialog(this, { _, year, month, dayOfMonth ->
-            val picked = Calendar.getInstance().apply {
-                set(year, month, dayOfMonth, 0, 0, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            currentValidityMode = "manual"
-            currentValidUntil = formatter.format(picked.time)
-            AppPrefs.setValidityMode(this, currentValidityMode)
-            AppPrefs.setValid(this, currentValidUntil)
-            updateValidityButtonText()
-            loadCustomerSummary()
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                currentValidUntil = String.format(
+                    Locale.getDefault(),
+                    "%02d/%02d/%04d",
+                    dayOfMonth,
+                    month + 1,
+                    year
+                )
+                AppPrefs.setValid(this, currentValidUntil)
+                updateValidityButtonText()
+                loadCustomerSummary()
+                persistValidityStateIfPossible()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
-    private fun calculateAutoValidity(dataPackage: String): String {
+
+    private fun persistValidityStateIfPossible() {
+        val docId = currentCustomerDocId ?: return
+        val payload = linkedMapOf(
+            "validUntil" to currentValidUntil,
+            "validMode" to if (isAutoValidity) "auto" else "manual",
+            "validityMode" to if (isAutoValidity) "auto" else "manual",
+            "package" to spinnerPackage.selectedItem?.toString().orEmpty(),
+            "dataPackage" to spinnerPackage.selectedItem?.toString().orEmpty(),
+            "lastUpdate" to System.currentTimeMillis()
+        )
+        db.collection("customers").document(docId).set(payload, SetOptions.merge())
+    }
+
+    private fun updateValidityButtonText() {
+        val mode = if (isAutoValidity) "אוטומטי" else "ידני"
+        val value = currentValidUntil.ifBlank { "לא ידוע" }
+        btnValidityMode.text = "📅 תוקף חבילה ($mode) - $value"
+    }
+
+    private fun calculateValidityFromPackage(selectedPackage: String): String {
+        if (selectedPackage.isBlank() || selectedPackage == "לא ידוע / אין") return ""
+
         val cal = Calendar.getInstance()
-        when (dataPackage) {
+        when (selectedPackage) {
             "100GB לשנתיים" -> cal.add(Calendar.YEAR, 2)
             "36GB ל-60 חודשים" -> cal.add(Calendar.MONTH, 60)
             "4GB לחודשיים" -> cal.add(Calendar.MONTH, 2)
-            else -> return "לא ידוע"
+            else -> return ""
         }
         return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
     }
 
-    private fun updateValidityButtonText() {
-        val suffix = when {
-            currentValidUntil.isBlank() -> "לא ידוע"
-            else -> currentValidUntil
+    private fun saveCustomerData() {
+        val name = etName.text.toString().trim()
+        val phone = normalizeDisplayPhone(etPhone.text.toString().trim())
+        val carModel = etCarModel.text.toString().trim()
+        val carNumber = etCarNumber.text.toString().trim()
+        val dataPackage = spinnerPackage.selectedItem?.toString().orEmpty()
+
+        AppPrefs.setCustomerName(this, name)
+        AppPrefs.setCustomerPhone(this, phone)
+        AppPrefs.setCarModel(this, carModel)
+        AppPrefs.setCarNumber(this, carNumber)
+        AppPrefs.setDataPackage(this, dataPackage)
+        AppPrefs.setValid(this, currentValidUntil)
+        AppPrefs.setValidityModeAuto(this, isAutoValidity)
+
+        val lineNumber = normalizeDisplayPhone(AppPrefs.getLineNumber(this).orEmpty())
+        val identifier = when {
+            lineNumber.isNotBlank() -> lineNumber
+            phone.isNotBlank() -> phone
+            else -> ""
         }
-        val modeLabel = if (currentValidityMode == "manual") "ידני" else "אוטומטי"
-        btnValidityMode.text = "📅 תוקף חבילה ($modeLabel)
-$suffix"
+
+        if (identifier.isBlank()) {
+            Toast.makeText(this, "אין מזהה לקוח לשמירה", Toast.LENGTH_SHORT).show()
+            loadCustomerSummary()
+            return
+        }
+
+        val payload = linkedMapOf(
+            "name" to name,
+            "lineNumber" to lineNumber,
+            "phone" to phone,
+            "carNumber" to carNumber,
+            "carModel" to carModel,
+            "package" to dataPackage,
+            "validUntil" to currentValidUntil,
+            "validMode" to if (isAutoValidity) "auto" else "manual",
+            "balanceMb" to (AppPrefs.getBalanceMb(this) ?: -1),
+            "lastBalanceCheck" to AppPrefs.getUpdated(this),
+            "status" to "",
+            "lastUpdate" to System.currentTimeMillis(),
+            "deviceName" to android.os.Build.MODEL,
+
+            // aliases for legacy screens
+            "customerName" to name,
+            "customerPhone" to phone,
+            "dataPackage" to dataPackage,
+            "validityMode" to if (isAutoValidity) "auto" else "manual"
+        )
+
+        val saveTask = when {
+            currentCustomerDocId != null -> db.collection("customers").document(currentCustomerDocId!!).set(payload, SetOptions.merge())
+            lineNumber.isNotBlank() -> db.collection("customers").document(lineNumber).set(payload, SetOptions.merge())
+            else -> db.collection("customers").document(phone).set(payload, SetOptions.merge())
+        }
+
+        saveTask
+            .addOnSuccessListener {
+                Toast.makeText(this, "פרטי הלקוח נשמרו", Toast.LENGTH_SHORT).show()
+                tvMissingCustomer.visibility = View.GONE
+                loadCustomerSummary()
+                finish()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "שגיאה בשמירת פרטי הלקוח", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun showMissingCustomer(show: Boolean) {
-        tvMissingCustomer.visibility = if (show) View.VISIBLE else View.GONE
-    }
-
-    private fun clearEditableFields() {
-        etName.setText("")
-        etPhone.setText("")
-        etCarModel.setText("")
-        etCarNumber.setText("")
-        spinnerPackage.setSelection(0, false)
-        currentValidUntil = ""
-        updateValidityButtonText()
-    }
-
-    private fun normalizeDisplayPhone(phone: String): String {
+    private fun normalizeDisplayPhone(phone: String?): String {
         val normalized = PhoneUtils.normalizeToLocal(phone)
-        return if (normalized == "לא זוהה" || normalized == "לא זוהה מספר" || normalized == "לא אושרו הרשאות") "" else normalized
+        return if (
+            normalized == "לא זוהה" ||
+            normalized == "לא זוהה מספר" ||
+            normalized == "לא אושרו הרשאות"
+        ) {
+            ""
+        } else {
+            normalized
+        }
     }
 
     private fun formatTimestamp(timestamp: Long): String {

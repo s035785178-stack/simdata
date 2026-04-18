@@ -16,14 +16,31 @@ object FirebaseCustomerSync {
 
         val now = System.currentTimeMillis()
 
-        val data: HashMap<String, Any?> = hashMapOf(
+        val data = linkedMapOf<String, Any?>(
+            "name" to AppPrefs.getCustomerName(context),
             "lineNumber" to lineNumber,
-            "balanceMb" to AppPrefs.getBalanceMb(context),
-            "currentBalanceMb" to AppPrefs.getBalanceMb(context),
+            "phone" to AppPrefs.getCustomerPhone(context),
+            "carNumber" to AppPrefs.getCarNumber(context),
+            "carModel" to AppPrefs.getCarModel(context),
+            "package" to AppPrefs.getDataPackage(context),
             "validUntil" to AppPrefs.getValid(context),
-            "lastUpdate" to now,
+            "validMode" to if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual",
+            "balanceMb" to AppPrefs.getBalanceMb(context),
             "lastBalanceCheck" to now,
-            "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim()
+            "status" to "",
+            "lastUpdate" to now,
+            "deviceName" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
+            "warrantyEnd" to AppPrefs.getWarrantyEnd(context),
+            "warrantyActive" to AppPrefs.isWarrantyActive(context),
+
+            // aliases for existing data/manager compatibility
+            "customerName" to AppPrefs.getCustomerName(context),
+            "customerPhone" to AppPrefs.getCustomerPhone(context),
+            "carNumber" to AppPrefs.getCarNumber(context),
+            "carModel" to AppPrefs.getCarModel(context),
+            "dataPackage" to AppPrefs.getDataPackage(context),
+            "validityMode" to if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual",
+            "currentBalanceMb" to AppPrefs.getBalanceMb(context)
         )
 
         db.collection("customers")

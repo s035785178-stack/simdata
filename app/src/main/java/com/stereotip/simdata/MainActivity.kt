@@ -9,10 +9,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.TelephonyManager
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -35,13 +35,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLine: TextView
     private lateinit var tvBalanceQuick: TextView
     private lateinit var tvUpdated: TextView
-    private lateinit var tvValidity: TextView
     private lateinit var tvStatus: TextView
     private lateinit var btnPackageStatus: Button
     private lateinit var btnWarrantyStatus: Button
     private lateinit var logo: ImageView
     private lateinit var btnUpdateTop: ImageView
     private lateinit var accountTopContainer: View
+    private lateinit var updateTopContainer: View
+    private lateinit var tvValidity: TextView
 
     private var logoTapCount = 0
     private var lastTapTime = 0L
@@ -99,13 +100,14 @@ class MainActivity : AppCompatActivity() {
         tvLine = findViewById(R.id.tvLine)
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
         tvUpdated = findViewById(R.id.tvUpdated)
-        tvValidity = findViewById(R.id.tvValidity)
         tvStatus = findViewById(R.id.tvStatus)
+        tvValidity = findViewById(R.id.tvValidity)
         btnPackageStatus = findViewById(R.id.btnPackageStatus)
         btnWarrantyStatus = findViewById(R.id.btnWarrantyStatus)
         logo = findViewById(R.id.logo)
         btnUpdateTop = findViewById(R.id.btnUpdateTop)
         accountTopContainer = findViewById(R.id.accountTopContainer)
+        updateTopContainer = findViewById(R.id.updateTopContainer)
 
         findViewById<Button>(R.id.btnBalance).setOnClickListener {
             startActivity(Intent(this, BalanceActivity::class.java))
@@ -142,7 +144,9 @@ class MainActivity : AppCompatActivity() {
         btnUpdateTop.setOnClickListener {
             startActivity(Intent(this, UpdateActivity::class.java))
         }
-
+        updateTopContainer.setOnClickListener {
+            startActivity(Intent(this, UpdateActivity::class.java))
+        }
         accountTopContainer.setOnClickListener {
             startActivity(Intent(this, CustomerDetailsActivity::class.java))
         }
@@ -150,7 +154,7 @@ class MainActivity : AppCompatActivity() {
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
         updateSummary()
-        syncCustomerFromFirebaseOnOpen()
+        checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
     }
@@ -169,7 +173,7 @@ class MainActivity : AppCompatActivity() {
         if (movedToRegistration) return
 
         updateSummary()
-        syncCustomerFromFirebaseOnOpen()
+        checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
     }
@@ -186,7 +190,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hasSavedRegisteredUser(): Boolean {
-        return AppPrefs.getCustomerName(this).isNotBlank() &&
+        return AppPrefs.getCustomerName(this).isNotBlank() ||
             AppPrefs.getCustomerPhone(this).isNotBlank()
     }
 
@@ -344,7 +348,7 @@ class MainActivity : AppCompatActivity() {
         val mb = AppPrefs.getBalanceMb(this)
         tvBalanceQuick.text = mb?.let { Formatter.mbToDisplay(it) } ?: "לא בוצעה בדיקה"
         tvUpdated.text = Formatter.formatDate(AppPrefs.getUpdated(this))
-        tvValidity.text = AppPrefs.getValid(this)?.takeIf { it.isNotBlank() } ?: "לא ידוע"
+        tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
         tvStatus.text = Formatter.balanceStatus(mb)
     }
 
@@ -365,11 +369,115 @@ class MainActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
 
                 if (result.isEmpty) {
-                    moveToRegistration(clearLocal = true)
+                    moveToRegistration(clearLocal = false)
                     return@addOnSuccessListener
                 }
 
-                applyCustomerDocument(result.documents.first())
+                val doc = result.documents.first()
+                applyCustomerFromDocument(
+                    customerName = doc.getString("name").orEmpty().ifBlank { doc.getString("customerName").orEmpty() },
+                    customerPhone = normalizePhone(doc.getString("phone").orEmpty().ifBlank { doc.getString("customerPhone").orEmpty() }),
+                    carModel = doc.getString("carModel").orEmpty().ifBlank { doc.getString("vehicleModel").orEmpty() },
+                    carNumber = doc.getString("carNumber").orEmpty().ifBlank { doc.getString("vehicleNumber").orEmpty() },
+                    dataPackage = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty() },
+                    lineNumber = lineNumber,
+                    validUntil = doc.getString("validUntil").orEmpty()
+                )
+            }
+            .addOnFailureListener {
+                restoreLookupInProgress = false
+                waitingForRestoreAnswer = false
+                if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+
+                Toast.makeText(this, "ממתין לחיבור כדי לשחזר לקוח קיים", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    private fun applyCustomerFromDocument(
+        customerName: String,
+        customerPhone: String,
+        carModel: String,
+        carNumber: String,
+        dataPackage: String,
+        lineNumber: String,
+        validUntil: String
+    ) {
+        if (customerName.isNotBlank()) AppPrefs.setCustomerName(this, customerName)
+        if (customerPhone.isNotBlank()) AppPrefs.setCustomerPhone(this, customerPhone)
+        if (carModel.isNotBlank()) AppPrefs.setCarModel(this, carModel)
+        if (carNumber.isNotBlank()) AppPrefs.setCarNumber(this, carNumber)
+        if (dataPackage.isNotBlank()) AppPrefs.setDataPackage(this, dataPackage)
+        if (lineNumber.isNotBlank()) AppPrefs.setLineNumber(this, lineNumber)
+        if (validUntil.isNotBlank()) AppPrefs.setValid(this, validUntil)
+
+        registrationCheckDone = true
+        updateSummary()
+        loadWarrantyStatus()
+        loadPackageStatus()
+    }
+
+    private fun restoreCustomerFromFirebaseByPhone(phone: String) {
+        if (restoreLookupInProgress) return
+
+        restoreLookupInProgress = true
+        waitingForRestoreAnswer = true
+
+        db.collection("customers")
+            .whereEqualTo("phone", phone)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                if (!result.isEmpty) {
+                    restoreLookupInProgress = false
+                    waitingForRestoreAnswer = false
+
+                    if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                    val doc = result.documents.first()
+                    applyCustomerFromDocument(
+                        customerName = doc.getString("name").orEmpty().ifBlank { doc.getString("customerName").orEmpty() },
+                        customerPhone = normalizePhone(doc.getString("phone").orEmpty().ifBlank { doc.getString("customerPhone").orEmpty() }),
+                        carModel = doc.getString("carModel").orEmpty().ifBlank { doc.getString("vehicleModel").orEmpty() },
+                        carNumber = doc.getString("carNumber").orEmpty().ifBlank { doc.getString("vehicleNumber").orEmpty() },
+                        dataPackage = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty() },
+                        lineNumber = normalizeLine(doc.getString("lineNumber")).ifBlank { phone },
+                        validUntil = doc.getString("validUntil").orEmpty()
+                    )
+                } else {
+                    db.collection("customers")
+                        .whereEqualTo("customerPhone", phone)
+                        .limit(1)
+                        .get()
+                        .addOnSuccessListener { legacy ->
+                            restoreLookupInProgress = false
+                            waitingForRestoreAnswer = false
+
+                            if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
+
+                            if (legacy.isEmpty) {
+                                moveToRegistration(clearLocal = true)
+                                return@addOnSuccessListener
+                            }
+
+                            val doc = legacy.documents.first()
+                            applyCustomerFromDocument(
+                                customerName = doc.getString("name").orEmpty().ifBlank { doc.getString("customerName").orEmpty() },
+                                customerPhone = normalizePhone(doc.getString("phone").orEmpty().ifBlank { doc.getString("customerPhone").orEmpty() }),
+                                carModel = doc.getString("carModel").orEmpty().ifBlank { doc.getString("vehicleModel").orEmpty() },
+                                carNumber = doc.getString("carNumber").orEmpty().ifBlank { doc.getString("vehicleNumber").orEmpty() },
+                                dataPackage = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty() },
+                                lineNumber = normalizeLine(doc.getString("lineNumber")).ifBlank { phone },
+                                validUntil = doc.getString("validUntil").orEmpty()
+                            )
+                        }
+                        .addOnFailureListener {
+                            restoreLookupInProgress = false
+                            waitingForRestoreAnswer = false
+                            if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
+                            Toast.makeText(this, "ממתין לחיבור כדי לשחזר לקוח קיים", Toast.LENGTH_SHORT).show()
+                        }
+                }
             }
             .addOnFailureListener {
                 restoreLookupInProgress = false
@@ -381,76 +489,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkRegistrationIfNeeded() {
-        syncCustomerFromFirebaseOnOpen()
-    }
-
-    private fun syncCustomerFromFirebaseOnOpen() {
-        if (movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) return
-
-        val line = normalizeLine(safeDeviceLine()).ifBlank { normalizeLine(AppPrefs.getLineNumber(this)) }
-        val phone = normalizePhone(AppPrefs.getCustomerPhone(this))
-
-        when {
-            line.isNotBlank() -> restoreCustomerFromFirebaseByLine(line)
-            phone.isNotBlank() -> restoreCustomerFromFirebaseByPhone(phone)
-            else -> moveToRegistration(clearLocal = false)
-        }
-    }
-
-    private fun restoreCustomerFromFirebaseByPhone(phone: String) {
-        if (restoreLookupInProgress) return
-
-        restoreLookupInProgress = true
-        waitingForRestoreAnswer = true
-
-        db.collection("customers")
-            .whereEqualTo("customerPhone", phone)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                restoreLookupInProgress = false
-                waitingForRestoreAnswer = false
-
-                if (isFinishing || isDestroyed || movedToRegistration) return@addOnSuccessListener
-
-                if (result.isEmpty) {
-                    moveToRegistration(clearLocal = true)
-                    return@addOnSuccessListener
-                }
-
-                applyCustomerDocument(result.documents.first())
-            }
-            .addOnFailureListener {
-                restoreLookupInProgress = false
-                waitingForRestoreAnswer = false
-                if (isFinishing || isDestroyed || movedToRegistration) return@addOnFailureListener
-                Toast.makeText(this, "שגיאת חיבור לשרת", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun applyCustomerDocument(doc: com.google.firebase.firestore.DocumentSnapshot) {
-        val customerName = doc.getString("customerName").orEmpty()
-        val customerPhone = normalizePhone(doc.getString("customerPhone"))
-        val carModel = doc.getString("carModel").orEmpty()
-        val carNumber = doc.getString("carNumber").orEmpty()
-        val dataPackage = doc.getString("dataPackage").orEmpty()
-        val lineNumber = normalizeLine(doc.getString("lineNumber"))
-        val validUntil = doc.getString("validUntil").orEmpty()
-
-        AppPrefs.setCustomerName(this, customerName)
-        AppPrefs.setCustomerPhone(this, customerPhone)
-        AppPrefs.setCarModel(this, carModel)
-        AppPrefs.setCarNumber(this, carNumber)
-        AppPrefs.setDataPackage(this, dataPackage.ifBlank { "לא ידוע / אין" })
-        AppPrefs.setValid(this, validUntil)
-        if (lineNumber.isNotBlank()) {
-            AppPrefs.setLineNumber(this, lineNumber)
+        if (registrationCheckDone || movedToRegistration || restoreLookupInProgress || waitingForRestoreAnswer) {
+            return
         }
 
-        registrationCheckDone = true
-        updateSummary()
-        loadWarrantyStatus()
-        loadPackageStatus()
+        val savedPhone = normalizePhone(AppPrefs.getCustomerPhone(this))
+        val normalizedLine = normalizeLine(safeDeviceLine())
+
+        if (normalizedLine.isNotBlank()) {
+            AppPrefs.setLineNumber(this, normalizedLine)
+            restoreCustomerFromFirebaseByLine(normalizedLine)
+            return
+        }
+
+        if (savedPhone.isNotBlank()) {
+            restoreCustomerFromFirebaseByPhone(savedPhone)
+            return
+        }
+
+        moveToRegistration(clearLocal = false)
     }
 
     private fun moveToRegistration(clearLocal: Boolean) {
@@ -497,7 +554,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val doc = result.documents.first()
-                val pkg = doc.getString("dataPackage").orEmpty()
+                val pkg = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty() }
 
                 if (pkg.isNotBlank()) {
                     AppPrefs.setDataPackage(this, pkg)
@@ -513,76 +570,82 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWarrantyStatus() {
-        val identifier = getCustomerIdentifier()
+        val lineIdentifier = normalizeLine(safeDeviceLine()).ifBlank { normalizeLine(AppPrefs.getLineNumber(this)) }
+        val phoneIdentifier = normalizePhone(AppPrefs.getCustomerPhone(this))
 
-        if (identifier.isBlank()) {
+        fun bindDefault() {
             warrantyActivated = false
             currentWarrantyEnd = ""
             noWarrantyExternal = false
             btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
             btnWarrantyStatus.isEnabled = true
+            AppPrefs.setWarrantyEnd(this, "")
+            AppPrefs.setWarrantyActive(this, false)
+        }
+
+        fun applyFromDoc(doc: com.google.firebase.firestore.DocumentSnapshot) {
+            val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
+            val warrantyStart = doc.get("warrantyStart")
+            val noWarrantyFlag = doc.getBoolean("noWarrantyExternal") == true
+            noWarrantyExternal = noWarrantyFlag
+            if (noWarrantyExternal) {
+                warrantyActivated = false
+                currentWarrantyEnd = ""
+                btnWarrantyStatus.text = "אין אחריות (נרכש במקום אחר)"
+                btnWarrantyStatus.isEnabled = false
+                AppPrefs.setWarrantyEnd(this, "")
+                AppPrefs.setWarrantyActive(this, false)
+                return
+            }
+            btnWarrantyStatus.isEnabled = true
+            val hasStart = when (warrantyStart) {
+                is Number -> warrantyStart.toLong() > 0L
+                is String -> warrantyStart.isNotBlank()
+                else -> false
+            }
+            if (warrantyEnd.isBlank() || !hasStart) {
+                bindDefault()
+            } else {
+                warrantyActivated = true
+                currentWarrantyEnd = warrantyEnd
+                btnWarrantyStatus.text = "תוקף אחריות $warrantyEnd🛡️"
+                AppPrefs.setWarrantyEnd(this, warrantyEnd)
+                AppPrefs.setWarrantyActive(this, true)
+            }
+        }
+
+        if (lineIdentifier.isBlank() && phoneIdentifier.isBlank()) {
+            bindDefault()
             return
         }
 
-        val query = if (identifier.startsWith("05")) {
-            db.collection("customers")
-                .whereEqualTo("customerPhone", identifier)
-                .limit(1)
-        } else {
-            db.collection("customers")
-                .whereEqualTo("lineNumber", identifier)
-                .limit(1)
+        val handlePhoneFallback: () -> Unit = {
+            if (phoneIdentifier.isBlank()) {
+                bindDefault()
+            } else {
+                db.collection("customers").whereEqualTo("phone", phoneIdentifier).limit(1).get()
+                    .addOnSuccessListener { res ->
+                        if (!res.isEmpty) applyFromDoc(res.documents.first())
+                        else db.collection("customers").whereEqualTo("customerPhone", phoneIdentifier).limit(1).get()
+                            .addOnSuccessListener { legacy ->
+                                if (!legacy.isEmpty) applyFromDoc(legacy.documents.first()) else bindDefault()
+                            }
+                            .addOnFailureListener { if (!isFinishing && !isDestroyed) bindDefault() }
+                    }
+                    .addOnFailureListener { if (!isFinishing && !isDestroyed) bindDefault() }
+            }
         }
 
-        query.get()
-            .addOnSuccessListener { result ->
-                if (isFinishing || isDestroyed) return@addOnSuccessListener
-
-                if (result.isEmpty) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    noWarrantyExternal = false
-                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
-                    btnWarrantyStatus.isEnabled = true
-                    return@addOnSuccessListener
+        if (lineIdentifier.isNotBlank()) {
+            db.collection("customers").whereEqualTo("lineNumber", lineIdentifier).limit(1).get()
+                .addOnSuccessListener { result ->
+                    if (isFinishing || isDestroyed) return@addOnSuccessListener
+                    if (!result.isEmpty) applyFromDoc(result.documents.first()) else handlePhoneFallback()
                 }
-
-                val doc = result.documents.first()
-                val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
-                val warrantyStart = doc.getLong("warrantyStart")
-                val noWarrantyFlag = doc.getBoolean("noWarrantyExternal") == true
-
-                noWarrantyExternal = noWarrantyFlag
-
-                if (noWarrantyExternal) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    btnWarrantyStatus.text = "אין אחריות (נרכש במקום אחר)"
-                    btnWarrantyStatus.isEnabled = false
-                    return@addOnSuccessListener
-                }
-
-                btnWarrantyStatus.isEnabled = true
-
-                if (warrantyEnd.isBlank() || warrantyStart == null || warrantyStart <= 0L) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
-                } else {
-                    warrantyActivated = true
-                    currentWarrantyEnd = warrantyEnd
-                    btnWarrantyStatus.text = "תוקף אחריות $warrantyEnd🛡️"
-                }
-            }
-            .addOnFailureListener {
-                if (!isFinishing && !isDestroyed) {
-                    warrantyActivated = false
-                    currentWarrantyEnd = ""
-                    noWarrantyExternal = false
-                    btnWarrantyStatus.text = "הפעל תקופת אחריות✔️"
-                    btnWarrantyStatus.isEnabled = true
-                }
-            }
+                .addOnFailureListener { if (!isFinishing && !isDestroyed) handlePhoneFallback() }
+        } else {
+            handlePhoneFallback()
+        }
     }
 
     private fun activateWarranty() {
@@ -595,7 +658,7 @@ class MainActivity : AppCompatActivity() {
 
         val query = if (identifier.startsWith("05")) {
             db.collection("customers")
-                .whereEqualTo("customerPhone", identifier)
+                .whereEqualTo("phone", identifier)
                 .limit(1)
         } else {
             db.collection("customers")
@@ -606,7 +669,7 @@ class MainActivity : AppCompatActivity() {
         query.get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    Toast.makeText(this, "לא נמצא לקוח במערכת", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "לא נמצא לקוח במערכת. בדוק שהלקוח נטען מחדש מהשרת.", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
                 }
 
@@ -640,9 +703,10 @@ class MainActivity : AppCompatActivity() {
                 cal.add(Calendar.YEAR, 1)
                 val endDate = dateFormat.format(cal.time)
 
-                val data: HashMap<String, Any?> = hashMapOf(
+                val data = linkedMapOf<String, Any?>(
                     "warrantyStart" to startMillis,
                     "warrantyEnd" to endDate,
+                    "warrantyActive" to true,
                     "lastUpdate" to System.currentTimeMillis(),
                     "noWarrantyExternal" to false
                 )
@@ -674,6 +738,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun clearLocalCustomer() {
         AppPrefs.clearCustomerProfile(this)
+        AppPrefs.setDataPackage(this, "לא ידוע / אין")
     }
 
     private fun normalizeLine(raw: String?): String {

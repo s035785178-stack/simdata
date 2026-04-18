@@ -180,11 +180,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_button_gray"
+                android:gravity="center"
                 android:minHeight="56dp"
                 android:padding="12dp"
-                android:text="📅 תוקף חבילה (אוטומטי)
-לא ידוע"
+                android:text="📅 תוקף חבילה (אוטומטי) - לא ידוע"
                 android:textAllCaps="false"
+                android:textAlignment="center"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
