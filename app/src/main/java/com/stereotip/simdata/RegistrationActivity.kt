@@ -10,7 +10,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -33,25 +38,25 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var etCarModel: EditText
     private lateinit var etCarNumber: EditText
     private lateinit var spinnerPackage: Spinner
+    private lateinit var etManualValidUntil: EditText
+    private lateinit var tvValidityHint: TextView
+    private lateinit var btnUseAutoValidity: Button
     private lateinit var btnRegister: Button
     private lateinit var btnHelp: Button
 
     private val db = FirebaseFirestore.getInstance()
     private var detectedLineNumber: String = ""
     private val handler = Handler(Looper.getMainLooper())
+    private val displayDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    private val packages = listOf(
+    private val packageOptions = listOf(
         "לא ידוע / אין",
         "100 ג׳יגה או שנתיים",
         "36 ג׳יגה או 60 חודשים",
         "4 ג׳יגה או חודשיים"
     )
-    private val manualOption = "בחירת תוקף ידני לחבילה שנבחרה"
 
-    private var selectedPackage = packages[1]
-    private var selectedValidUntil = ""
-    private var isAutoValidity = true
-    private var suppressSpinnerCallback = false
+    private var isManualValidity = false
 
     private fun hasRealSmsAccess(): Boolean {
         return try {
@@ -83,11 +88,9 @@ class RegistrationActivity : AppCompatActivity() {
             Manifest.permission.READ_SMS,
             Manifest.permission.RECEIVE_SMS
         )
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             list.add(Manifest.permission.POST_NOTIFICATIONS)
         }
-
         return list.toTypedArray()
     }
 
@@ -106,10 +109,14 @@ class RegistrationActivity : AppCompatActivity() {
         etCarModel = findViewById(R.id.etCarModel)
         etCarNumber = findViewById(R.id.etCarNumber)
         spinnerPackage = findViewById(R.id.spinnerPackage)
+        etManualValidUntil = findViewById(R.id.etManualValidUntil)
+        tvValidityHint = findViewById(R.id.tvValidityHint)
+        btnUseAutoValidity = findViewById(R.id.btnUseAutoValidity)
         btnRegister = findViewById(R.id.btnRegisterCustomer)
         btnHelp = findViewById(R.id.btnHelp)
 
         setupSpinner()
+        setupValidityControls()
 
         if (!hasRealSmsAccess() || !hasRealPhoneAccess()) {
             requestPermissionsIfNeeded()
@@ -123,85 +130,54 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun setupSpinner() {
-        val items = packages + manualOption
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
-            items
+            packageOptions
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerPackage.adapter = adapter
-
-        selectedPackage = packages[1]
-        selectedValidUntil = calculateValidityFromPackage(selectedPackage)
-        isAutoValidity = true
-        spinnerPackage.setSelection(packages.indexOf(selectedPackage))
+        spinnerPackage.setSelection(1)
 
         spinnerPackage.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: android.widget.AdapterView<*>?,
-                view: android.view.View?,
-                position: Int,
-                id: Long
-            ) {
-                if (suppressSpinnerCallback) return
-                val selected = items[position]
-
-                if (selected == manualOption) {
-                    if (selectedPackage.isBlank()) {
-                        Toast.makeText(
-                            this@RegistrationActivity,
-                            "בחר קודם חבילה",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        resetSpinnerToPackage()
-                        return
-                    }
-                    isAutoValidity = false
-                    showManualDatePicker()
-                    return
-                }
-
-                selectedPackage = selected
-                if (selected == "לא ידוע / אין") {
-                    isAutoValidity = true
-                    selectedValidUntil = ""
-                } else if (isAutoValidity || selectedValidUntil.isBlank()) {
-                    isAutoValidity = true
-                    selectedValidUntil = calculateValidityFromPackage(selected)
-                }
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                updateValidityUi()
             }
-
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
     }
 
-    private fun resetSpinnerToPackage() {
-        val index = packages.indexOf(selectedPackage).takeIf { it >= 0 } ?: 0
-        suppressSpinnerCallback = true
-        spinnerPackage.setSelection(index)
-        suppressSpinnerCallback = false
+    private fun setupValidityControls() {
+        etManualValidUntil.setOnClickListener {
+            val seedValue = etManualValidUntil.text.toString().trim().ifBlank {
+                calculatePackageValidUntil(spinnerPackage.selectedItem?.toString().orEmpty())
+            }
+            showDatePicker(seedValue) { selectedDate ->
+                isManualValidity = true
+                etManualValidUntil.setText(selectedDate)
+                updateValidityUi()
+            }
+        }
+
+        btnUseAutoValidity.setOnClickListener {
+            isManualValidity = false
+            etManualValidUntil.setText("")
+            updateValidityUi()
+        }
+
+        updateValidityUi()
     }
 
-    private fun showManualDatePicker() {
+    private fun showDatePicker(seedValue: String, onDateSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
+        tryParseDate(seedValue)?.let { calendar.time = it }
+
         DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
-                isAutoValidity = false
-                selectedValidUntil = String.format(
-                    Locale.getDefault(),
-                    "%02d/%02d/%04d",
-                    dayOfMonth,
-                    month + 1,
-                    year
-                )
-                resetSpinnerToPackage()
-                Toast.makeText(
-                    this,
-                    "תוקף ידני נשמר לחבילה: $selectedPackage",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val chosen = Calendar.getInstance()
+                chosen.set(year, month, dayOfMonth)
+                onDateSelected(displayDateFormat.format(chosen.time))
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -209,8 +185,28 @@ class RegistrationActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun calculateValidityFromPackage(selectedPackage: String): String {
-        if (selectedPackage.isBlank() || selectedPackage == "לא ידוע / אין") return ""
+    private fun updateValidityUi() {
+        val selectedPackage = spinnerPackage.selectedItem?.toString().orEmpty().trim()
+        val autoDate = calculatePackageValidUntil(selectedPackage)
+        val manualDate = etManualValidUntil.text.toString().trim()
+
+        when {
+            isManualValidity && manualDate.isNotBlank() -> {
+                tvValidityHint.text = "נבחר תוקף ידני: $manualDate. החבילה נשארת $selectedPackage."
+                btnUseAutoValidity.visibility = android.view.View.VISIBLE
+            }
+            autoDate.isBlank() -> {
+                tvValidityHint.text = "לחבילה הזו אין תוקף אוטומטי. אפשר לבחור תאריך ידני אם צריך."
+                btnUseAutoValidity.visibility = android.view.View.GONE
+            }
+            else -> {
+                tvValidityHint.text = "התוקף יחושב אוטומטית לפי החבילה: $autoDate"
+                btnUseAutoValidity.visibility = android.view.View.GONE
+            }
+        }
+    }
+
+    private fun calculatePackageValidUntil(selectedPackage: String): String {
         val cal = Calendar.getInstance()
         when (selectedPackage) {
             "100 ג׳יגה או שנתיים" -> cal.add(Calendar.YEAR, 2)
@@ -218,16 +214,14 @@ class RegistrationActivity : AppCompatActivity() {
             "4 ג׳יגה או חודשיים" -> cal.add(Calendar.MONTH, 2)
             else -> return ""
         }
-        return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
+        return displayDateFormat.format(cal.time)
     }
 
     private fun requestPermissionsIfNeeded() {
         if (hasRealSmsAccess() && hasRealPhoneAccess()) return
-
         val missing = allPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-
         if (missing.isNotEmpty()) {
             permissionLauncher.launch(missing.toTypedArray())
         }
@@ -242,11 +236,7 @@ class RegistrationActivity : AppCompatActivity() {
     private fun refreshLineNumber() {
         val saved = normalize(AppPrefs.getLineNumber(this))
         val device = normalize(
-            try {
-                TelephonyUtils.getLineNumber(this)
-            } catch (e: Exception) {
-                ""
-            }
+            try { TelephonyUtils.getLineNumber(this) } catch (e: Exception) { "" }
         )
 
         detectedLineNumber = when {
@@ -267,65 +257,51 @@ class RegistrationActivity : AppCompatActivity() {
         val phone = normalize(etPhone.text.toString())
         val carModel = etCarModel.text.toString().trim()
         val carNumber = etCarNumber.text.toString().trim()
-        val packageName = selectedPackage
+        val selectedPackage = spinnerPackage.selectedItem?.toString().orEmpty().trim()
+        val validMode = if (isManualValidity) "manual" else "auto"
+        val validUntil = if (isManualValidity) {
+            etManualValidUntil.text.toString().trim()
+        } else {
+            calculatePackageValidUntil(selectedPackage)
+        }
 
         if (name.isBlank()) {
             etName.error = "נא למלא שם"
             return
         }
-
         if (phone.length != 10) {
             etPhone.error = "טלפון לא תקין"
             return
         }
-
         if (!NetworkUtils.isOnline(this)) {
             Toast.makeText(this, "אין אינטרנט", Toast.LENGTH_SHORT).show()
             return
-        }
-
-        if (packageName.isBlank()) {
-            Toast.makeText(this, "נא לבחור חבילה", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (!isAutoValidity && selectedValidUntil.isBlank()) {
-            Toast.makeText(this, "נא לבחור תוקף ידני", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val validUntil = if (isAutoValidity) {
-            calculateValidityFromPackage(packageName)
-        } else {
-            selectedValidUntil
         }
 
         btnRegister.isEnabled = false
         btnRegister.text = "נרשם..."
 
         val now = System.currentTimeMillis()
+        val safePackage = if (selectedPackage.isBlank()) "לא ידוע / אין" else selectedPackage
         val deviceName = "${Build.MANUFACTURER} ${Build.MODEL}".trim()
-        val validMode = if (isAutoValidity) "auto" else "manual"
 
-        val data = linkedMapOf<String, Any?>(
+        val data = hashMapOf(
             "name" to name,
             "lineNumber" to detectedLineNumber,
             "phone" to phone,
             "carNumber" to carNumber,
             "carModel" to carModel,
-            "package" to packageName,
+            "package" to safePackage,
             "validUntil" to validUntil,
             "validMode" to validMode,
-            "balanceMb" to 0,
+            "balanceMb" to 0L,
             "lastBalanceCheck" to now,
             "status" to "",
             "lastUpdate" to now,
             "deviceName" to deviceName,
-
-            // תאימות לאחור
             "customerName" to name,
             "customerPhone" to phone,
-            "dataPackage" to packageName,
+            "dataPackage" to safePackage,
             "validityMode" to validMode,
             "createdAt" to now
         )
@@ -338,16 +314,15 @@ class RegistrationActivity : AppCompatActivity() {
                 AppPrefs.setCustomerPhone(this, phone)
                 AppPrefs.setCarModel(this, carModel)
                 AppPrefs.setCarNumber(this, carNumber)
-                AppPrefs.setDataPackage(this, packageName)
+                AppPrefs.setDataPackage(this, safePackage)
+                AppPrefs.setValidityModeAuto(this, validMode == "auto")
                 AppPrefs.setValid(this, validUntil)
-                AppPrefs.setValidityModeAuto(this, isAutoValidity)
 
                 if (detectedLineNumber.isNotBlank()) {
                     AppPrefs.setLineNumber(this, detectedLineNumber)
                 }
 
                 btnRegister.text = "✔️ נרשמת"
-
                 handler.postDelayed({
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
@@ -369,5 +344,10 @@ class RegistrationActivity : AppCompatActivity() {
     private fun normalize(input: String?): String {
         val n = PhoneUtils.normalizeToLocal(input)
         return if (n.contains("לא")) "" else n
+    }
+
+    private fun tryParseDate(value: String): java.util.Date? {
+        if (value.isBlank()) return null
+        return try { displayDateFormat.parse(value) } catch (_: Exception) { null }
     }
 }
