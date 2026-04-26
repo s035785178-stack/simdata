@@ -26,58 +26,44 @@ class ResultActivity : AppCompatActivity() {
         tvTimer = findViewById(R.id.tvTimer)
 
         val success = intent.getBooleanExtra("success", true)
-        val returnToRegistration = intent.getBooleanExtra("return_to_registration", false)
-        val seconds = intent.getIntExtra("seconds", if (success) 5 else 10)
+        val phone = intent.getStringExtra("phone") ?: ""
 
         if (success) {
             tvIcon.text = "✔"
-            tvIcon.setTextColor(0xFF2ECC71.toInt())
             tvTitle.text = "ההרשמה בוצעה בהצלחה!"
-            tvSub.text = "לא לשכוח להפעיל אחריות מוצר בעמוד הבא 🛡️"
+            tvSub.text = "ממשיכים להפעלת אחריות..."
         } else {
             tvIcon.text = "✖"
-            tvIcon.setTextColor(0xFFE74C3C.toInt())
-            tvTitle.text = "ההרשמה לא בוצעה"
-            tvSub.text = "כי אין אינטרנט למכשיר.\nאנא התחבר ל-Wi-Fi או הגדר APN"
+            tvTitle.text = "שגיאה בהרשמה"
+            tvSub.text = "נסה שוב"
         }
 
-        playNiceAnimation()
-        startCountdown(seconds, returnToRegistration)
+        playAnimation()
+        startCountdown(phone)
     }
 
-    private fun playNiceAnimation() {
-        tvIcon.scaleX = 0.2f
-        tvIcon.scaleY = 0.2f
-        tvIcon.alpha = 0f
-
-        val scaleX = ObjectAnimator.ofFloat(tvIcon, TextView.SCALE_X, 0.2f, 1.15f, 1f)
-        val scaleY = ObjectAnimator.ofFloat(tvIcon, TextView.SCALE_Y, 0.2f, 1.15f, 1f)
-        val alpha = ObjectAnimator.ofFloat(tvIcon, TextView.ALPHA, 0f, 1f)
+    private fun playAnimation() {
+        val scaleX = ObjectAnimator.ofFloat(tvIcon, "scaleX", 0.5f, 1f)
+        val scaleY = ObjectAnimator.ofFloat(tvIcon, "scaleY", 0.5f, 1f)
 
         AnimatorSet().apply {
-            playTogether(scaleX, scaleY, alpha)
-            duration = 700
-            interpolator = OvershootInterpolator(2f)
+            playTogether(scaleX, scaleY)
+            duration = 400
+            interpolator = OvershootInterpolator()
             start()
         }
     }
 
-    private fun startCountdown(seconds: Int, returnToRegistration: Boolean) {
-        object : CountDownTimer((seconds * 1000L), 1000L) {
+    private fun startCountdown(phone: String) {
+        object : CountDownTimer(2500, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                val remaining = kotlin.math.ceil(millisUntilFinished / 1000.0).toInt()
-                tvTimer.text = "אתם מועברים אוטומטית בעוד $remaining"
+                val sec = millisUntilFinished / 1000
+                tvTimer.text = "מעבר בעוד $sec..."
             }
 
             override fun onFinish() {
-                val target = if (returnToRegistration) {
-                    RegistrationActivity::class.java
-                } else {
-                    MainActivity::class.java
-                }
-
-                val intent = Intent(this@ResultActivity, target)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                val intent = Intent(this@ResultActivity, WarrantyPromptActivity::class.java)
+                intent.putExtra("phone", phone)
                 startActivity(intent)
                 finish()
             }

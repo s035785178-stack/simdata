@@ -285,7 +285,7 @@ class RegistrationActivity : AppCompatActivity() {
         val safePackage = if (selectedPackage.isBlank()) "לא ידוע / אין" else selectedPackage
         val deviceName = "${Build.MANUFACTURER} ${Build.MODEL}".trim()
 
-        val data = hashMapOf(
+        val data = hashMapOf<String, Any?>(
             "name" to name,
             "lineNumber" to detectedLineNumber,
             "phone" to phone,
@@ -294,8 +294,9 @@ class RegistrationActivity : AppCompatActivity() {
             "package" to safePackage,
             "validUntil" to validUntil,
             "validMode" to validMode,
-            "balanceMb" to 0L,
-            "lastBalanceCheck" to now,
+            "balanceMb" to null,
+            "currentBalanceMb" to null,
+            "lastBalanceCheck" to null,
             "status" to "",
             "lastUpdate" to now,
             "deviceName" to deviceName,
@@ -324,7 +325,7 @@ class RegistrationActivity : AppCompatActivity() {
 
                 btnRegister.text = "✔️ נרשמת"
                 handler.postDelayed({
-                    startActivity(Intent(this, MainActivity::class.java))
+                    startActivity(Intent(this, WarrantyPromptActivity::class.java))
                     finish()
                 }, 800)
             }

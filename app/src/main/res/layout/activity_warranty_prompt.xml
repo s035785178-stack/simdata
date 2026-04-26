@@ -9,32 +9,40 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layoutDirection="rtl"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="28dp"
-        android:paddingTop="26dp"
+        android:paddingTop="24dp"
         android:paddingEnd="28dp"
-        android:paddingBottom="26dp">
+        android:paddingBottom="24dp">
 
         <ImageView
             android:id="@+id/logoWarranty"
             android:layout_width="220dp"
-            android:layout_height="90dp"
+            android:layout_height="82dp"
             android:adjustViewBounds="true"
-            android:contentDescription="logo"
-            android:scaleType="fitCenter"
+            android:contentDescription="Stereo Tip"
+            android:scaleType="centerInside"
             android:src="@drawable/stereo_logo" />
+
+        <TextView
+            android:id="@+id/tvShieldWarranty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="🛡️"
+            android:textSize="46sp" />
 
         <TextView
             android:id="@+id/tvWarrantyTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="הפעלת אחריות למכשיר"
             android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textSize="26sp"
             android:textStyle="bold" />
 
         <TextView
@@ -43,10 +51,19 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text="מומלץ להפעיל אחריות כבר עכשיו לפני בדיקת היתרה"
-            android:textColor="#D0D0D0"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:text="כדי לקבל שירות מלא, עדכונים ותמיכה מהירה, מומלץ להפעיל אחריות למכשיר שלך כבר עכשיו."
+            android:textColor="#DADADA"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvWarrantyTrustText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="האחריות מאפשרת זיהוי מהיר במערכת וקבלת שירות ללא עיכובים"
+            android:textColor="#AFAFAF"
+            android:textSize="14sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -56,22 +73,12 @@
             android:orientation="vertical"
             android:padding="18dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="מה תרצה לעשות?"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
             <Button
                 android:id="@+id/btnActivateWarrantyPrompt"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_marginTop="18dp"
                 android:backgroundTint="#2E7D32"
-                android:text="הפעלת אחריות על מכשיר זה🛡️"
+                android:text="הפעל אחריות עכשיו"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
@@ -82,11 +89,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:layout_marginTop="14dp"
-                android:backgroundTint="#C62828"
-                android:text="דלג בשלב זה (לא מומלץ)🔜"
+                android:backgroundTint="#555555"
+                android:text="דלג כרגע (לא מומלץ)"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnNoWarrantyExternalPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="14dp"
+                android:backgroundTint="#C62828"
+                android:text="בטל אחריות - המוצר לא נרכש בסטריאו טיפ"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <LinearLayout
