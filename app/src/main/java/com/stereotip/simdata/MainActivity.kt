@@ -25,6 +25,7 @@ import com.stereotip.simdata.receiver.SmsReceiver
 import com.stereotip.simdata.util.AppPrefs
 import com.stereotip.simdata.util.Formatter
 import com.stereotip.simdata.util.PhoneUtils
+import com.stereotip.simdata.util.RequiredApps
 import com.stereotip.simdata.util.TelephonyUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -96,6 +97,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         AppPrefs.ensureInstallTimestamp(this)
+
+        if (!RequiredApps.isRequiredDialerAvailable(this)) {
+            startActivity(Intent(this, RequiredAppsActivity::class.java))
+            finish()
+            return
+        }
 
         tvLine = findViewById(R.id.tvLine)
         tvBalanceQuick = findViewById(R.id.tvBalanceQuick)
