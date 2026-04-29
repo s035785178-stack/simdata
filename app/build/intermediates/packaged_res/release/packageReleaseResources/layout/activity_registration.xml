@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#111111"
+    android:scrollbars="none"
+    android:layoutDirection="rtl">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layoutDirection="rtl"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
+
+        <View
+            android:layout_width="72dp"
+            android:layout_height="5dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_registration_accent" />
+
+        <TextView
+            android:id="@+id/tvRegistrationTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="רישום כלקוח חדש"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvRegistrationSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="ממלאים פעם אחת ושומרים תוקף מסודר"
+            android:textColor="#CFCFCF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_registration_panel"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/tvRegistrationLineNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="מספר קו במכשיר: לא זוהה"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_registration_panel"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:layoutDirection="rtl"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etRegistrationName"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_registration_input"
+                    android:gravity="end|center_vertical"
+                    android:hint="שם מלא"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textAlignment="viewEnd"
+                    android:textColor="#111111"
+                    android:textColorHint="#444444"
+                    android:textDirection="rtl" 
+                    android:layoutDirection="rtl" />
+
+                <EditText
+                    android:id="@+id/etRegistrationPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_registration_input"
+                    android:gravity="end|center_vertical"
+                    android:hint="טלפון"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textAlignment="viewEnd"
+                    android:textColor="#111111"
+                    android:textColorHint="#444444"
+                    android:textDirection="rtl" 
+                    android:layoutDirection="rtl" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:layoutDirection="rtl"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etCarModel"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_registration_input"
+                    android:gravity="end|center_vertical"
+                    android:hint="דגם רכב"
+                    android:inputType="text"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textAlignment="viewEnd"
+                    android:textColor="#111111"
+                    android:textColorHint="#444444"
+                    android:textDirection="rtl" 
+                    android:layoutDirection="rtl" />
+
+                <EditText
+                    android:id="@+id/etCarNumber"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_registration_input"
+                    android:digits="0123456789"
+                    android:gravity="end|center_vertical"
+                    android:hint="מספר רכב"
+                    android:inputType="number"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textAlignment="viewEnd"
+                    android:textColor="#111111"
+                    android:textColorHint="#444444"
+                    android:textDirection="rtl" 
+                    android:layoutDirection="rtl" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="end"
+                android:text="חבילת גלישה"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/spinnerPackage"
+                android:layoutDirection="rtl"
+                android:textDirection="rtl"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_registration_input" />
+
+            <EditText
+                android:id="@+id/etManualValidUntil"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_registration_input"
+                android:clickable="true"
+                android:focusable="false"
+                android:gravity="end|center_vertical"
+                android:hint="תוקף חבילה (בחירה ידנית בלבד)"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textAlignment="viewEnd"
+                android:textColor="#111111"
+                android:textColorHint="#444444"
+                android:textDirection="rtl" 
+                    android:layoutDirection="rtl" />
+
+            <TextView
+                android:id="@+id/tvValidityHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="end"
+                android:text="אם לא תבחר תאריך ידני, התוקף יחושב אוטומטית לפי החבילה."
+                android:textColor="#D9E4EE"
+                android:textSize="12sp"
+                android:textDirection="rtl" />
+
+            <Button
+                android:id="@+id/btnUseAutoValidity"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_registration_secondary"
+                android:text="בטל תאריך ידני וחזור לאוטומטי לפי חבילה"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnRegisterCustomer"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_registration_primary"
+            android:text="הרשמה"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnHelp"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_registration_secondary"
+            android:text="עזרה"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>

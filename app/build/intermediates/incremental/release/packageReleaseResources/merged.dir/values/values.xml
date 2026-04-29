@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="blue_btn">#186E9D</color>
+    <color name="brand_primary">#842F1B</color>
+    <color name="brand_primary_dark">#5B1F13</color>
+    <color name="card_bg">#1D1D1D</color>
+    <color name="gray_btn">#555555</color>
+    <color name="green_btn">#1F8B4C</color>
+    <color name="orange_btn">#C7771B</color>
+    <color name="screen_bg">#111111</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#D7D7D7</color>
+    <string name="app_name">יתרת גלישה</string>
+    <string name="gcm_defaultSenderId" translatable="false">887104216455</string>
+    <string name="google_api_key" translatable="false">AIzaSyBWoxiGcSPfzRZVRscKhV-kaDeXpBmRYZ8</string>
+    <string name="google_app_id" translatable="false">1:887104216455:android:edc71231850bf6e1458722</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBWoxiGcSPfzRZVRscKhV-kaDeXpBmRYZ8</string>
+    <string name="google_storage_bucket" translatable="false">simdata-46260.firebasestorage.app</string>
+    <string name="project_id" translatable="false">simdata-46260</string>
+    <style name="Theme.SimData" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_primary_dark</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="android:statusBarColor">@color/brand_primary_dark</item>
+        <item name="android:windowBackground">@color/screen_bg</item>
+        <item name="android:forceDarkAllowed" ns1:targetApi="q">false</item>
+    </style>
+</resources>

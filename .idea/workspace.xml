@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config>
+        <device id="automotive_1080p_landscape" />
+      </config>
+    </shared>
+    <layouts>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_button_blue.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_button_gray.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_button_green.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_button_orange.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_card.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_screen.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_account.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_customer_details.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_network.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_registration.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_required_apps.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_warranty_prompt.xml">
+        <config>
+          <theme>@style/Theme.SimData</theme>
+        </config>
+      </layout>
+    </layouts>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="844df9b8-f3e6-42f5-bc1b-3869a4e93bb8" name="Changes" comment="מסף אפליקציה נדרשת (חייגן)">
+      <change afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/stereotip/simdata/LauncherActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/stereotip/simdata/LauncherActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\itai\.android\avd\Medium_Phone.avd]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="simdata" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+        <option value="resourceFile" />
+      </list>
+    </option>
+  </component>
+  <component name="GenerateSignedApkSettings">
+    <option name="KEY_STORE_PATH" value="D:\Android\keys\simdata-key.jks" />
+    <option name="KEY_ALIAS" value="simdata" />
+    <option name="REMEMBER_PASSWORDS" value="true" />
+    <option name="BUILD_TARGET_KEY" value="apk" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="1.63" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;s035785178-stack&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/s035785178-stack/simdata.git&quot;,
+    &quot;accountId&quot;: &quot;7bf9b60f-8bc0-47a4-869e-2b8be4fdff65&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="3BOn2Q0mmkVQBaUa2f1HKVDRbOE" />
+  <component name="ProjectReloadState">
+    <option name="STATE" value="1" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.app.executor": "Debug",
+    "ApkExportedModule": "simdata.app",
+    "ExportApk.ApkPathForsimdata.app": "D:\\Android\\androidprojects\\apkים",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "1.64",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/Android/androidprojects/simdata/1.07-stable/app/src/main/res/layout",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.17",
+    "project.structure.side.proportion": "0.0",
+    "recommended.upgrade.last.time.stamp": "1774603179533",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
+  },
+  "keyToStringList": {
+    "ExportApk.BuildVariants": [
+      "release"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\res\layout" />
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\java\com\stereotip\simdata\util" />
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\java\com\stereotip\simdata" />
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\res\xml" />
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\res\drawable" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Android\androidprojects\simdata\1.07-stable\app\src\main\res" />
+    </key>
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="com.stereotip.simdata" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="simdata.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="844df9b8-f3e6-42f5-bc1b-3869a4e93bb8" name="Changes" comment="" />
+      <created>1774368777294</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1774368777294</updated>
+    </task>
+    <task id="LOCAL‎-00001" summary="Stable version 1.07 - working build">
+      <option name="closed" value="true" />
+      <created>1774376802234</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL‎-00001" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774376802234</updated>
+    </task>
+    <task id="LOCAL‎-00002" summary="Stable version 1.07 - working build">
+      <option name="closed" value="true" />
+      <created>1774379563100</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL‎-00002" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774379563100</updated>
+    </task>
+    <task id="LOCAL‎-00003" summary="backup before update system">
+      <option name="closed" value="true" />
+      <created>1774388044998</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL‎-00003" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774388044998</updated>
+    </task>
+    <task id="LOCAL‎-00004" summary="backup before update system">
+      <option name="closed" value="true" />
+      <created>1774415629254</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL‎-00004" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774415629254</updated>
+    </task>
+    <task id="LOCAL‎-00005" summary="מסך אחריות + תיקון הרשמה">
+      <option name="closed" value="true" />
+      <created>1774470465583</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL‎-00005" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774470465583</updated>
+    </task>
+    <task id="LOCAL‎-00006" summary="התקנת חייגן אוטומטית">
+      <option name="closed" value="true" />
+      <created>1774479605797</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL‎-00006" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774479605815</updated>
+    </task>
+    <task id="LOCAL‎-00007" summary="לתקן!!!">
+      <option name="closed" value="true" />
+      <created>1774483305010</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL‎-00007" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774483305010</updated>
+    </task>
+    <task id="LOCAL‎-00008" summary="התראות...">
+      <option name="closed" value="true" />
+      <created>1774562640830</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL‎-00008" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1774562640830</updated>
+    </task>
+    <task id="LOCAL‎-00009" summary="תיקון גריידל">
+      <option name="closed" value="true" />
+      <created>1776451705236</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL‎-00009" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776451705237</updated>
+    </task>
+    <task id="LOCAL‎-00010" summary="החזרת גרסא עם החשבון שלי וקבצים שנעלמו">
+      <option name="closed" value="true" />
+      <created>1776457033296</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL‎-00010" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776457033296</updated>
+    </task>
+    <task id="LOCAL‎-00011" summary="הוספת החשבון שלי">
+      <option name="closed" value="true" />
+      <created>1776467375110</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL‎-00011" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776467375142</updated>
+    </task>
+    <task id="LOCAL‎-00012" summary="התאמת אפליקציות ותיקונים">
+      <option name="closed" value="true" />
+      <created>1776507737308</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL‎-00012" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776507737319</updated>
+    </task>
+    <task id="LOCAL‎-00013" summary="התאמת אפליקציות ותיקונים">
+      <option name="closed" value="true" />
+      <created>1776510487113</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL‎-00013" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776510487113</updated>
+    </task>
+    <task id="LOCAL‎-00014" summary="התאמת אפליקציות ותיקונים">
+      <option name="closed" value="true" />
+      <created>1776520732810</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL‎-00014" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776520732811</updated>
+    </task>
+    <task id="LOCAL‎-00015" summary="תיקון שדות פיירבייס והתאמה לצי + תיקון כפתור אחריות">
+      <option name="closed" value="true" />
+      <created>1776522071538</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL‎-00015" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1776522071538</updated>
+    </task>
+    <task id="LOCAL‎-00016" summary="תיקון שדות פיירבייס והתאמה לצי + תיקון כפתור אחריות">
+      <option name="closed" value="true" />
+      <created>1777239343721</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL‎-00016" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1777239343721</updated>
+    </task>
+    <task id="LOCAL‎-00017" summary="מסף אפליקציה נדרשת (חייגן)">
+      <option name="closed" value="true" />
+      <created>1777263812753</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL‎-00017" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1777263812763</updated>
+    </task>
+    <task id="LOCAL‎-00018" summary="מסף אפליקציה נדרשת (חייגן)">
+      <option name="closed" value="true" />
+      <created>1777328692611</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL‎-00018" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1777328692611</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Stable version 1.07 - working build" />
+    <MESSAGE value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&#10;&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&#10;    package=&quot;com.stereotip.simdata&quot;&gt;&#10;&#10;    &lt;uses-permission android:name=&quot;android.permission.READ_SMS&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.RECEIVE_SMS&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.READ_PHONE_STATE&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.READ_PHONE_NUMBERS&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.CALL_PHONE&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.ACCESS_NETWORK_STATE&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.INTERNET&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.ACCESS_WIFI_STATE&quot; /&gt;&#10;    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; /&gt;&#10;&#10;    &lt;application&#10;        android:allowBackup=&quot;true&quot;&#10;        android:icon=&quot;@mipmap/ic_launcher&quot;&#10;        android:label=&quot;יתרת גלישה&quot;&#10;        android:roundIcon=&quot;@mipmap/ic_launcher_round&quot;&#10;        android:supportsRtl=&quot;true&quot;&#10;        android:theme=&quot;@style/Theme.SimData&quot;&gt;&#10;&#10;        &lt;receiver&#10;            android:name=&quot;.receiver.SmsReceiver&quot;&#10;            android:enabled=&quot;true&quot;&#10;            android:exported=&quot;true&quot;&gt;&#10;            &lt;intent-filter android:priority=&quot;999&quot;&gt;&#10;                &lt;action android:name=&quot;android.provider.Telephony.SMS_RECEIVED&quot; /&gt;&#10;            &lt;/intent-filter&gt;&#10;        &lt;/receiver&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.WarrantyPromptActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.ResultActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.RegistrationActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.CustomerDetailsActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.TechnicianActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.SupportActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.PackagesActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.NetworkCheckActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.BalanceActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.UpdateActivity&quot;&#10;            android:exported=&quot;false&quot;&#10;            android:screenOrientation=&quot;landscape&quot; /&gt;&#10;&#10;        &lt;activity&#10;            android:name=&quot;.MainActivity&quot;&#10;            android:exported=&quot;true&quot;&#10;            android:screenOrientation=&quot;landscape&quot;&gt;&#10;            &lt;intent-filter&gt;&#10;                &lt;action android:name=&quot;android.intent.action.MAIN&quot; /&gt;&#10;                &lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&gt;&#10;            &lt;/intent-filter&gt;&#10;        &lt;/activity&gt;&#10;    &lt;/application&gt;&#10;&#10;&lt;/manifest&gt;" />
+    <MESSAGE value="backup before update system" />
+    <MESSAGE value="מסך אחריות + תיקון הרשמה" />
+    <MESSAGE value="התקנת חייגן אוטומטית" />
+    <MESSAGE value="לתקן!!!" />
+    <MESSAGE value="התראות..." />
+    <MESSAGE value="תיקון גריידל" />
+    <MESSAGE value="החזרת גרסא עם החשבון שלי וקבצים שנעלמו" />
+    <MESSAGE value="הוספת החשבון שלי" />
+    <MESSAGE value="התאמת אפליקציות ותיקונים" />
+    <MESSAGE value="תיקון שדות פיירבייס והתאמה לצי + תיקון כפתור אחריות" />
+    <MESSAGE value="מסף אפליקציה נדרשת (חייגן)" />
+    <option name="LAST_COMMIT_MESSAGE" value="מסף אפליקציה נדרשת (חייגן)" />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.stereotip.simdata">
+          <value>
+            <CheckInfo lastCheckTimestamp="1777463849372" />
+          </value>
+        </entry>
+        <entry key="com.stereotip.simdata.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1777463849377" />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
