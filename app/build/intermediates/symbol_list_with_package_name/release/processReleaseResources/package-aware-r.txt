@@ -3313,6 +3313,7 @@ id ifRoom
 id ignore
 id ignoreRequest
 id image
+id imgLogoTop
 id indeterminate
 id info
 id invisible
@@ -3442,6 +3443,7 @@ id pin
 id position
 id postLayout
 id pressed
+id progressBar
 id progressUpdate
 id progress_circular
 id progress_horizontal

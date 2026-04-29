@@ -5,7 +5,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +20,7 @@ class RequiredAppsActivity : AppCompatActivity() {
 
     private lateinit var btnInstall: Button
     private lateinit var txtProgress: TextView
+    private lateinit var progressBar: ProgressBar
 
     private val apkUrl = "https://github.com/s035785178-stack/simdata/releases/download/dialer/dialer.apk"
     private val apkName = "dialer.apk"
@@ -31,26 +34,18 @@ class RequiredAppsActivity : AppCompatActivity() {
 
         btnInstall = findViewById(R.id.btnInstall)
         txtProgress = findViewById(R.id.txtProgress)
+        progressBar = findViewById(R.id.progressBar)
 
-        btnInstall.text = "התקן חייגן"
+        resetDownloadUi()
 
         btnInstall.setOnClickListener {
-            val file = File(getExternalFilesDir(null), "Download/$apkName")
-
-            // אם כבר הורד → לא מוריד שוב
-            if (file.exists()) {
-                btnInstall.text = "פותח התקנה..."
-                installDownloadedApk(file)
-            } else {
-                downloadDialerApk()
-            }
+            downloadDialerApk()
         }
     }
 
     override fun onResume() {
         super.onResume()
 
-        // חזרה מהרשאת התקנה
         if (waitingForInstallPermission) {
             waitingForInstallPermission = false
             downloadedApkFile?.let { file ->
@@ -61,7 +56,6 @@ class RequiredAppsActivity : AppCompatActivity() {
             return
         }
 
-        // אם כבר יש חייגן → ממשיך לאפליקציה
         if (hasDialer()) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -71,19 +65,25 @@ class RequiredAppsActivity : AppCompatActivity() {
     private fun downloadDialerApk() {
         btnInstall.isEnabled = false
         btnInstall.text = "מוריד..."
-        txtProgress.visibility = TextView.VISIBLE
+        txtProgress.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
         txtProgress.text = "0%"
+        progressBar.progress = 0
 
         Thread {
             try {
-                val connection = URL(apkUrl).openConnection()
-                connection.connect()
-
                 val file = File(getExternalFilesDir(null), "Download/$apkName")
                 file.parentFile?.mkdirs()
 
+                if (file.exists()) {
+                    file.delete()
+                }
+
+                val connection = URL(apkUrl).openConnection()
+                connection.connect()
+
                 val input = connection.getInputStream()
-                val output = FileOutputStream(file)
+                val output = FileOutputStream(file, false)
 
                 val buffer = ByteArray(4096)
                 var total = 0L
@@ -97,8 +97,9 @@ class RequiredAppsActivity : AppCompatActivity() {
                     output.write(buffer, 0, count)
 
                     if (fileLength > 0) {
-                        val progress = ((total * 100) / fileLength).toInt()
+                        val progress = ((total * 100) / fileLength).toInt().coerceIn(0, 100)
                         runOnUiThread {
+                            progressBar.progress = progress
                             txtProgress.text = "$progress%"
                         }
                     }
@@ -111,6 +112,7 @@ class RequiredAppsActivity : AppCompatActivity() {
                 downloadedApkFile = file
 
                 runOnUiThread {
+                    progressBar.progress = 100
                     txtProgress.text = "100%"
                     btnInstall.text = "מתקין..."
                     installDownloadedApk(file)
@@ -127,11 +129,12 @@ class RequiredAppsActivity : AppCompatActivity() {
     }
 
     private fun installDownloadedApk(file: File) {
-        // בדיקת הרשאת התקנה
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             !packageManager.canRequestPackageInstalls()
         ) {
             waitingForInstallPermission = true
+            btnInstall.isEnabled = true
+            btnInstall.text = "אשר הרשאה והמשך"
             Toast.makeText(this, "אשר התקנה ממקור זה", Toast.LENGTH_LONG).show()
 
             val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -158,6 +161,9 @@ class RequiredAppsActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_RETURN_RESULT, true)
             }
 
+            btnInstall.isEnabled = true
+            btnInstall.text = "הורד שוב אם נכשל"
+
             startActivity(intent)
 
         } catch (e: Exception) {
@@ -165,6 +171,15 @@ class RequiredAppsActivity : AppCompatActivity() {
             btnInstall.text = "נסה שוב"
             Toast.makeText(this, "שגיאה בפתיחת התקנה", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun resetDownloadUi() {
+        btnInstall.isEnabled = true
+        btnInstall.text = "התקן חייגן"
+        txtProgress.visibility = View.GONE
+        txtProgress.text = "0%"
+        progressBar.visibility = View.GONE
+        progressBar.progress = 0
     }
 
     private fun hasDialer(): Boolean {

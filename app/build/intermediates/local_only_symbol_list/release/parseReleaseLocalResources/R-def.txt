@@ -90,10 +90,12 @@ id etName
 id etPhone
 id etRegistrationName
 id etRegistrationPhone
+id imgLogoTop
 id ivQr
 id listCustomers
 id logo
 id logoWarranty
+id progressBar
 id progressUpdate
 id spinnerPackage
 id successContainer
