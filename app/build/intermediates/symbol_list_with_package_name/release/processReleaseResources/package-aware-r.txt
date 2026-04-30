@@ -2923,6 +2923,7 @@ drawable bg_info_card
 drawable bg_input
 drawable bg_input_light
 drawable bg_input_rounded
+drawable bg_main_button
 drawable bg_package_card
 drawable bg_package_card_featured
 drawable bg_registration_accent
@@ -2931,6 +2932,8 @@ drawable bg_registration_panel
 drawable bg_registration_primary
 drawable bg_registration_screen
 drawable bg_registration_secondary
+drawable bg_required_button
+drawable bg_required_card
 drawable bg_screen
 drawable bg_status_bar
 drawable btn_checkbox_checked_mtrl
@@ -2988,6 +2991,7 @@ drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
 drawable ic_search_black_24
 drawable ic_update
+drawable ic_warning_outline_white
 drawable logo
 drawable m3_avd_hide_password
 drawable m3_avd_show_password

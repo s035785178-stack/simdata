@@ -25,6 +25,7 @@ drawable bg_info_card
 drawable bg_input
 drawable bg_input_light
 drawable bg_input_rounded
+drawable bg_main_button
 drawable bg_package_card
 drawable bg_package_card_featured
 drawable bg_registration_accent
@@ -33,11 +34,14 @@ drawable bg_registration_panel
 drawable bg_registration_primary
 drawable bg_registration_screen
 drawable bg_registration_secondary
+drawable bg_required_button
+drawable bg_required_card
 drawable bg_screen
 drawable bg_status_bar
 drawable ic_account
 drawable ic_foreground
 drawable ic_update
+drawable ic_warning_outline_white
 drawable logo
 drawable stereo_logo
 id accountTopContainer

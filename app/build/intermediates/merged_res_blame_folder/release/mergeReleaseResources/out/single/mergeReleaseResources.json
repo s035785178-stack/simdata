@@ -8,12 +8,24 @@
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_registration_secondary.xml"
     },
     {
+        "merged": "com.stereotip.simdata.app-release-36:/drawable_bg_main_button.xml.flat",
+        "source": "com.stereotip.simdata.app-main-37:/drawable/bg_main_button.xml"
+    },
+    {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_button_secondary.xml.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_button_secondary.xml"
     },
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_input_light.xml.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_input_light.xml"
+    },
+    {
+        "merged": "com.stereotip.simdata.app-release-36:/layout-land_activity_main.xml.flat",
+        "source": "com.stereotip.simdata.app-main-37:/layout-land/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_required_card.xml.flat",
+        "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_required_card.xml"
     },
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_input_rounded.xml.flat",
@@ -26,6 +38,10 @@
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_ic_foreground.png.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\ic_foreground.png"
+    },
+    {
+        "merged": "com.stereotip.simdata.app-release-36:/layout_activity_main.xml.flat",
+        "source": "com.stereotip.simdata.app-main-37:/layout/activity_main.xml"
     },
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_registration_primary.xml.flat",
@@ -100,8 +116,8 @@
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\layout\\activity_network.xml"
     },
     {
-        "merged": "com.stereotip.simdata.app-release-36:/layout_activity_required_apps.xml.flat",
-        "source": "com.stereotip.simdata.app-main-37:/layout/activity_required_apps.xml"
+        "merged": "com.stereotip.simdata.app-release-36:/layout-sw600dp-land_activity_main.xml.flat",
+        "source": "com.stereotip.simdata.app-main-37:/layout-sw600dp-land/activity_main.xml"
     },
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_registration_screen.xml.flat",
@@ -152,6 +168,10 @@
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\layout\\activity_packages.xml"
     },
     {
+        "merged": "com.stereotip.simdata.app-release-36:/drawable_bg_button_gray.xml.flat",
+        "source": "com.stereotip.simdata.app-main-37:/drawable/bg_button_gray.xml"
+    },
+    {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\xml_file_paths.xml.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\xml\\file_paths.xml"
     },
@@ -176,8 +196,16 @@
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_info_card.xml"
     },
     {
+        "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_required_button.xml.flat",
+        "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_required_button.xml"
+    },
+    {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_ic_update.xml.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\ic_update.xml"
+    },
+    {
+        "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_ic_warning_outline_white.xml.flat",
+        "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\ic_warning_outline_white.xml"
     },
     {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_button_orange.xml.flat",

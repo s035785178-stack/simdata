@@ -1,4 +1,65 @@
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/gray_btn" />
-    <corners android:radius="16dp" />
-</shape>
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- לחיצה -->
+    <item android:state_pressed="true">
+        <layer-list>
+
+            <!-- צל -->
+            <item android:top="3dp">
+                <shape>
+                    <solid android:color="#40000000"/>
+                    <corners android:radius="16dp"/>
+                </shape>
+            </item>
+
+            <!-- כפתור -->
+            <item>
+                <shape>
+                    <gradient
+                        android:startColor="@color/gray_btn"
+                        android:endColor="#666666"
+                        android:angle="90"/>
+
+                    <stroke
+                        android:width="3dp"
+                        android:color="#FFFFFF"/>
+
+                    <corners android:radius="16dp"/>
+                </shape>
+            </item>
+
+        </layer-list>
+    </item>
+
+    <!-- רגיל -->
+    <item>
+        <layer-list>
+
+            <!-- צל -->
+            <item android:top="4dp">
+                <shape>
+                    <solid android:color="#33000000"/>
+                    <corners android:radius="16dp"/>
+                </shape>
+            </item>
+
+            <!-- כפתור -->
+            <item>
+                <shape>
+                    <gradient
+                        android:startColor="@color/gray_btn"
+                        android:endColor="#777777"
+                        android:angle="90"/>3
+                    <stroke
+                        android:width="2dp"
+                        android:color="#FFFFFF"/>
+
+                    <corners android:radius="16dp"/>
+                </shape>
+            </item>
+
+        </layer-list>
+    </item>
+
+</selector>

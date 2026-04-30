@@ -28,16 +28,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="#1A1A1A"
+                android:background="@drawable/bg_required_card"
                 android:padding="28dp"
                 android:gravity="center">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⚠️"
-                    android:textSize="48sp"
-                    android:layout_marginBottom="16dp" />
+                <ImageView
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="16dp"
+                    android:src="@drawable/ic_warning_outline_white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -83,7 +82,7 @@
                     android:text="התקן חייגן"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
-                    android:backgroundTint="#842F1B" />
+                    android:background="@drawable/bg_required_button" />
 
             </LinearLayout>
         </LinearLayout>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layoutDirection="rtl"
@@ -179,7 +180,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -217,13 +217,16 @@
         android:orientation="horizontal"
         android:weightSum="3">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnPackageStatus"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="5dp"
-            android:background="@drawable/bg_button_gray"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -252,13 +255,16 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnWarrantyStatus"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="5dp"
-            android:background="@drawable/bg_button_gray"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -279,13 +285,16 @@
         android:orientation="horizontal"
         android:weightSum="2">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnBalance"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="5dp"
-            android:background="@drawable/bg_button_green"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -297,13 +306,16 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNetwork"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="5dp"
-            android:background="@drawable/bg_button_blue"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -324,13 +336,16 @@
         android:orientation="horizontal"
         android:weightSum="2">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnPackages"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="5dp"
-            android:background="@drawable/bg_button_orange"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -342,13 +357,16 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnSupport"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="5dp"
-            android:background="@drawable/bg_button_gray"
+            android:background="@drawable/bg_main_button"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"

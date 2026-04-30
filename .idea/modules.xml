@@ -3,9 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/simdata.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/simdata.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/simdata.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/simdata.app.androidTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/simdata.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/simdata.app.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/simdata.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/simdata.app.unitTest.iml" />
     </modules>
   </component>
 </project>

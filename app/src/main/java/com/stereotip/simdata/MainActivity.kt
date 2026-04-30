@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasSavedRegisteredUser(): Boolean {
         return AppPrefs.getCustomerName(this).isNotBlank() ||
-            AppPrefs.getCustomerPhone(this).isNotBlank()
+                AppPrefs.getCustomerPhone(this).isNotBlank()
     }
 
     private fun showStartupPermissionsDialogIfNeeded() {
@@ -296,7 +296,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasAnyMissingStartupPermission(): Boolean {
         return getEffectiveMissingPhonePermissions().isNotEmpty() ||
-            getEffectiveMissingSmsPermissions().isNotEmpty()
+                getEffectiveMissingSmsPermissions().isNotEmpty()
     }
 
     private fun triggerSmsPermission() {
