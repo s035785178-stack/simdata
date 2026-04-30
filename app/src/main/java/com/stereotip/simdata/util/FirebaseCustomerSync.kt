@@ -18,6 +18,7 @@ object FirebaseCustomerSync {
         val now = System.currentTimeMillis()
         val packageName = AppPrefs.getDataPackage(context)
         val validMode = if (AppPrefs.isValidityModeAuto(context)) "auto" else "manual"
+        val validUntil = AppPrefs.getValid(context)
 
         val data = linkedMapOf<String, Any?>(
             "name" to AppPrefs.getCustomerName(context),
@@ -26,7 +27,6 @@ object FirebaseCustomerSync {
             "carNumber" to AppPrefs.getCarNumber(context),
             "carModel" to AppPrefs.getCarModel(context),
             "package" to packageName,
-            "validUntil" to AppPrefs.getValid(context),
             "validMode" to validMode,
             "balanceMb" to AppPrefs.getBalanceMb(context),
             "lastBalanceCheck" to now,
@@ -41,6 +41,11 @@ object FirebaseCustomerSync {
             "validityMode" to validMode,
             "currentBalanceMb" to AppPrefs.getBalanceMb(context)
         )
+
+        // 🚀 תיקון קריטי - לא לדרוס אם ריק
+        if (!validUntil.isNullOrBlank()) {
+            data["validUntil"] = validUntil
+        }
 
         db.collection("customers")
             .whereEqualTo("lineNumber", lineNumber)

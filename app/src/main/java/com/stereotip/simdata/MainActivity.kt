@@ -538,6 +538,7 @@ class MainActivity : AppCompatActivity() {
 
         if (normalizedLine.isBlank()) {
             btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
+            tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
             return
         }
 
@@ -550,14 +551,23 @@ class MainActivity : AppCompatActivity() {
 
                 if (result.isEmpty) {
                     btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "לא ידוע" }}"
+                    tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
                     return@addOnSuccessListener
                 }
 
                 val doc = result.documents.first()
                 val pkg = doc.getString("package").orEmpty().ifBlank { doc.getString("dataPackage").orEmpty() }
+                val validUntil = doc.getString("validUntil").orEmpty()
 
                 if (pkg.isNotBlank()) {
                     AppPrefs.setDataPackage(this, pkg)
+                }
+
+                if (validUntil.isNotBlank()) {
+                    AppPrefs.setValid(this, validUntil)
+                    tvValidity.text = validUntil
+                } else {
+                    tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
                 }
 
                 btnPackageStatus.text = "📦 סוג חבילה\n${pkg.ifBlank { savedPackage.ifBlank { "לא ידוע" } }}"
@@ -565,6 +575,7 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener {
                 if (!isFinishing && !isDestroyed) {
                     btnPackageStatus.text = "📦 סוג חבילה\n${savedPackage.ifBlank { "שגיאה" }}"
+                    tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
                 }
             }
     }

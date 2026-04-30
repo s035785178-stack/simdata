@@ -52,7 +52,7 @@
                         android:endColor="#777777"
                         android:angle="90"/>3
                     <stroke
-                        android:width="3dp"
+                        android:width="2dp"
                         android:color="#FFFFFF"/>
 
                     <corners android:radius="16dp"/>

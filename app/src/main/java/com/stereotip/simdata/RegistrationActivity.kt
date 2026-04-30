@@ -143,6 +143,7 @@ class RegistrationActivity : AppCompatActivity() {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
                 updateValidityUi()
             }
+
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
     }
@@ -258,11 +259,20 @@ class RegistrationActivity : AppCompatActivity() {
         val carModel = etCarModel.text.toString().trim()
         val carNumber = etCarNumber.text.toString().trim()
         val selectedPackage = spinnerPackage.selectedItem?.toString().orEmpty().trim()
-        val validMode = if (isManualValidity) "manual" else "auto"
-        val validUntil = if (isManualValidity) {
-            etManualValidUntil.text.toString().trim()
+
+        val manualValidUntil = etManualValidUntil.text.toString().trim()
+        val autoValidUntil = calculatePackageValidUntil(selectedPackage)
+
+        val validMode = if (isManualValidity && manualValidUntil.isNotBlank()) {
+            "manual"
         } else {
-            calculatePackageValidUntil(selectedPackage)
+            "auto"
+        }
+
+        val validUntil = if (validMode == "manual") {
+            manualValidUntil
+        } else {
+            autoValidUntil
         }
 
         if (name.isBlank()) {
