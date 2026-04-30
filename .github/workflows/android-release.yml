@@ -2,6 +2,9 @@ name: Android Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "**"
 
 permissions:
   contents: write
@@ -24,23 +27,23 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
-      - name: Build release APK without bumping version
+      - name: Build release APK
         run: ./gradlew :app:assembleRelease -PskipVersionBump=true
 
       - name: Read version
         id: version
         run: |
-          VERSION_NAME=$(grep VERSION_NAME app/version.properties | cut -d'=' -f2)
-          VERSION_CODE=$(grep VERSION_CODE app/version.properties | cut -d'=' -f2)
+          VERSION_NAME=$(grep VERSION_NAME app/version.properties | cut -d'=' -f2 | tr -d '\r')
+          VERSION_CODE=$(grep VERSION_CODE app/version.properties | cut -d'=' -f2 | tr -d '\r')
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
 
-      - name: Rename APK
+      - name: Prepare APK
         run: |
           mkdir -p release
           cp app/build/outputs/apk/release/app-release.apk release/app-release.apk
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version_name }}
@@ -48,5 +51,7 @@ jobs:
           body: |
             עדכון חדש זמין להורדה.
             Version Code: ${{ steps.version.outputs.version_code }}
+            Branch: ${{ github.ref_name }}
           files: release/app-release.apk
           make_latest: true
+          overwrite_files: true
