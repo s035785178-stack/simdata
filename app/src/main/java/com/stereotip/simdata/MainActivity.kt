@@ -29,6 +29,7 @@ import com.stereotip.simdata.util.TelephonyUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var permissionRequestInProgress = false
     private var restoreLookupInProgress = false
     private var waitingForRestoreAnswer = false
+    private var updateCheckDone = false
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -157,6 +159,7 @@ class MainActivity : AppCompatActivity() {
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
+        checkUpdateAndShowPopup()
     }
 
     override fun onResume() {
@@ -392,7 +395,6 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "ממתין לחיבור כדי לשחזר לקוח קיים", Toast.LENGTH_SHORT).show()
             }
     }
-
 
     private fun applyCustomerFromDocument(
         customerName: String,
@@ -659,7 +661,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun findCustomerDocument(
         onFound: (com.google.firebase.firestore.DocumentSnapshot) -> Unit,
         onMissing: () -> Unit,
@@ -717,7 +718,6 @@ class MainActivity : AppCompatActivity() {
             }
             .addOnFailureListener { if (!isFinishing && !isDestroyed) findByPhone() }
     }
-
 
     private fun activateWarranty() {
         findCustomerDocument(
@@ -777,6 +777,76 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun checkUpdateAndShowPopup() {
+        if (updateCheckDone || movedToRegistration) return
+        updateCheckDone = true
+
+        thread {
+            val result = UpdateManager.fetchUpdateInfo()
+
+            runOnUiThread {
+                if (isFinishing || isDestroyed || movedToRegistration) return@runOnUiThread
+
+                result.onSuccess { info ->
+                    val currentVersion = try {
+                        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+                        packageInfo.versionName ?: ""
+                    } catch (_: Exception) {
+                        ""
+                    }
+
+                    if (isRemoteVersionNewer(info.versionName, currentVersion)) {
+                        showUpdatePopup(info)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showUpdatePopup(info: UpdateInfo) {
+        if (isFinishing || isDestroyed || movedToRegistration) return
+
+        val title = info.title.ifBlank { "🚀 עדכון זמין" }
+        val message = info.message.ifBlank { "יש גרסה חדשה זמינה לעדכון.\n\nמומלץ לעדכן עכשיו." }
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(!info.forceUpdate)
+            .setPositiveButton("עדכן עכשיו") { _, _ ->
+                startActivity(Intent(this, UpdateActivity::class.java))
+            }
+
+        if (!info.forceUpdate) {
+            builder.setNegativeButton("מאוחר יותר", null)
+        }
+
+        builder.show()
+    }
+
+    private fun isRemoteVersionNewer(remoteVersion: String, localVersion: String): Boolean {
+        val remoteParts = remoteVersion
+            .removePrefix("v")
+            .split(".")
+            .mapNotNull { it.toIntOrNull() }
+
+        val localParts = localVersion
+            .removePrefix("v")
+            .split(".")
+            .mapNotNull { it.toIntOrNull() }
+
+        val maxSize = maxOf(remoteParts.size, localParts.size)
+
+        for (i in 0 until maxSize) {
+            val remote = remoteParts.getOrNull(i) ?: 0
+            val local = localParts.getOrNull(i) ?: 0
+
+            if (remote > local) return true
+            if (remote < local) return false
+        }
+
+        return false
+    }
 
     private fun onLogoTapped() {
         val now = System.currentTimeMillis()
