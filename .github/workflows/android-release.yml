@@ -47,11 +47,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version_name }}
-          name: גרסה ${{ steps.version.outputs.version_name }}
+          name: עדכון זמין
           body: |
-            עדכון חדש זמין להורדה.
-            Version Code: ${{ steps.version.outputs.version_code }}
-            Branch: ${{ github.ref_name }}
+            🎉 גרסה חדשה זמינה!
+
+            ✔ שיפורי ביצועים
+            ✔ תיקוני תקלות
+            ✔ שיפור יציבות האפליקציה
+
+            מומלץ לעדכן לגרסה האחרונה.
           files: release/app-release.apk
           make_latest: true
           overwrite_files: true
