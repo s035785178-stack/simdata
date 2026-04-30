@@ -190,6 +190,11 @@ class CustomerDetailsActivity : AppCompatActivity() {
         val valid = doc.getString("validUntil").orEmpty()
         val mode = doc.getString("validMode").orEmpty().ifBlank { doc.getString("validityMode").orEmpty() }
 
+        val warrantyEnd = doc.getString("warrantyEnd").orEmpty()
+        val warrantyActive = doc.getBoolean("warrantyActive") == true ||
+                doc.getString("warrantyStatus").orEmpty() == "active" ||
+                warrantyEnd.isNotBlank()
+
         currentLineNumber = line
 
         if (line.isNotBlank()) AppPrefs.setLineNumber(this, line)
@@ -200,6 +205,8 @@ class CustomerDetailsActivity : AppCompatActivity() {
         AppPrefs.setDataPackage(this, pkg)
         AppPrefs.setValid(this, valid)
         AppPrefs.setValidityModeAuto(this, mode != "manual")
+        AppPrefs.setWarrantyEnd(this, warrantyEnd)
+        AppPrefs.setWarrantyActive(this, warrantyActive)
 
         etName.setText(name)
         etPhone.setText(phone)
@@ -224,6 +231,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
         val localBalance = AppPrefs.getBalanceMb(this)?.let { "${it}MB" } ?: "---"
         val localValid = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
         val localUpdated = formatTimestamp(AppPrefs.getUpdated(this))
+        val localWarranty = AppPrefs.getWarrantyEnd(this).ifBlank { "---" }
 
         tvCustomerSummary.text = buildSummary(
             line = if (localLine.isBlank()) "---" else localLine,
@@ -231,7 +239,7 @@ class CustomerDetailsActivity : AppCompatActivity() {
             balance = localBalance,
             lastCheck = localUpdated,
             valid = localValid,
-            warranty = "---"
+            warranty = localWarranty
         )
     }
 

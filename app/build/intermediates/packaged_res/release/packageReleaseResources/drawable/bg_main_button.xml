@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- מצב לחיצה -->
+    <item android:state_pressed="true">
+        <layer-list>
+            <!-- צל -->
+            <item android:top="3dp">
+                <shape>
+                    <solid android:color="#40000000"/>
+                    <corners android:radius="18dp"/>
+                </shape>
+            </item>
+
+            <!-- כפתור -->
+            <item>
+                <shape>
+                    <gradient
+                        android:startColor="#6F2414"
+                        android:endColor="#842F1B"
+                        android:angle="90"/>
+
+                    <stroke
+                        android:width="5dp"
+                        android:color="#FFFFFF"/>
+
+                    <corners android:radius="18dp"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- רגיל -->
+    <item>
+        <layer-list>
+            <!-- צל -->
+            <item android:top="4dp">
+                <shape>
+                    <solid android:color="#33000000"/>
+                    <corners android:radius="18dp"/>
+                </shape>
+            </item>
+
+            <!-- כפתור -->
+            <item>
+                <shape>
+                    <gradient
+                        android:startColor="#842F1B"
+                        android:endColor="#A33A21"
+                        android:angle="90"/>
+
+                    <stroke
+                        android:width="3dp"
+                        android:color="#FFFFFF"/>
+
+                    <corners android:radius="18dp"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+</selector>
