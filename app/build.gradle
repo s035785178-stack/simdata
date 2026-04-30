@@ -16,6 +16,46 @@ def releaseStoreFilePath = hasKeystoreProperties ? keystoreProperties['storeFile
 def releaseStoreFile = releaseStoreFilePath ? rootProject.file("app/${releaseStoreFilePath}") : null
 def hasReleaseKeystore = hasKeystoreProperties && releaseStoreFile != null && releaseStoreFile.exists()
 
+def versionPropertiesFile = rootProject.file("app/version.properties")
+def versionProperties = new Properties()
+
+if (!versionPropertiesFile.exists()) {
+    versionPropertiesFile.text = "VERSION_CODE=7\nVERSION_NAME=1.67\n"
+}
+
+versionProperties.load(new FileInputStream(versionPropertiesFile))
+
+def requestedTasks = gradle.startParameter.taskNames.join(" ").toLowerCase()
+def isReleaseBuild = requestedTasks.contains("assemblerelease") ||
+        requestedTasks.contains("bundlerelease") ||
+        requestedTasks.contains("generaterelease") ||
+        requestedTasks.contains("signingreport")
+
+def appVersionCode = (versionProperties["VERSION_CODE"] ?: "7").toInteger()
+def appVersionName = versionProperties["VERSION_NAME"] ?: "1.67"
+
+if (isReleaseBuild) {
+    appVersionCode += 1
+
+    def parts = appVersionName.tokenize(".")
+    if (parts.size() >= 2) {
+        def major = parts[0]
+        def minor = (parts[1].toInteger() + 1).toString().padLeft(2, "0")
+        appVersionName = "${major}.${minor}"
+    } else {
+        appVersionName = "1.${appVersionCode.toString().padLeft(2, "0")}"
+    }
+
+    versionProperties["VERSION_CODE"] = appVersionCode.toString()
+    versionProperties["VERSION_NAME"] = appVersionName.toString()
+
+    versionPropertiesFile.withOutputStream { output ->
+        versionProperties.store(output, "Auto updated on release build")
+    }
+
+    println("✅ Auto version updated: code=${appVersionCode}, name=${appVersionName}")
+}
+
 android {
     namespace 'com.stereotip.simdata'
     compileSdk 34
@@ -24,8 +64,8 @@ android {
         applicationId "com.stereotip.simdata"
         minSdk 24
         targetSdk 34
-        versionCode 2
-        versionName "1.06"
+        versionCode appVersionCode
+        versionName appVersionName
     }
 
     signingConfigs {
@@ -41,7 +81,6 @@ android {
 
     buildTypes {
         debug {
-            // לא חותם אם אין keystore
             if (hasReleaseKeystore) {
                 signingConfig signingConfigs.release
             }
