@@ -63,6 +63,7 @@ id btnCheckUpdate
 id btnClearAll
 id btnClearHistory
 id btnClose
+id btnCloseAlert
 id btnDownloadUpdate
 id btnEditCustomer
 id btnFeatured
@@ -110,6 +111,8 @@ id progressBar
 id progressUpdate
 id spinnerPackage
 id successContainer
+id tvAlertMessage
+id tvAlertTitle
 id tvBalanceQuick
 id tvBalanceStatus
 id tvCurrentVersion
@@ -164,6 +167,7 @@ layout activity_support
 layout activity_technician
 layout activity_update
 layout activity_warranty_prompt
+layout overlay_customer_alert
 layout overlay_update
 layout spinner_dropdown_item_white
 layout spinner_item_white

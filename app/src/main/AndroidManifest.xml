@@ -36,6 +36,10 @@
             android:name=".UpdateOverlayService"
             android:exported="false" />
 
+        <service
+            android:name=".CustomerAlertOverlayService"
+            android:exported="false" />
+
         <receiver
             android:name=".receiver.SmsReceiver"
             android:enabled="true"

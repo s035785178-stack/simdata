@@ -851,6 +851,15 @@ class MainActivity : AppCompatActivity() {
                         showUpdatePopup(info)
                     }
                 }
+
+                val testAlertIntent = Intent(this, CustomerAlertOverlayService::class.java).apply {
+                    putExtra("title", "⚠️ חבילה עומדת להיגמר")
+                    putExtra(
+                        "message",
+                        "נשארו פחות מ־2GB בחבילת הגלישה.\nמומלץ לחדש חבילה כדי למנוע ניתוק."
+                    )
+                }
+                startService(testAlertIntent)
             }
         }
     }

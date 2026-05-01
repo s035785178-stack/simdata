@@ -48,6 +48,9 @@
         <service
             android:name="com.stereotip.simdata.UpdateOverlayService"
             android:exported="false" />
+        <service
+            android:name="com.stereotip.simdata.CustomerAlertOverlayService"
+            android:exported="false" />
 
         <receiver
             android:name="com.stereotip.simdata.receiver.SmsReceiver"

@@ -54,7 +54,7 @@
 27-->[androidx.core:core:1.12.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\78398944e1b09b17fc93280158bb014e\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
 28
 29    <application
-29-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:17:5-118:19
+29-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:17:5-122:19
 30        android:allowBackup="true"
 30-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:18:9-35
 31        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
@@ -93,274 +93,280 @@
 49-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:36:13-49
 50            android:exported="false" />
 50-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:37:13-37
-51
-52        <receiver
-52-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:39:9-46:20
-53            android:name="com.stereotip.simdata.receiver.SmsReceiver"
-53-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:40:13-49
-54            android:enabled="true"
-54-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:41:13-35
-55            android:exported="true" >
-55-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:42:13-36
-56            <intent-filter android:priority="999" >
-56-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:13-45:29
-56-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:28-50
-57                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-57-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:17-82
-57-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:25-79
-58            </intent-filter>
-59        </receiver>
-60
-61        <activity
-61-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:9-56:20
-62            android:name="com.stereotip.simdata.LauncherActivity"
-62-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:49:13-45
-63            android:exported="true"
-63-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:50:13-36
-64            android:screenOrientation="landscape" >
-64-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:51:13-50
-65            <intent-filter>
-65-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:52:13-55:29
-66                <action android:name="android.intent.action.MAIN" />
-66-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:17-69
-66-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:25-66
-67
-68                <category android:name="android.intent.category.LAUNCHER" />
-68-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:17-77
-68-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:27-74
-69            </intent-filter>
-70        </activity>
-71        <activity
-71-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:58:9-61:53
-72            android:name="com.stereotip.simdata.RequiredAppsActivity"
-72-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:59:13-49
-73            android:exported="false"
-73-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:60:13-37
-74            android:screenOrientation="landscape" />
-74-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:61:13-50
-75        <activity
-75-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:63:9-66:53
-76            android:name="com.stereotip.simdata.MainActivity"
-76-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:64:13-41
-77            android:exported="false"
-77-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:65:13-37
-78            android:screenOrientation="landscape" />
-78-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:66:13-50
-79        <activity
-79-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:68:9-71:53
-80            android:name="com.stereotip.simdata.WarrantyPromptActivity"
-80-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:69:13-51
-81            android:exported="false"
-81-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:70:13-37
-82            android:screenOrientation="landscape" />
-82-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:71:13-50
-83        <activity
-83-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:73:9-76:53
-84            android:name="com.stereotip.simdata.ResultActivity"
-84-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:74:13-43
-85            android:exported="false"
-85-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:75:13-37
-86            android:screenOrientation="landscape" />
-86-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:76:13-50
-87        <activity
-87-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:78:9-81:53
-88            android:name="com.stereotip.simdata.RegistrationActivity"
-88-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:79:13-49
-89            android:exported="false"
-89-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:80:13-37
-90            android:screenOrientation="landscape" />
-90-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:81:13-50
-91        <activity
-91-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:83:9-86:53
-92            android:name="com.stereotip.simdata.CustomerDetailsActivity"
-92-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:84:13-52
-93            android:exported="false"
-93-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:85:13-37
-94            android:screenOrientation="landscape" />
-94-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:86:13-50
-95        <activity
-95-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:88:9-91:53
-96            android:name="com.stereotip.simdata.TechnicianActivity"
-96-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:89:13-47
-97            android:exported="false"
-97-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:90:13-37
-98            android:screenOrientation="landscape" />
-98-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:91:13-50
-99        <activity
-99-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:93:9-96:53
-100            android:name="com.stereotip.simdata.SupportActivity"
-100-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:94:13-44
-101            android:exported="false"
-101-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:95:13-37
-102            android:screenOrientation="landscape" />
-102-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:96:13-50
-103        <activity
-103-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:98:9-101:53
-104            android:name="com.stereotip.simdata.PackagesActivity"
-104-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:99:13-45
-105            android:exported="false"
-105-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:100:13-37
-106            android:screenOrientation="landscape" />
-106-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:101:13-50
-107        <activity
-107-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:103:9-106:53
-108            android:name="com.stereotip.simdata.NetworkCheckActivity"
-108-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:104:13-49
-109            android:exported="false"
-109-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:105:13-37
-110            android:screenOrientation="landscape" />
-110-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:106:13-50
-111        <activity
-111-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:108:9-111:53
-112            android:name="com.stereotip.simdata.BalanceActivity"
-112-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:109:13-44
-113            android:exported="false"
-113-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:110:13-37
-114            android:screenOrientation="landscape" />
-114-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:111:13-50
-115        <activity
-115-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:113:9-116:53
-116            android:name="com.stereotip.simdata.UpdateActivity"
-116-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:114:13-43
-117            android:exported="false"
-117-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:115:13-37
-118            android:screenOrientation="landscape" />
-118-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:116:13-50
-119
-120        <provider
-120-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
-121            android:name="androidx.startup.InitializationProvider"
-121-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
-122            android:authorities="com.stereotip.simdata.androidx-startup"
-122-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
-123            android:exported="false" >
-123-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
-124            <meta-data
-124-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
-125                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-125-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
-126                android:value="androidx.startup" />
-126-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+51        <service
+51-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:39:9-41:40
+52            android:name="com.stereotip.simdata.CustomerAlertOverlayService"
+52-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:40:13-56
+53            android:exported="false" />
+53-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:41:13-37
+54
+55        <receiver
+55-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:9-50:20
+56            android:name="com.stereotip.simdata.receiver.SmsReceiver"
+56-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:13-49
+57            android:enabled="true"
+57-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:45:13-35
+58            android:exported="true" >
+58-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:46:13-36
+59            <intent-filter android:priority="999" >
+59-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:47:13-49:29
+59-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:47:28-50
+60                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+60-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:17-82
+60-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:25-79
+61            </intent-filter>
+62        </receiver>
+63
+64        <activity
+64-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:52:9-60:20
+65            android:name="com.stereotip.simdata.LauncherActivity"
+65-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:13-45
+66            android:exported="true"
+66-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:13-36
+67            android:screenOrientation="landscape" >
+67-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:55:13-50
+68            <intent-filter>
+68-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:56:13-59:29
+69                <action android:name="android.intent.action.MAIN" />
+69-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:57:17-69
+69-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:57:25-66
+70
+71                <category android:name="android.intent.category.LAUNCHER" />
+71-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:58:17-77
+71-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:58:27-74
+72            </intent-filter>
+73        </activity>
+74        <activity
+74-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:62:9-65:53
+75            android:name="com.stereotip.simdata.RequiredAppsActivity"
+75-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:63:13-49
+76            android:exported="false"
+76-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:64:13-37
+77            android:screenOrientation="landscape" />
+77-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:65:13-50
+78        <activity
+78-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:67:9-70:53
+79            android:name="com.stereotip.simdata.MainActivity"
+79-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:68:13-41
+80            android:exported="false"
+80-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:69:13-37
+81            android:screenOrientation="landscape" />
+81-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:70:13-50
+82        <activity
+82-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:72:9-75:53
+83            android:name="com.stereotip.simdata.WarrantyPromptActivity"
+83-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:73:13-51
+84            android:exported="false"
+84-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:74:13-37
+85            android:screenOrientation="landscape" />
+85-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:75:13-50
+86        <activity
+86-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:77:9-80:53
+87            android:name="com.stereotip.simdata.ResultActivity"
+87-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:78:13-43
+88            android:exported="false"
+88-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:79:13-37
+89            android:screenOrientation="landscape" />
+89-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:80:13-50
+90        <activity
+90-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:82:9-85:53
+91            android:name="com.stereotip.simdata.RegistrationActivity"
+91-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:83:13-49
+92            android:exported="false"
+92-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:84:13-37
+93            android:screenOrientation="landscape" />
+93-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:85:13-50
+94        <activity
+94-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:87:9-90:53
+95            android:name="com.stereotip.simdata.CustomerDetailsActivity"
+95-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:88:13-52
+96            android:exported="false"
+96-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:89:13-37
+97            android:screenOrientation="landscape" />
+97-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:90:13-50
+98        <activity
+98-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:92:9-95:53
+99            android:name="com.stereotip.simdata.TechnicianActivity"
+99-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:93:13-47
+100            android:exported="false"
+100-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:94:13-37
+101            android:screenOrientation="landscape" />
+101-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:95:13-50
+102        <activity
+102-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:97:9-100:53
+103            android:name="com.stereotip.simdata.SupportActivity"
+103-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:98:13-44
+104            android:exported="false"
+104-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:99:13-37
+105            android:screenOrientation="landscape" />
+105-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:100:13-50
+106        <activity
+106-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:102:9-105:53
+107            android:name="com.stereotip.simdata.PackagesActivity"
+107-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:103:13-45
+108            android:exported="false"
+108-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:104:13-37
+109            android:screenOrientation="landscape" />
+109-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:105:13-50
+110        <activity
+110-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:107:9-110:53
+111            android:name="com.stereotip.simdata.NetworkCheckActivity"
+111-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:108:13-49
+112            android:exported="false"
+112-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:109:13-37
+113            android:screenOrientation="landscape" />
+113-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:110:13-50
+114        <activity
+114-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:112:9-115:53
+115            android:name="com.stereotip.simdata.BalanceActivity"
+115-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:113:13-44
+116            android:exported="false"
+116-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:114:13-37
+117            android:screenOrientation="landscape" />
+117-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:115:13-50
+118        <activity
+118-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:117:9-120:53
+119            android:name="com.stereotip.simdata.UpdateActivity"
+119-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:118:13-43
+120            android:exported="false"
+120-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:119:13-37
+121            android:screenOrientation="landscape" />
+121-->D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:120:13-50
+122
+123        <provider
+123-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+124            android:name="androidx.startup.InitializationProvider"
+124-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+125            android:authorities="com.stereotip.simdata.androidx-startup"
+125-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+126            android:exported="false" >
+126-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
 127            <meta-data
-127-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
-128                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-128-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
+127-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+128                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+128-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
 129                android:value="androidx.startup" />
-129-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
+129-->[androidx.emoji2:emoji2:1.2.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1e3baa035646ac48e00fb6e4f6289918\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
 130            <meta-data
-130-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
-131                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-131-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+130-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
+131                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+131-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
 132                android:value="androidx.startup" />
-132-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
-133        </provider>
-134
-135        <service
-135-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:9:9-15:19
-136            android:name="com.google.firebase.components.ComponentDiscoveryService"
-136-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:10:13-84
-137            android:directBootAware="true"
-137-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:32:13-43
-138            android:exported="false" >
-138-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:11:13-37
-139            <meta-data
-139-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:12:13-14:85
-140                android:name="com.google.firebase.components:com.google.firebase.firestore.ktx.FirebaseFirestoreLegacyRegistrar"
-140-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:13:17-129
-141                android:value="com.google.firebase.components.ComponentRegistrar" />
-141-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:14:17-82
+132-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\2b26dd4d8c01785d924e95a7df1b732c\transformed\lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
+133            <meta-data
+133-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+134                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+134-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+135                android:value="androidx.startup" />
+135-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+136        </provider>
+137
+138        <service
+138-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:9:9-15:19
+139            android:name="com.google.firebase.components.ComponentDiscoveryService"
+139-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:10:13-84
+140            android:directBootAware="true"
+140-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:32:13-43
+141            android:exported="false" >
+141-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:11:13-37
 142            <meta-data
-142-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:17:13-19:85
-143                android:name="com.google.firebase.components:com.google.firebase.firestore.FirebaseFirestoreKtxRegistrar"
-143-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:18:17-122
+142-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:12:13-14:85
+143                android:name="com.google.firebase.components:com.google.firebase.firestore.ktx.FirebaseFirestoreLegacyRegistrar"
+143-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:13:17-129
 144                android:value="com.google.firebase.components.ComponentRegistrar" />
-144-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:19:17-82
+144-->[com.google.firebase:firebase-firestore-ktx:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\830ba7a3b644fe20f6dc26d475c2b593\transformed\firebase-firestore-ktx-25.1.1\AndroidManifest.xml:14:17-82
 145            <meta-data
-145-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:20:13-22:85
-146                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"
-146-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:21:17-111
+145-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:17:13-19:85
+146                android:name="com.google.firebase.components:com.google.firebase.firestore.FirebaseFirestoreKtxRegistrar"
+146-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:18:17-122
 147                android:value="com.google.firebase.components.ComponentRegistrar" />
-147-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:22:17-82
+147-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:19:17-82
 148            <meta-data
-148-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:12:13-14:85
-149                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
-149-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:13:17-116
+148-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:20:13-22:85
+149                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"
+149-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:21:17-111
 150                android:value="com.google.firebase.components.ComponentRegistrar" />
-150-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:14:17-82
+150-->[com.google.firebase:firebase-firestore:25.1.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\424a734eb89d0e30e5577670223078d5\transformed\firebase-firestore-25.1.1\AndroidManifest.xml:22:17-82
 151            <meta-data
-151-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:35:13-37:85
-152                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
-152-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:36:17-109
+151-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:12:13-14:85
+152                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
+152-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:13:17-116
 153                android:value="com.google.firebase.components.ComponentRegistrar" />
-153-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:37:17-82
-154        </service>
-155
-156        <activity
-156-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:9-22:45
-157            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-157-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:19-85
-158            android:exported="false"
-158-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:22:19-43
-159            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-159-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:21:19-78
-160
-161        <provider
-161-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:23:9-28:39
-162            android:name="com.google.firebase.provider.FirebaseInitProvider"
-162-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:24:13-77
-163            android:authorities="com.stereotip.simdata.firebaseinitprovider"
-163-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:25:13-72
-164            android:directBootAware="true"
-164-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:26:13-43
-165            android:exported="false"
-165-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:27:13-37
-166            android:initOrder="100" />
-166-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:28:13-36
-167
-168        <meta-data
-168-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:21:9-23:69
-169            android:name="com.google.android.gms.version"
-169-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:22:13-58
-170            android:value="@integer/google_play_services_version" />
-170-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:23:13-66
-171
-172        <receiver
-172-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
-173            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-173-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
-174            android:directBootAware="false"
-174-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
-175            android:enabled="true"
-175-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
-176            android:exported="true"
-176-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
-177            android:permission="android.permission.DUMP" >
-177-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
-178            <intent-filter>
-178-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
-179                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-179-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
-179-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
-180            </intent-filter>
+153-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\8dac0e6deaa93314b0a3755fa4a160d4\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:14:17-82
+154            <meta-data
+154-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:35:13-37:85
+155                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
+155-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:36:17-109
+156                android:value="com.google.firebase.components.ComponentRegistrar" />
+156-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:37:17-82
+157        </service>
+158
+159        <activity
+159-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:9-22:45
+160            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+160-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:19-85
+161            android:exported="false"
+161-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:22:19-43
+162            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+162-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\f3442b09977cd89b7a459772eb16e9d9\transformed\play-services-base-18.0.1\AndroidManifest.xml:21:19-78
+163
+164        <provider
+164-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:23:9-28:39
+165            android:name="com.google.firebase.provider.FirebaseInitProvider"
+165-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:24:13-77
+166            android:authorities="com.stereotip.simdata.firebaseinitprovider"
+166-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:25:13-72
+167            android:directBootAware="true"
+167-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:26:13-43
+168            android:exported="false"
+168-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:27:13-37
+169            android:initOrder="100" />
+169-->[com.google.firebase:firebase-common:21.0.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\3c44045284eb3f64e8ed03cd6461c05f\transformed\firebase-common-21.0.0\AndroidManifest.xml:28:13-36
+170
+171        <meta-data
+171-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:21:9-23:69
+172            android:name="com.google.android.gms.version"
+172-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:22:13-58
+173            android:value="@integer/google_play_services_version" />
+173-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\0e6fa1bdcc1163dfdd7afaa72cf7624a\transformed\play-services-basement-18.3.0\AndroidManifest.xml:23:13-66
+174
+175        <receiver
+175-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+176            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+176-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+177            android:directBootAware="false"
+177-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+178            android:enabled="true"
+178-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+179            android:exported="true"
+179-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+180            android:permission="android.permission.DUMP" >
+180-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
 181            <intent-filter>
-181-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
-182                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-182-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
-182-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+181-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+182                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+182-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+182-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
 183            </intent-filter>
 184            <intent-filter>
-184-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
-185                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-185-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
-185-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+184-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+185                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+185-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+185-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
 186            </intent-filter>
 187            <intent-filter>
-187-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
-188                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-188-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
-188-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+187-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+188                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+188-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+188-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
 189            </intent-filter>
-190        </receiver>
-191    </application>
-192
-193</manifest>
+190            <intent-filter>
+190-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+191                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+191-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+191-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\bf8ccff18ea03783f38006fb9b2f6db3\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+192            </intent-filter>
+193        </receiver>
+194    </application>
+195
+196</manifest>

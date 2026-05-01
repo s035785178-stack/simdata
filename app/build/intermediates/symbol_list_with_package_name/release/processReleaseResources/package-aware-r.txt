@@ -3178,6 +3178,7 @@ id btnCheckUpdate
 id btnClearAll
 id btnClearHistory
 id btnClose
+id btnCloseAlert
 id btnDownloadUpdate
 id btnEditCustomer
 id btnFeatured
@@ -3572,6 +3573,8 @@ id transition_position
 id transition_scene_layoutid_cache
 id transition_transform
 id triangle
+id tvAlertMessage
+id tvAlertTitle
 id tvBalanceQuick
 id tvBalanceStatus
 id tvCurrentVersion
@@ -3834,6 +3837,7 @@ layout notification_template_custom_big
 layout notification_template_icon_group
 layout notification_template_part_chronometer
 layout notification_template_part_time
+layout overlay_customer_alert
 layout overlay_update
 layout select_dialog_item_material
 layout select_dialog_multichoice_material
