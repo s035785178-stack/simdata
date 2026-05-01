@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.view.View
@@ -52,9 +54,11 @@ class MainActivity : AppCompatActivity() {
     private var balanceReceiverRegistered = false
     private var startupDialogShown = false
     private var permissionRequestInProgress = false
+    private var overlayPermissionRequestInProgress = false
     private var restoreLookupInProgress = false
     private var waitingForRestoreAnswer = false
     private var updateCheckDone = false
+    private var pendingUpdateInfo: UpdateInfo? = null
 
     private var warrantyActivated = false
     private var currentWarrantyEnd = ""
@@ -83,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
             loadPackageStatus()
+            showPendingUpdateIfReady()
         }
 
     private val balanceReceiver = object : BroadcastReceiver() {
@@ -165,7 +170,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        overlayPermissionRequestInProgress = false
+
         continuePermissionFlowIfNeeded()
+        showPendingUpdateIfReady()
 
         if (!balanceReceiverRegistered) {
             LocalBroadcastManager.getInstance(this)
@@ -201,6 +209,7 @@ class MainActivity : AppCompatActivity() {
         if (!hasAnyMissingStartupPermission()) return
         if (startupDialogShown) return
         if (permissionRequestInProgress) return
+        if (overlayPermissionRequestInProgress) return
 
         startupDialogShown = true
 
@@ -216,6 +225,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun continuePermissionFlowIfNeeded() {
         if (permissionRequestInProgress) return
+        if (overlayPermissionRequestInProgress) return
 
         val missingPhone = getEffectiveMissingPhonePermissions()
         if (missingPhone.isNotEmpty()) {
@@ -229,6 +239,48 @@ class MainActivity : AppCompatActivity() {
             permissionRequestInProgress = true
             permissionLauncher.launch(missingSms.toTypedArray())
         }
+    }
+
+    private fun showPendingUpdateIfReady() {
+        val info = pendingUpdateInfo ?: return
+
+        if (isFinishing || isDestroyed || movedToRegistration) return
+        if (permissionRequestInProgress || overlayPermissionRequestInProgress) return
+        if (getEffectiveMissingPhonePermissions().isNotEmpty()) return
+        if (getEffectiveMissingSmsPermissions().isNotEmpty()) return
+
+        if (Settings.canDrawOverlays(this)) {
+            pendingUpdateInfo = null
+            showUpdatePopup(info)
+        }
+    }
+
+    private fun showOverlayPermissionExplanation(updateInfo: UpdateInfo?) {
+        if (isFinishing || isDestroyed) return
+        if (overlayPermissionRequestInProgress) return
+
+        if (updateInfo != null) {
+            pendingUpdateInfo = updateInfo
+        }
+
+        overlayPermissionRequestInProgress = true
+        startupDialogShown = false
+
+        AlertDialog.Builder(this)
+            .setTitle("נדרשת הרשאה להצגת עדכונים")
+            .setMessage("כדי שהאפליקציה תוכל להציג עדכון חשוב מעל המסך, יש לאשר לה הרשאת הצגה מעל אפליקציות אחרות.")
+            .setPositiveButton("פתח הרשאה") { _, _ ->
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
+            }
+            .setNegativeButton("מאוחר יותר") { _, _ ->
+                overlayPermissionRequestInProgress = false
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun getMissingPermissions(group: Array<String>): List<String> {
@@ -806,22 +858,24 @@ class MainActivity : AppCompatActivity() {
     private fun showUpdatePopup(info: UpdateInfo) {
         if (isFinishing || isDestroyed || movedToRegistration) return
 
-        val title = info.title.ifBlank { "🚀 עדכון זמין" }
-        val message = info.message.ifBlank { "יש גרסה חדשה זמינה לעדכון.\n\nמומלץ לעדכן עכשיו." }
-
-        val builder = AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setCancelable(!info.forceUpdate)
-            .setPositiveButton("עדכן עכשיו") { _, _ ->
-                startActivity(Intent(this, UpdateActivity::class.java))
-            }
-
-        if (!info.forceUpdate) {
-            builder.setNegativeButton("מאוחר יותר", null)
+        if (getEffectiveMissingPhonePermissions().isNotEmpty() || getEffectiveMissingSmsPermissions().isNotEmpty()) {
+            pendingUpdateInfo = info
+            return
         }
 
-        builder.show()
+        if (!Settings.canDrawOverlays(this)) {
+            showOverlayPermissionExplanation(info)
+            return
+        }
+
+        val intent = Intent(this, UpdateOverlayService::class.java).apply {
+            putExtra("version", info.versionName)
+            putExtra("title", info.title)
+            putExtra("message", info.message)
+            putExtra("force", info.forceUpdate)
+        }
+
+        startService(intent)
     }
 
     private fun isRemoteVersionNewer(remoteVersion: String, localVersion: String): Boolean {

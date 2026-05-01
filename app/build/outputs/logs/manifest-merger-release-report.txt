@@ -1,20 +1,20 @@
 -- Merging decision tree log ---
 provider#androidx.core.content.FileProvider
-INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:24:9-32:20
+INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:25:9-33:20
 	android:grantUriPermissions
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:28:13-47
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:29:13-47
 	android:authorities
 		INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:26:13-60
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:27:13-60
 	android:exported
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:27:13-37
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:28:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:25:13-62
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:26:13-62
 manifest
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-115:12
-INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-115:12
-INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-115:12
-INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-115:12
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-120:12
+INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-120:12
+INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-120:12
+INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:2:1-120:12
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1eac3dc14dd582021057e50c6d1fa039\transformed\material-1.11.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\d51d1983a46aeb3b1debcbc68388e108\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\cefb49370b4578478673dd96aa294388\transformed\constraintlayout-2.0.1\AndroidManifest.xml:2:1-11:12
@@ -124,9 +124,13 @@ uses-permission#android.permission.REQUEST_INSTALL_PACKAGES
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:14:5-83
 	android:name
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:14:22-80
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:15:5-78
+	android:name
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:15:22-75
 application
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:16:5-113:19
-INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:16:5-113:19
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:17:5-118:19
+INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:17:5-118:19
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1eac3dc14dd582021057e50c6d1fa039\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\1eac3dc14dd582021057e50c6d1fa039\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\itai\.gradle\caches\9.0.0\transforms\cefb49370b4578478673dd96aa294388\transformed\constraintlayout-2.0.1\AndroidManifest.xml:9:5-20
@@ -166,153 +170,159 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\itai\.gradle\cache
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\itai\.gradle\caches\9.0.0\transforms\78398944e1b09b17fc93280158bb014e\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:21:9-35
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:22:9-35
 	android:label
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:19:9-35
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:20:9-35
 	android:roundIcon
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:20:9-54
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:21:9-54
 	android:icon
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:18:9-43
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:19:9-43
 	android:allowBackup
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:17:9-35
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:18:9-35
 	android:theme
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:22:9-45
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:23:9-45
+service#com.stereotip.simdata.UpdateOverlayService
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:35:9-37:40
+	android:exported
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:37:13-37
+	android:name
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:36:13-49
 receiver#com.stereotip.simdata.receiver.SmsReceiver
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:34:9-41:20
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:39:9-46:20
 	android:enabled
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:36:13-35
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:41:13-35
 	android:exported
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:37:13-36
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:42:13-36
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:35:13-49
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:40:13-49
 intent-filter#action:name:android.provider.Telephony.SMS_RECEIVED
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:38:13-40:29
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:13-45:29
 	android:priority
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:38:28-50
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:28-50
 action#android.provider.Telephony.SMS_RECEIVED
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:39:17-82
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:17-82
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:39:25-79
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:25-79
 activity#com.stereotip.simdata.LauncherActivity
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:43:9-51:20
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:9-56:20
 	android:screenOrientation
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:46:13-50
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:51:13-50
 	android:exported
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:45:13-36
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:50:13-36
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:44:13-45
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:49:13-45
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:47:13-50:29
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:52:13-55:29
 action#android.intent.action.MAIN
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:17-69
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:17-69
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:48:25-66
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:25-66
 category#android.intent.category.LAUNCHER
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:49:17-77
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:17-77
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:49:27-74
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:27-74
 activity#com.stereotip.simdata.RequiredAppsActivity
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:53:9-56:53
-	android:screenOrientation
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:56:13-50
-	android:exported
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:55:13-37
-	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:54:13-49
-activity#com.stereotip.simdata.MainActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:58:9-61:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:61:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:60:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:59:13-41
-activity#com.stereotip.simdata.WarrantyPromptActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:59:13-49
+activity#com.stereotip.simdata.MainActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:63:9-66:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:66:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:65:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:64:13-51
-activity#com.stereotip.simdata.ResultActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:64:13-41
+activity#com.stereotip.simdata.WarrantyPromptActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:68:9-71:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:71:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:70:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:69:13-43
-activity#com.stereotip.simdata.RegistrationActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:69:13-51
+activity#com.stereotip.simdata.ResultActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:73:9-76:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:76:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:75:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:74:13-49
-activity#com.stereotip.simdata.CustomerDetailsActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:74:13-43
+activity#com.stereotip.simdata.RegistrationActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:78:9-81:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:81:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:80:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:79:13-52
-activity#com.stereotip.simdata.TechnicianActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:79:13-49
+activity#com.stereotip.simdata.CustomerDetailsActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:83:9-86:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:86:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:85:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:84:13-47
-activity#com.stereotip.simdata.SupportActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:84:13-52
+activity#com.stereotip.simdata.TechnicianActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:88:9-91:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:91:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:90:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:89:13-44
-activity#com.stereotip.simdata.PackagesActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:89:13-47
+activity#com.stereotip.simdata.SupportActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:93:9-96:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:96:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:95:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:94:13-45
-activity#com.stereotip.simdata.NetworkCheckActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:94:13-44
+activity#com.stereotip.simdata.PackagesActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:98:9-101:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:101:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:100:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:99:13-49
-activity#com.stereotip.simdata.BalanceActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:99:13-45
+activity#com.stereotip.simdata.NetworkCheckActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:103:9-106:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:106:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:105:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:104:13-44
-activity#com.stereotip.simdata.UpdateActivity
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:104:13-49
+activity#com.stereotip.simdata.BalanceActivity
 ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:108:9-111:53
 	android:screenOrientation
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:111:13-50
 	android:exported
 		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:110:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:109:13-43
-meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:29:13-31:54
-	android:resource
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:31:17-51
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:109:13-44
+activity#com.stereotip.simdata.UpdateActivity
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:113:9-116:53
+	android:screenOrientation
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:116:13-50
+	android:exported
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:115:13-37
 	android:name
-		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:30:17-67
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:114:13-43
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:30:13-32:54
+	android:resource
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:32:17-51
+	android:name
+		ADDED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml:31:17-67
 uses-sdk
 INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\Android\androidprojects\simdata\1.07-stable\app\src\main\AndroidManifest.xml

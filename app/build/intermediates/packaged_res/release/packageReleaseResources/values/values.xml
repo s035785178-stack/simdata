@@ -18,11 +18,17 @@
     <string name="google_storage_bucket" translatable="false">simdata-46260.firebasestorage.app</string>
     <string name="project_id" translatable="false">simdata-46260</string>
     <style name="Theme.SimData" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
         <item name="colorPrimary">@color/brand_primary</item>
         <item name="colorPrimaryVariant">@color/brand_primary_dark</item>
         <item name="colorOnPrimary">@color/text_primary</item>
+
+        
+        <item name="materialButtonStyle">@style/Widget.AppCompat.Button</item>
+
         <item name="android:statusBarColor">@color/brand_primary_dark</item>
         <item name="android:windowBackground">@color/screen_bg</item>
         <item name="android:forceDarkAllowed" ns1:targetApi="q">false</item>
+
     </style>
 </resources>

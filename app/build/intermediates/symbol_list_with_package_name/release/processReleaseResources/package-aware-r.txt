@@ -2936,6 +2936,9 @@ drawable bg_required_button
 drawable bg_required_card
 drawable bg_screen
 drawable bg_status_bar
+drawable bg_update_button
+drawable bg_update_button_outline
+drawable bg_update_card
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
@@ -2982,6 +2985,7 @@ drawable ic_clear_black_24
 drawable ic_clock_black_24dp
 drawable ic_foreground
 drawable ic_keyboard_black_24dp
+drawable ic_launcher_background
 drawable ic_m3_chip_check
 drawable ic_m3_chip_checked_circle
 drawable ic_m3_chip_close
@@ -3173,6 +3177,7 @@ id btnCheckBalance
 id btnCheckUpdate
 id btnClearAll
 id btnClearHistory
+id btnClose
 id btnDownloadUpdate
 id btnEditCustomer
 id btnFeatured
@@ -3195,6 +3200,7 @@ id btnSupport
 id btnTechNetwork
 id btnTechSupportQr
 id btnTrial
+id btnUpdateNow
 id btnUpdateTop
 id btnUseAutoValidity
 id btnValidityMode
@@ -3317,6 +3323,7 @@ id ifRoom
 id ignore
 id ignoreRequest
 id image
+id imgAppIcon
 id imgLogoTop
 id indeterminate
 id info
@@ -3576,6 +3583,9 @@ id tvLine
 id tvLineBalance
 id tvMissingCustomer
 id tvNetworkResults
+id tvOverlayMessage
+id tvOverlayTitle
+id tvOverlayVersion
 id tvProgress
 id tvQrTitle
 id tvRegistrationLineNumber
@@ -3824,6 +3834,7 @@ layout notification_template_custom_big
 layout notification_template_icon_group
 layout notification_template_part_chronometer
 layout notification_template_part_time
+layout overlay_update
 layout select_dialog_item_material
 layout select_dialog_multichoice_material
 layout select_dialog_singlechoice_material
@@ -3831,6 +3842,7 @@ layout spinner_dropdown_item_white
 layout spinner_item_white
 layout support_simple_spinner_dropdown_item
 mipmap ic_launcher
+mipmap ic_launcher_foreground
 mipmap ic_launcher_round
 plurals mtrl_badge_content_description
 raw firebase_common_keep
