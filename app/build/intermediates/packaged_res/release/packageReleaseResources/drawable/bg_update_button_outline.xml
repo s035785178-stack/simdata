@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- לחיצה -->
+    <item android:state_pressed="true">
+        <shape>
+            <!-- רקע נשאר לבן -->
+            <solid android:color="#FFFFFF"/>
+
+            <corners android:radius="18dp"/>
+
+            <!-- סטרוק כהה יותר בלחיצה -->
+            <stroke
+                android:width="3dp"
+                android:color="#5E1F12"/>
+        </shape>
+    </item>
+
+    <!-- רגיל -->
+    <item>
+        <shape>
+
+            <!-- לבן -->
+            <solid android:color="#FFFFFF"/>
+
+            <corners android:radius="18dp"/>
+
+            <!-- סטרוק בצבע שלך -->
+            <stroke
+                android:width="3dp"
+                android:color="#842F1B"/>
+
+        </shape>
+    </item>
+
+</selector>
