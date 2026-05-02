@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.provider.Telephony
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     private var restoreLookupInProgress = false
     private var waitingForRestoreAnswer = false
     private var updateCheckDone = false
+    private var backgroundServiceStarted = false
     private var pendingUpdateInfo: UpdateInfo? = null
 
     private var warrantyActivated = false
@@ -78,11 +80,20 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.RECEIVE_SMS
     )
 
+    private fun notificationPermissions(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            emptyArray()
+        }
+    }
+
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
             permissionRequestInProgress = false
             startupDialogShown = false
             continuePermissionFlowIfNeeded()
+            startBackgroundServiceIfReady()
             updateSummary()
             checkRegistrationIfNeeded()
             loadWarrantyStatus()
@@ -94,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (isFinishing || isDestroyed) return
             updateSummary()
+            CustomerAlertManager.checkAndShowAlerts(this@MainActivity)
             loadWarrantyStatus()
             loadPackageStatus()
         }
@@ -160,7 +172,9 @@ class MainActivity : AppCompatActivity() {
 
         showStartupPermissionsDialogIfNeeded()
         triggerSmsPermission()
+        startBackgroundServiceIfReady()
         updateSummary()
+        CustomerAlertManager.checkAndShowAlerts(this)
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
@@ -173,6 +187,7 @@ class MainActivity : AppCompatActivity() {
         overlayPermissionRequestInProgress = false
 
         continuePermissionFlowIfNeeded()
+        startBackgroundServiceIfReady()
         showPendingUpdateIfReady()
 
         if (!balanceReceiverRegistered) {
@@ -184,6 +199,7 @@ class MainActivity : AppCompatActivity() {
         if (movedToRegistration) return
 
         updateSummary()
+        CustomerAlertManager.checkAndShowAlerts(this)
         checkRegistrationIfNeeded()
         loadWarrantyStatus()
         loadPackageStatus()
@@ -215,7 +231,7 @@ class MainActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle("נדרשות הרשאות להפעלת האפליקציה")
-            .setMessage("האפליקציה צריכה הרשאות טלפון והודעות SMS כדי לזהות מספר קו ולעבוד תקין.")
+            .setMessage("האפליקציה צריכה הרשאות טלפון, הודעות SMS, התראות והצגה מעל אפליקציות אחרות כדי לזהות מספר קו, לבדוק יתרת גלישה ולעבוד תקין.")
             .setPositiveButton("אשר הרשאות") { _, _ ->
                 continuePermissionFlowIfNeeded()
             }
@@ -238,7 +254,22 @@ class MainActivity : AppCompatActivity() {
         if (missingSms.isNotEmpty()) {
             permissionRequestInProgress = true
             permissionLauncher.launch(missingSms.toTypedArray())
+            return
         }
+
+        val missingNotifications = getEffectiveMissingNotificationPermissions()
+        if (missingNotifications.isNotEmpty()) {
+            permissionRequestInProgress = true
+            permissionLauncher.launch(missingNotifications.toTypedArray())
+            return
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            showOverlayPermissionExplanation(null)
+            return
+        }
+
+        startBackgroundServiceIfReady()
     }
 
     private fun showPendingUpdateIfReady() {
@@ -267,8 +298,8 @@ class MainActivity : AppCompatActivity() {
         startupDialogShown = false
 
         AlertDialog.Builder(this)
-            .setTitle("נדרשת הרשאה להצגת עדכונים")
-            .setMessage("כדי שהאפליקציה תוכל להציג עדכון חשוב מעל המסך, יש לאשר לה הרשאת הצגה מעל אפליקציות אחרות.")
+            .setTitle("נדרשת הרשאה להצגה מעל אפליקציות אחרות")
+            .setMessage("כדי שהאפליקציה תוכל להציג עדכון חשוב והתראות חבילה מעל המסך, יש לאשר לה הרשאת הצגה מעל אפליקציות אחרות.")
             .setPositiveButton("פתח הרשאה") { _, _ ->
                 val intent = Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -281,6 +312,28 @@ class MainActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+
+    private fun startBackgroundServiceIfReady() {
+        if (backgroundServiceStarted) return
+        if (isFinishing || isDestroyed || movedToRegistration) return
+        if (permissionRequestInProgress || overlayPermissionRequestInProgress) return
+
+        if (getEffectiveMissingNotificationPermissions().isNotEmpty()) return
+
+        backgroundServiceStarted = true
+
+        try {
+            val serviceIntent = Intent(this, AutoBalanceService::class.java)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } catch (_: Exception) {
+            backgroundServiceStarted = false
+        }
     }
 
     private fun getMissingPermissions(group: Array<String>): List<String> {
@@ -349,9 +402,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getEffectiveMissingNotificationPermissions(): List<String> {
+        return getMissingPermissions(notificationPermissions())
+    }
+
     private fun hasAnyMissingStartupPermission(): Boolean {
         return getEffectiveMissingPhonePermissions().isNotEmpty() ||
-                getEffectiveMissingSmsPermissions().isNotEmpty()
+                getEffectiveMissingSmsPermissions().isNotEmpty() ||
+                getEffectiveMissingNotificationPermissions().isNotEmpty() ||
+                !Settings.canDrawOverlays(this)
     }
 
     private fun triggerSmsPermission() {
@@ -467,6 +526,7 @@ class MainActivity : AppCompatActivity() {
 
         registrationCheckDone = true
         updateSummary()
+        CustomerAlertManager.checkAndShowAlerts(this)
         loadWarrantyStatus()
         loadPackageStatus()
     }
@@ -623,6 +683,8 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     tvValidity.text = AppPrefs.getValid(this).orEmpty().ifBlank { "לא ידוע" }
                 }
+
+                CustomerAlertManager.checkAndShowAlerts(this)
 
                 btnPackageStatus.text = "📦 סוג חבילה\n${pkg.ifBlank { savedPackage.ifBlank { "לא ידוע" } }}"
             }
@@ -852,14 +914,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                val testAlertIntent = Intent(this, CustomerAlertOverlayService::class.java).apply {
-                    putExtra("title", "⚠️ חבילה עומדת להיגמר")
-                    putExtra(
-                        "message",
-                        "נשארו פחות מ־2GB בחבילת הגלישה.\nמומלץ לחדש חבילה כדי למנוע ניתוק."
-                    )
-                }
-                startService(testAlertIntent)
+                CustomerAlertManager.checkAndShowAlerts(this)
             }
         }
     }

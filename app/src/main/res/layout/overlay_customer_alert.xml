@@ -5,45 +5,114 @@
     android:background="#88000000">
 
     <LinearLayout
-        android:layout_width="650dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/bg_update_card"
-        android:elevation="20dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:layoutDirection="rtl"
+        android:background="@drawable/bg_update_card"
+        android:elevation="18dp"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="26dp">
 
-        <TextView
-            android:id="@+id/tvAlertTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="התראה"
-            android:textColor="#111"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:gravity="right"/>
+            android:layoutDirection="rtl"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imgAppIcon"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="16dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="אייקון האפליקציה"
+                android:scaleType="fitCenter"
+                android:src="@mipmap/ic_launcher" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end|center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvAlertTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="התראה חשובה"
+                    android:textColor="#111111"
+                    android:textDirection="rtl"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvOverlayVersion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="end"
+                    android:text="פרטי ההתראה"
+                    android:textColor="#111111"
+                    android:textDirection="rtl"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAlertMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="תוכן ההתראה"
-            android:textColor="#222"
-            android:textSize="16sp"
-            android:gravity="right"/>
+            android:layout_marginTop="20dp"
+            android:gravity="end"
+            android:lineSpacingExtra="3dp"
+            android:text="כאן יוצג תוכן ההתראה"
+            android:textColor="#222222"
+            android:textDirection="rtl"
+            android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/btnCloseAlert"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="18dp"
-            android:text="סגור"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:background="@drawable/bg_update_button"
-            android:backgroundTint="@null"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:layoutDirection="rtl"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnRenewPackage"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_update_button"
+                android:backgroundTint="@null"
+                android:text="לחידוש החבילה"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnCloseAlert"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_update_button_outline"
+                android:backgroundTint="@null"
+                android:text="סגור"
+                android:textAllCaps="false"
+                android:textColor="#842F1B"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

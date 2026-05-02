@@ -37,6 +37,7 @@ class CustomerAlertOverlayService : Service() {
         val tvTitle = overlayView!!.findViewById<TextView>(R.id.tvAlertTitle)
         val tvMessage = overlayView!!.findViewById<TextView>(R.id.tvAlertMessage)
         val btnClose = overlayView!!.findViewById<Button>(R.id.btnCloseAlert)
+        val btnRenew = overlayView!!.findViewById<Button>(R.id.btnRenewPackage)
 
         tvTitle.text = title
         tvMessage.text = message
@@ -45,9 +46,18 @@ class CustomerAlertOverlayService : Service() {
             stopSelf()
         }
 
+        btnRenew.setOnClickListener {
+            val packagesIntent = Intent(this, PackagesActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(packagesIntent)
+            stopSelf()
+        }
+
         val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
+            @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
@@ -59,16 +69,26 @@ class CustomerAlertOverlayService : Service() {
             PixelFormat.TRANSLUCENT
         )
 
-        windowManager?.addView(overlayView, params)
+        try {
+            windowManager?.addView(overlayView, params)
+        } catch (_: Exception) {
+            overlayView = null
+            stopSelf()
+        }
 
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        overlayView?.let {
-            windowManager?.removeView(it)
+        try {
+            if (overlayView != null) {
+                windowManager?.removeView(overlayView)
+                overlayView = null
+            }
+        } catch (_: Exception) {
+            overlayView = null
         }
-        overlayView = null
+
         super.onDestroy()
     }
 

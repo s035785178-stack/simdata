@@ -11,10 +11,8 @@ class LauncherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         if (hasDialer()) {
-            // יש חייגן → נכנס לאפליקציה
             startActivity(Intent(this, MainActivity::class.java))
         } else {
-            // אין חייגן → נכנס למסך הסבר
             startActivity(Intent(this, RequiredAppsActivity::class.java))
         }
 
@@ -27,7 +25,7 @@ class LauncherActivity : AppCompatActivity() {
             val resolve = packageManager.resolveActivity(intent, 0)
             resolve != null
         } catch (e: Exception) {
-            true // לא מפיל את האפליקציה
+            true
         }
     }
 }

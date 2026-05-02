@@ -160,6 +160,10 @@
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\layout\\activity_network.xml"
     },
     {
+        "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\layout_overlay_customer_alert.xml.flat",
+        "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\layout\\overlay_customer_alert.xml"
+    },
+    {
         "merged": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-release-36:\\drawable_bg_update_button_outline.xml.flat",
         "source": "C:\\Users\\itai\\.gradle\\daemon\\9.0.0\\com.stereotip.simdata.app-main-37:\\drawable\\bg_update_button_outline.xml"
     },

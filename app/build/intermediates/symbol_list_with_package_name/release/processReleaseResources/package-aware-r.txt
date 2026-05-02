@@ -3193,6 +3193,7 @@ id btnRefreshNetwork
 id btnRegisterCustomer
 id btnRegularSupport
 id btnRenewFromBalance
+id btnRenewPackage
 id btnSaveCustomer
 id btnSendData
 id btnSendNetwork
